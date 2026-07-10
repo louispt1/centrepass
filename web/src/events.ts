@@ -5,10 +5,10 @@
 import type { Action } from "./types/Action";
 import type { ActionKind } from "./types/ActionKind";
 import type { CentrePassReceivePosition } from "./types/CentrePassReceivePosition";
-import type { Event } from "./types/Event";
 import type { FeedPosition } from "./types/FeedPosition";
 import type { GainSubType } from "./types/GainSubType";
 import type { GoalPosition } from "./types/GoalPosition";
+import type { LogEntry } from "./types/LogEntry";
 import type { Position } from "./types/Position";
 import type { ReboundPosition } from "./types/ReboundPosition";
 
@@ -69,16 +69,24 @@ export const SUB_TYPE_LABELS: Record<GainSubType, string> = {
   PickUp: "Pick-up",
 };
 
-/** One-line rendering of an event for the spot-check strip, e.g. "WD Intercept" or "GA Goal ✕ ⚑". */
-export function formatEvent(event: Event): string {
-  const action = event.action;
+/**
+ * One-line rendering of a log entry for the spot-check strip, e.g.
+ * "WD Intercept", "Beth GA Goal ✕ ⚑", "Dana → GA", or "Q break". A coded
+ * event's attributed player (from deriveAttributions) leads when known, so a
+ * substitution's effect is visible on the very next tap.
+ */
+export function formatEntry(entry: LogEntry, player: string | null = null): string {
+  if (entry.kind === "QuarterBreak") return "Q break";
+  if (entry.kind === "Substitution") return `${entry.player} → ${entry.position}`;
+  const action = entry.action;
   const label =
     action.type === "Gain" && action.subType
       ? SUB_TYPE_LABELS[action.subType]
       : STRIP_LABELS[action.type];
   const parts = [`${action.position} ${label}`];
+  if (player) parts.unshift(player);
   if ("failed" in action && action.failed) parts.push("✕");
-  if (event.flagged) parts.push("⚑");
-  if (event.team === "B") parts.unshift("Opp");
+  if (entry.flagged) parts.push("⚑");
+  if (entry.team === "B") parts.unshift("Opp");
   return parts.join(" ");
 }

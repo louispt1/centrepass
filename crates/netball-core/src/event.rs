@@ -89,6 +89,31 @@ macro_rules! position_subset {
 }
 
 position_subset!(
+    /// The seven on-court positions — [`Position`] without TEAM. A roster
+    /// assignment or substitution always names a real position on court.
+    CourtPosition { GS, GA, WA, C, WD, GD, GK }
+);
+
+impl CourtPosition {
+    pub const ALL: [CourtPosition; 7] = [
+        CourtPosition::GS,
+        CourtPosition::GA,
+        CourtPosition::WA,
+        CourtPosition::C,
+        CourtPosition::WD,
+        CourtPosition::GD,
+        CourtPosition::GK,
+    ];
+
+    /// Narrow a [`Position`] to a court position; `None` for TEAM.
+    pub fn from_position(position: Position) -> Option<CourtPosition> {
+        CourtPosition::ALL
+            .into_iter()
+            .find(|&court| Position::from(court) == position)
+    }
+}
+
+position_subset!(
     /// Positions that may receive a centre pass: those allowed in the centre
     /// third at a centre pass. C takes the pass, GS and GK may not enter the
     /// centre third, and a receive is always attributable to the player who
@@ -213,6 +238,59 @@ pub struct Event {
     pub timestamp_ms: Option<i64>,
 }
 
+/// A quarter-break marker: the moment one quarter ends and the next begins.
+/// Quarter boundaries are coded, not inferred, so the quarter an event
+/// belongs to is simply the number of breaks before it in the log.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub struct QuarterBreak {
+    /// Wall-clock capture time, as on [`Event`].
+    #[cfg_attr(feature = "ts-bindings", ts(type = "number | null"))]
+    pub timestamp_ms: Option<i64>,
+}
+
+/// `player` takes over `position` for `team` from this point in the log.
+/// The initial roster entered at match setup is coded as ordinary
+/// substitutions (one per assigned position), so replaying the log
+/// reconstructs the roster at any moment and an incomplete roster is just a
+/// position with no substitution yet.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub struct Substitution {
+    pub team: Team,
+    pub position: CourtPosition,
+    pub player: String,
+    /// Wall-clock capture time, as on [`Event`]. Playing time is derived
+    /// from these; without them it is unavailable, never guessed.
+    #[cfg_attr(feature = "ts-bindings", ts(type = "number | null"))]
+    pub timestamp_ms: Option<i64>,
+}
+
+/// One entry in a match's append-only log: a coded [`Event`] or a structural
+/// marker. Markers are entries in the same log (ADR-0003) so that undo,
+/// replay, and re-derivation treat them exactly like coded events.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub enum LogEntry {
+    Event(Event),
+    QuarterBreak(QuarterBreak),
+    Substitution(Substitution),
+}
+
+impl LogEntry {
+    /// This entry's wall-clock capture time, whatever its kind.
+    pub fn timestamp_ms(&self) -> Option<i64> {
+        match self {
+            LogEntry::Event(event) => event.timestamp_ms,
+            LogEntry::QuarterBreak(quarter_break) => quarter_break.timestamp_ms,
+            LogEntry::Substitution(substitution) => substitution.timestamp_ms,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,6 +363,81 @@ mod tests {
     fn a_shot_by_a_non_shooter_fails_to_deserialize() {
         let illegal = r#"{"type":"Goal","position":"WD","failed":false}"#;
         assert!(serde_json::from_str::<Action>(illegal).is_err());
+    }
+
+    #[test]
+    fn log_entry_json_is_the_match_file_shape() {
+        let log = vec![
+            LogEntry::Substitution(Substitution {
+                team: Team::A,
+                position: CourtPosition::GS,
+                player: "Alice".to_string(),
+                timestamp_ms: Some(1),
+            }),
+            LogEntry::Event(Event {
+                team: Team::A,
+                action: Action::Goal {
+                    position: GoalPosition::GS,
+                    failed: false,
+                },
+                flagged: false,
+                timestamp_ms: Some(2),
+            }),
+            LogEntry::QuarterBreak(QuarterBreak {
+                timestamp_ms: Some(3),
+            }),
+        ];
+        let json = serde_json::to_string(&log).unwrap();
+        assert_eq!(
+            json,
+            concat!(
+                r#"[{"kind":"Substitution","team":"A","position":"GS","player":"Alice","timestampMs":1},"#,
+                r#"{"kind":"Event","team":"A","action":{"type":"Goal","position":"GS","failed":false},"flagged":false,"timestampMs":2},"#,
+                r#"{"kind":"QuarterBreak","timestampMs":3}]"#
+            )
+        );
+        assert_eq!(serde_json::from_str::<Vec<LogEntry>>(&json).unwrap(), log);
+    }
+
+    #[test]
+    fn a_substitution_to_team_fails_to_deserialize() {
+        let illegal = r#"{"kind":"Substitution","team":"A","position":"TEAM","player":"Alice","timestampMs":null}"#;
+        assert!(serde_json::from_str::<LogEntry>(illegal).is_err());
+    }
+
+    #[test]
+    fn log_entries_expose_their_timestamp_whatever_their_kind() {
+        assert_eq!(
+            LogEntry::QuarterBreak(QuarterBreak {
+                timestamp_ms: Some(7)
+            })
+            .timestamp_ms(),
+            Some(7)
+        );
+        assert_eq!(
+            LogEntry::Substitution(Substitution {
+                team: Team::B,
+                position: CourtPosition::C,
+                player: "Beth".to_string(),
+                timestamp_ms: None,
+            })
+            .timestamp_ms(),
+            None
+        );
+    }
+
+    #[test]
+    fn court_positions_are_exactly_the_positions_minus_team() {
+        for position in Position::ALL {
+            assert_eq!(
+                CourtPosition::from_position(position).is_some(),
+                position != Position::Team
+            );
+        }
+        assert_eq!(
+            CourtPosition::from_position(Position::WD),
+            Some(CourtPosition::WD)
+        );
     }
 
     #[test]

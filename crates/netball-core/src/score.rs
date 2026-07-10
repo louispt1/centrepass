@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::event::{Action, Event, Team};
+use crate::event::{Action, LogEntry, Team};
 
 /// The running score of a match, one tally per team.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -15,6 +15,11 @@ pub struct Score {
 }
 
 impl Score {
+    const NIL_ALL: Score = Score {
+        team_a: 0,
+        team_b: 0,
+    };
+
     /// The tally for one team.
     pub fn for_team(&self, team: Team) -> u32 {
         match team {
@@ -22,42 +27,68 @@ impl Score {
             Team::B => self.team_b,
         }
     }
+
+    fn credit(&mut self, team: Team) {
+        match team {
+            Team::A => self.team_a += 1,
+            Team::B => self.team_b += 1,
+        }
+    }
 }
 
-/// Derive the score from an event log: one point per successful Goal event
+/// Derive the match score from a log: one point per successful Goal event
 /// (a Goal with `failed: true` is a missed shot), credited to the team the
-/// event carries.
-pub fn derive_score(events: &[Event]) -> Score {
-    let mut score = Score {
-        team_a: 0,
-        team_b: 0,
-    };
-    for event in events {
-        if let Action::Goal { failed: false, .. } = event.action {
-            match event.team {
-                Team::A => score.team_a += 1,
-                Team::B => score.team_b += 1,
+/// event carries. Marker entries never score.
+pub fn derive_score(log: &[LogEntry]) -> Score {
+    let mut score = Score::NIL_ALL;
+    for entry in log {
+        if let LogEntry::Event(event) = entry {
+            if let Action::Goal { failed: false, .. } = event.action {
+                score.credit(event.team);
             }
         }
     }
     score
 }
 
+/// Derive the score of each quarter separately: the log split at its
+/// QuarterBreak markers, one [`Score`] per segment in match order. The
+/// current quarter of a live match is the length of this vector (an empty
+/// log is in quarter 1), and the match score is the elementwise sum.
+pub fn derive_quarter_scores(log: &[LogEntry]) -> Vec<Score> {
+    let mut quarters = vec![Score::NIL_ALL];
+    for entry in log {
+        match entry {
+            LogEntry::QuarterBreak(_) => quarters.push(Score::NIL_ALL),
+            LogEntry::Event(event) => {
+                if let Action::Goal { failed: false, .. } = event.action {
+                    quarters.last_mut().unwrap().credit(event.team);
+                }
+            }
+            LogEntry::Substitution(_) => {}
+        }
+    }
+    quarters
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event::{GainSubType, GoalPosition, Position, ReboundPosition};
+    use crate::event::{
+        CourtPosition, Event, GainSubType, GoalPosition, Position, QuarterBreak, ReboundPosition,
+        Substitution,
+    };
 
-    fn event(team: Team, action: Action) -> Event {
-        Event {
+    fn event(team: Team, action: Action) -> LogEntry {
+        LogEntry::Event(Event {
             team,
             action,
             flagged: false,
             timestamp_ms: Some(1_770_000_000_000),
-        }
+        })
     }
 
-    fn goal(team: Team) -> Event {
+    fn goal(team: Team) -> LogEntry {
         event(
             team,
             Action::Goal {
@@ -65,6 +96,12 @@ mod tests {
                 failed: false,
             },
         )
+    }
+
+    fn quarter_break() -> LogEntry {
+        LogEntry::QuarterBreak(QuarterBreak {
+            timestamp_ms: Some(1_770_000_000_000),
+        })
     }
 
     #[test]
@@ -152,7 +189,7 @@ mod tests {
 
     #[test]
     fn score_ignores_missing_timestamps() {
-        let log = [Event {
+        let log = [LogEntry::Event(Event {
             team: Team::B,
             action: Action::Goal {
                 position: GoalPosition::Team,
@@ -160,8 +197,28 @@ mod tests {
             },
             flagged: false,
             timestamp_ms: None,
-        }];
+        })];
         assert_eq!(derive_score(&log).for_team(Team::B), 1);
+    }
+
+    #[test]
+    fn markers_never_score() {
+        let log = [
+            LogEntry::Substitution(Substitution {
+                team: Team::A,
+                position: CourtPosition::GS,
+                player: "Alice".to_string(),
+                timestamp_ms: Some(1),
+            }),
+            quarter_break(),
+        ];
+        assert_eq!(
+            derive_score(&log),
+            Score {
+                team_a: 0,
+                team_b: 0
+            }
+        );
     }
 
     #[test]
@@ -187,5 +244,54 @@ mod tests {
                 team_b: 0
             }
         );
+    }
+
+    #[test]
+    fn an_empty_log_is_in_quarter_one() {
+        assert_eq!(derive_quarter_scores(&[]), vec![Score::NIL_ALL]);
+    }
+
+    #[test]
+    fn quarter_breaks_split_the_score_by_quarter() {
+        let log = [
+            goal(Team::A),
+            goal(Team::B),
+            quarter_break(),
+            goal(Team::A),
+            quarter_break(),
+            // Quarter 3 scoreless so far; the break was still just tapped.
+        ];
+        assert_eq!(
+            derive_quarter_scores(&log),
+            vec![
+                Score {
+                    team_a: 1,
+                    team_b: 1
+                },
+                Score {
+                    team_a: 1,
+                    team_b: 0
+                },
+                Score::NIL_ALL,
+            ]
+        );
+    }
+
+    #[test]
+    fn quarter_scores_sum_to_the_match_score() {
+        let log = [
+            goal(Team::A),
+            quarter_break(),
+            goal(Team::B),
+            goal(Team::A),
+            quarter_break(),
+            goal(Team::B),
+        ];
+        let quarters = derive_quarter_scores(&log);
+        let summed = quarters.iter().fold(Score::NIL_ALL, |sum, q| Score {
+            team_a: sum.team_a + q.team_a,
+            team_b: sum.team_b + q.team_b,
+        });
+        assert_eq!(summed, derive_score(&log));
     }
 }

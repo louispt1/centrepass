@@ -5,14 +5,16 @@
 //! browser boundary lives in the sibling `netball-wasm` crate.
 
 pub mod event;
+pub mod roster;
 pub mod score;
 pub mod taxonomy;
 
 pub use event::{
-    Action, CentrePassReceivePosition, Event, FeedPosition, GainSubType, GoalPosition, Position,
-    ReboundPosition, Team,
+    Action, CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType,
+    GoalPosition, LogEntry, Position, QuarterBreak, ReboundPosition, Substitution, Team,
 };
-pub use score::{derive_score, Score};
+pub use roster::{derive_attributions, derive_playing_time, derive_roster, PlayingTime, Roster};
+pub use score::{derive_quarter_scores, derive_score, Score};
 pub use taxonomy::{action_taxonomy, ActionKind, ActionKindInfo};
 
 /// The event taxonomy this engine implements, with its citation.

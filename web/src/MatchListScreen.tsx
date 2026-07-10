@@ -36,10 +36,12 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
       teamBName: teamBName.trim(),
       date,
       createdAtMs: Date.now(),
-      events: [],
+      log: [],
     };
     await putMatch(match);
-    window.location.hash = `#/match/${match.id}`;
+    // Match setup continues with the roster; it can be left blank or partial
+    // and completed mid-match, so it never delays the first centre pass.
+    window.location.hash = `#/match/${match.id}/roster`;
   }
 
   return (

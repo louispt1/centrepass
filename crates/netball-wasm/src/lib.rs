@@ -12,17 +12,57 @@ pub fn engine_description() -> String {
     netball_core::engine_description()
 }
 
-/// Derive the score from an event log.
+fn parse_log(log: JsValue) -> Result<Vec<netball_core::LogEntry>, JsValue> {
+    serde_wasm_bindgen::from_value(log).map_err(JsValue::from)
+}
+
+fn parse_team(team: JsValue) -> Result<netball_core::Team, JsValue> {
+    serde_wasm_bindgen::from_value(team).map_err(JsValue::from)
+}
+
+/// Derive the match score from a log.
 ///
-/// `events` is an `Event[]` and the result a `Score`, per the TypeScript
+/// `log` is a `LogEntry[]` and the result a `Score`, per the TypeScript
 /// types generated from the `netball-core` types (`web/src/types/`); the
 /// typed wrapper lives in `web/src/engine.ts`.
 #[wasm_bindgen]
-pub fn derive_score(events: JsValue) -> Result<JsValue, JsValue> {
-    let events: Vec<netball_core::Event> =
-        serde_wasm_bindgen::from_value(events).map_err(JsValue::from)?;
-    let score = netball_core::derive_score(&events);
+pub fn derive_score(log: JsValue) -> Result<JsValue, JsValue> {
+    let score = netball_core::derive_score(&parse_log(log)?);
     serde_wasm_bindgen::to_value(&score).map_err(JsValue::from)
+}
+
+/// Derive per-quarter scores (`Score[]`, one per quarter so far) from a log
+/// (`LogEntry[]`). The current quarter is the length of the result.
+#[wasm_bindgen]
+pub fn derive_quarter_scores(log: JsValue) -> Result<JsValue, JsValue> {
+    let scores = netball_core::derive_quarter_scores(&parse_log(log)?);
+    serde_wasm_bindgen::to_value(&scores).map_err(JsValue::from)
+}
+
+/// Derive one team's current roster (`Roster`) from a log (`LogEntry[]`)
+/// and a team (`Team`).
+#[wasm_bindgen]
+pub fn derive_roster(log: JsValue, team: JsValue) -> Result<JsValue, JsValue> {
+    let roster = netball_core::derive_roster(&parse_log(log)?, parse_team(team)?);
+    serde_wasm_bindgen::to_value(&roster).map_err(JsValue::from)
+}
+
+/// Attribute each log entry to a player (`(string | null)[]`, parallel to
+/// the `LogEntry[]` argument): the occupant of the event's position at that
+/// point, or null for markers, TEAM events, and unfilled positions.
+#[wasm_bindgen]
+pub fn derive_attributions(log: JsValue) -> Result<JsValue, JsValue> {
+    let attributions = netball_core::derive_attributions(&parse_log(log)?);
+    serde_wasm_bindgen::to_value(&attributions).map_err(JsValue::from)
+}
+
+/// Derive one team's per-player time on court (`PlayingTime[]`) from a log
+/// (`LogEntry[]`) and a team (`Team`); null/undefined when the log lacks the
+/// timestamps to compute it.
+#[wasm_bindgen]
+pub fn derive_playing_time(log: JsValue, team: JsValue) -> Result<JsValue, JsValue> {
+    let times = netball_core::derive_playing_time(&parse_log(log)?, parse_team(team)?);
+    serde_wasm_bindgen::to_value(&times).map_err(JsValue::from)
 }
 
 /// The action taxonomy as data (`ActionKindInfo[]`): which actions exist,

@@ -16,6 +16,8 @@ test("create match → record goals for both teams → undo → reload → score
   await page.getByLabel("Date").fill("2026-07-10");
   await page.getByRole("button", { name: "Create match" }).click();
 
+  // Match setup continues with the roster; leaving it blank doesn't block.
+  await page.getByTestId("save-roster").click();
   await expectScore(page, 0, 0);
 
   await page.getByTestId("position-GS").click();
@@ -37,7 +39,8 @@ test("create match → record goals for both teams → undo → reload → score
     });
     return new Promise<
       {
-        events: {
+        log: {
+          kind: string;
           team: string;
           action: { type: string; position: string };
           timestampMs: number | null;
@@ -50,10 +53,11 @@ test("create match → record goals for both teams → undo → reload → score
     });
   });
   expect(storedMatches).toHaveLength(1);
-  expect(storedMatches[0].events.map((event) => event.team)).toEqual(["A", "A"]);
-  for (const event of storedMatches[0].events) {
-    expect(event.action).toMatchObject({ type: "Goal", position: "GS" });
-    expect(typeof event.timestampMs).toBe("number");
+  expect(storedMatches[0].log.map((entry) => entry.team)).toEqual(["A", "A"]);
+  for (const entry of storedMatches[0].log) {
+    expect(entry.kind).toBe("Event");
+    expect(entry.action).toMatchObject({ type: "Goal", position: "GS" });
+    expect(typeof entry.timestampMs).toBe("number");
   }
 
   // Match, events, and score survive a reload…

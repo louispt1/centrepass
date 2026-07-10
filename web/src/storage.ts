@@ -1,8 +1,8 @@
 // IndexedDB persistence, owned entirely by TypeScript (ADR-0002). Each match
-// is one document: metadata plus its append-only event log, which is the only
-// stored truth — scores and stats are always re-derived by netball-core
-// (ADR-0003).
-import type { Event } from "./types/Event";
+// is one document: metadata plus its append-only log, which is the only
+// stored truth — scores, rosters, playing time, and stats are always
+// re-derived by netball-core (ADR-0003).
+import type { LogEntry } from "./types/LogEntry";
 
 export interface StoredMatch {
   id: string;
@@ -13,11 +13,12 @@ export interface StoredMatch {
   /** Match date, YYYY-MM-DD. */
   date: string;
   createdAtMs: number;
-  events: Event[];
+  /** The append-only log: coded events plus quarter/substitution markers. */
+  log: LogEntry[];
 }
 
 const DB_NAME = "centrepass";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const MATCH_STORE = "matches";
 
 let dbPromise: Promise<IDBDatabase> | undefined;
@@ -28,9 +29,8 @@ function openDb(): Promise<IDBDatabase> {
     request.onupgradeneeded = (upgrade) => {
       if (upgrade.oldVersion < 1) {
         request.result.createObjectStore(MATCH_STORE, { keyPath: "id" });
-      }
-      if (upgrade.oldVersion === 1) {
-        migrateV1Events(request.transaction!.objectStore(MATCH_STORE));
+      } else if (upgrade.oldVersion < 3) {
+        migrateToV3Log(request.transaction!.objectStore(MATCH_STORE));
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -39,26 +39,35 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-// v1 (issue 02) stored an event's action as the bare string "Goal"; the full
-// taxonomy made Action a tagged object and added the flagged modifier. Those
-// early goals had no coded shooter, so they become TEAM-attributed goals.
-function migrateV1Events(store: IDBObjectStore) {
-  type V1Event = { team: "A" | "B"; action: unknown; timestampMs: number | null };
+// v3 renamed `events` to `log` and made each entry a kind-tagged LogEntry so
+// quarter breaks and substitutions live in the same log as coded events.
+// v1 (issue 02) is also handled here: it stored an event's action as the
+// bare string "Goal", with no coded shooter, so those become TEAM-attributed
+// goals.
+function migrateToV3Log(store: IDBObjectStore) {
+  type PreV3Event = {
+    team: "A" | "B";
+    action: unknown;
+    flagged?: boolean;
+    timestampMs: number | null;
+  };
   store.openCursor().onsuccess = (found) => {
     const cursor = (found.target as IDBRequest<IDBCursorWithValue | null>).result;
     if (!cursor) return;
-    const match = cursor.value as Omit<StoredMatch, "events"> & { events: V1Event[] };
-    const events = match.events.map((event) =>
-      event.action === "Goal"
-        ? {
-            team: event.team,
-            action: { type: "Goal", position: "TEAM", failed: false },
-            flagged: false,
-            timestampMs: event.timestampMs,
-          }
-        : event,
-    );
-    cursor.update({ ...match, events });
+    const { events, ...match } = cursor.value as Omit<StoredMatch, "log"> & {
+      events: PreV3Event[];
+    };
+    const log = events.map((event) => ({
+      kind: "Event",
+      team: event.team,
+      action:
+        event.action === "Goal"
+          ? { type: "Goal", position: "TEAM", failed: false }
+          : event.action,
+      flagged: event.flagged ?? false,
+      timestampMs: event.timestampMs,
+    }));
+    cursor.update({ ...match, log });
     cursor.continue();
   };
 }

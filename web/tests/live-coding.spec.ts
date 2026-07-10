@@ -6,6 +6,8 @@ async function createMatch(page: Page) {
   await page.getByLabel("Opposition").fill("Riverside");
   await page.getByLabel("Date").fill("2026-07-10");
   await page.getByRole("button", { name: "Create match" }).click();
+  // Match setup continues with the roster; leaving it blank doesn't block.
+  await page.getByTestId("save-roster").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("0");
 }
 
@@ -64,6 +66,7 @@ test("codes a realistic multi-possession sequence with modifiers and a Gain sub-
     });
     return new Promise<
       {
+        kind: string;
         team: string;
         flagged: boolean;
         timestampMs: number | null;
@@ -71,10 +74,11 @@ test("codes a realistic multi-possession sequence with modifiers and a Gain sub-
       }[]
     >((resolve, reject) => {
       const getAll = db.transaction("matches").objectStore("matches").getAll();
-      getAll.onsuccess = () => resolve(getAll.result[0].events);
+      getAll.onsuccess = () => resolve(getAll.result[0].log);
       getAll.onerror = () => reject(getAll.error);
     });
   });
+  expect(events.every((event) => event.kind === "Event")).toBe(true);
   expect(events.map((event) => event.action.type)).toEqual([
     "CentrePassReceive",
     "Feed",
@@ -199,6 +203,8 @@ test("live screen fits a phone viewport with one-hand-sized tap targets", async 
     "toggle-failed",
     "goal-opposition",
     "undo",
+    "quarter-break",
+    "open-roster",
   ]) {
     const box = await page.getByTestId(id).boundingBox();
     expect(box, id).not.toBeNull();
