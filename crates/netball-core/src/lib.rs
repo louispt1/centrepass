@@ -8,6 +8,7 @@ pub mod event;
 pub mod match_file;
 pub mod roster;
 pub mod score;
+pub mod shorthand;
 pub mod stats;
 pub mod taxonomy;
 
@@ -18,6 +19,7 @@ pub use event::{
 pub use match_file::{MatchFile, MatchFileError, MATCH_FILE_VERSION};
 pub use roster::{derive_attributions, derive_playing_time, derive_roster, PlayingTime, Roster};
 pub use score::{derive_quarter_scores, derive_score, Score};
+pub use shorthand::{parse_shorthand, ShorthandError, ShorthandErrorKind};
 pub use stats::{derive_stats, Conversions, PlayerStats, StatsReport, TeamStats};
 pub use taxonomy::{action_taxonomy, ActionKind, ActionKindInfo};
 

@@ -11,6 +11,7 @@ import {
   derive_score,
   derive_stats,
   engine_description,
+  parse_shorthand,
 } from "./wasm/netball";
 import type { ActionKindInfo } from "./types/ActionKindInfo";
 import type { LogEntry } from "./types/LogEntry";
@@ -68,6 +69,22 @@ export function derivePlayingTime(log: LogEntry[], team: Team): PlayingTime[] | 
  */
 export function deriveStats(log: LogEntry[]): StatsReport {
   return derive_stats(log) as StatsReport;
+}
+
+/**
+ * Parse Shorthand text into a match log in netball-core, or throw an `Error`
+ * carrying the core's located, human-readable message ("Line 2, column 4: …").
+ * A single malformed token fails the whole parse and yields no value, so the
+ * caller never imports a partial match. The entries carry no timestamps.
+ */
+export function parseShorthand(input: string): LogEntry[] {
+  try {
+    return parse_shorthand(input) as LogEntry[];
+  } catch (thrown) {
+    // wasm-bindgen throws the Rust error as a string; normalise to an Error.
+    const message = typeof thrown === "string" ? thrown : (thrown as Error)?.message;
+    throw new Error(message || "This Shorthand could not be parsed.");
+  }
 }
 
 /**

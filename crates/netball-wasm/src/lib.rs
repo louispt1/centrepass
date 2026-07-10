@@ -95,6 +95,18 @@ pub fn parse_match_file(json: &str) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&match_file).map_err(JsValue::from)
 }
 
+/// Parse Shorthand text into a match log (`LogEntry[]`, per `web/src/types/`).
+/// On a malformed token the core's located, human-readable message is thrown
+/// and no value is produced, so the UI can pinpoint the typo and leave no
+/// partial import behind. The returned entries carry no timestamps; the UI
+/// wraps them with team names and a date to make a match.
+#[wasm_bindgen]
+pub fn parse_shorthand(input: &str) -> Result<JsValue, JsValue> {
+    let log = netball_core::parse_shorthand(input)
+        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_wasm_bindgen::to_value(&log).map_err(JsValue::from)
+}
+
 /// The action taxonomy as data (`ActionKindInfo[]`): which actions exist,
 /// which positions each is legal for, whether Failed applies, and the
 /// available sub-types. The UI derives its buttons from this so it can never
