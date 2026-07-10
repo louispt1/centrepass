@@ -323,6 +323,21 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
         >
           Roster / Sub
         </a>
+        <a
+          href={`#/match/${matchId}/stats`}
+          data-testid="open-stats"
+          style={{
+            ...tapButton,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textDecoration: "none",
+            color: "inherit",
+            boxSizing: "border-box",
+          }}
+        >
+          Stats
+        </a>
       </div>
 
       <details data-testid="match-stats" style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>

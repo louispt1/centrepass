@@ -9,6 +9,7 @@ import {
   derive_quarter_scores,
   derive_roster,
   derive_score,
+  derive_stats,
   engine_description,
 } from "./wasm/netball";
 import type { ActionKindInfo } from "./types/ActionKindInfo";
@@ -16,6 +17,7 @@ import type { LogEntry } from "./types/LogEntry";
 import type { PlayingTime } from "./types/PlayingTime";
 import type { Roster } from "./types/Roster";
 import type { Score } from "./types/Score";
+import type { StatsReport } from "./types/StatsReport";
 import type { Team } from "./types/Team";
 
 export function engineDescription(): string {
@@ -57,6 +59,15 @@ export function deriveAttributions(log: LogEntry[]): (string | null)[] {
  */
 export function derivePlayingTime(log: LogEntry[], team: Team): PlayingTime[] | null {
   return (derive_playing_time(log, team) as PlayingTime[] | null | undefined) ?? null;
+}
+
+/**
+ * The full post-match statistics report from netball-core: per-player lines
+ * and team-level conversion rates for both teams, plus the score and its
+ * quarter breakdown. Everything is re-derived from the log on every call.
+ */
+export function deriveStats(log: LogEntry[]): StatsReport {
+  return derive_stats(log) as StatsReport;
 }
 
 /**

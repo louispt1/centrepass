@@ -7,6 +7,7 @@
 pub mod event;
 pub mod roster;
 pub mod score;
+pub mod stats;
 pub mod taxonomy;
 
 pub use event::{
@@ -15,6 +16,7 @@ pub use event::{
 };
 pub use roster::{derive_attributions, derive_playing_time, derive_roster, PlayingTime, Roster};
 pub use score::{derive_quarter_scores, derive_score, Score};
+pub use stats::{derive_stats, Conversions, PlayerStats, StatsReport, TeamStats};
 pub use taxonomy::{action_taxonomy, ActionKind, ActionKindInfo};
 
 /// The event taxonomy this engine implements, with its citation.

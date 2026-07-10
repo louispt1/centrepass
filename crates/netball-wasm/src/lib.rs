@@ -65,6 +65,15 @@ pub fn derive_playing_time(log: JsValue, team: JsValue) -> Result<JsValue, JsVal
     serde_wasm_bindgen::to_value(&times).map_err(JsValue::from)
 }
 
+/// Derive the full post-match statistics report (`StatsReport`) from a log
+/// (`LogEntry[]`): per-player lines and team-level conversion rates for both
+/// teams, plus the score and its quarter breakdown. One call, per issue 05.
+#[wasm_bindgen]
+pub fn derive_stats(log: JsValue) -> Result<JsValue, JsValue> {
+    let report = netball_core::derive_stats(&parse_log(log)?);
+    serde_wasm_bindgen::to_value(&report).map_err(JsValue::from)
+}
+
 /// The action taxonomy as data (`ActionKindInfo[]`): which actions exist,
 /// which positions each is legal for, whether Failed applies, and the
 /// available sub-types. The UI derives its buttons from this so it can never
