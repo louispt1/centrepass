@@ -100,3 +100,8 @@ export async function putMatch(match: StoredMatch): Promise<void> {
   const store = await matchStore("readwrite");
   await asPromise(store.put(match));
 }
+
+export async function deleteMatch(id: string): Promise<void> {
+  const store = await matchStore("readwrite");
+  await asPromise(store.delete(id));
+}
