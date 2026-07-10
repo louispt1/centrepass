@@ -4,6 +4,17 @@
 //! plain data-in, data-out Rust, tested natively with `cargo test`. The
 //! browser boundary lives in the sibling `netball-wasm` crate.
 
+pub mod event;
+pub mod score;
+pub mod taxonomy;
+
+pub use event::{
+    Action, CentrePassReceivePosition, Event, FeedPosition, GainSubType, GoalPosition, Position,
+    ReboundPosition, Team,
+};
+pub use score::{derive_score, Score};
+pub use taxonomy::{action_taxonomy, ActionKind, ActionKindInfo};
+
 /// The event taxonomy this engine implements, with its citation.
 ///
 /// CentrePass follows the netball video analysis consensus (NVAC) taxonomy

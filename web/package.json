@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "build:wasm": "wasm-pack build ../crates/netball-wasm --target web --out-dir ../../web/src/wasm --out-name netball",
-    "dev": "npm run build:wasm && vite",
-    "build": "npm run build:wasm && tsc --noEmit && vite build",
+    "build:types": "TS_RS_EXPORT_DIR=../../web/src/types cargo test -p netball-core --features ts-bindings --quiet export_bindings",
+    "dev": "npm run build:wasm && npm run build:types && vite",
+    "build": "npm run build:wasm && npm run build:types && tsc --noEmit && vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "test": "playwright test"
   },
