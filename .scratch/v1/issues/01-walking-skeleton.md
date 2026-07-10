@@ -14,13 +14,17 @@ Set up the repository as a Cargo workspace containing the pure `netball-core` cr
 
 ## Acceptance criteria
 
-- [ ] Cargo workspace builds with a pure `netball-core` lib crate and a separate wasm-bindgen wrapper crate; `cargo test`, `cargo clippy -- -D warnings`, and `cargo fmt --check` all pass in CI
-- [ ] The TypeScript app calls a `netball-core` function through WASM and renders its result (e.g. a taxonomy/version string)
-- [ ] Web app manifest + service worker: after one visit, the app loads with the network disabled, and is installable to a phone home screen
-- [ ] A Playwright smoke test runs in CI against the built app and asserts the WASM-computed value is rendered
-- [ ] Pushes to main deploy the built app to GitHub Pages via CI
-- [ ] MIT and Apache-2.0 license files present; README records the chosen frontend framework
+- [x] Cargo workspace builds with a pure `netball-core` lib crate and a separate wasm-bindgen wrapper crate; `cargo test`, `cargo clippy -- -D warnings`, and `cargo fmt --check` all pass in CI
+- [x] The TypeScript app calls a `netball-core` function through WASM and renders its result (e.g. a taxonomy/version string)
+- [x] Web app manifest + service worker: after one visit, the app loads with the network disabled, and is installable to a phone home screen
+- [x] A Playwright smoke test runs in CI against the built app and asserts the WASM-computed value is rendered
+- [x] Pushes to main deploy the built app to GitHub Pages via CI
+- [x] MIT and Apache-2.0 license files present; README records the chosen frontend framework
 
 ## Blocked by
 
 None - can start immediately
+
+## Comments
+
+**2026-07-10 (agent):** Implemented. Frontend framework choice: **React** (Vite + TypeScript) — largest contributor pool, consistent with ADR-0002's "mature web ecosystem" rationale; recorded in the README. `netball-core` exposes `engine_description()` (NVAC taxonomy citation + crate version); `netball-wasm` wraps it via wasm-bindgen and `wasm-pack` emits the package into `web/src/wasm` (gitignored, rebuilt by `npm run build:wasm`). PWA shell is `vite-plugin-pwa` (generateSW, precache includes the `.wasm`); Playwright covers both the rendered WASM value and an offline reload after first visit. CI (`.github/workflows/ci.yml`): rust job (fmt/clippy/test), web job (wasm-pack build, tsc, vite build, Playwright), Pages deploy on main pushes.

@@ -1,0 +1,14 @@
+[package]
+name = "netball-wasm"
+description = "Thin wasm-bindgen wrapper exposing netball-core to the browser"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+netball-core = { path = "../netball-core" }
+wasm-bindgen = "0.2"

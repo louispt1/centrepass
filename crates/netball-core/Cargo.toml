@@ -1,0 +1,9 @@
+[package]
+name = "netball-core"
+description = "Pure netball match statistics domain engine: event model, shorthand parser, validation, and stat derivation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
