@@ -5,6 +5,7 @@
 //! browser boundary lives in the sibling `netball-wasm` crate.
 
 pub mod event;
+pub mod match_file;
 pub mod roster;
 pub mod score;
 pub mod stats;
@@ -14,6 +15,7 @@ pub use event::{
     Action, CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType,
     GoalPosition, LogEntry, Position, QuarterBreak, ReboundPosition, Substitution, Team,
 };
+pub use match_file::{MatchFile, MatchFileError, MATCH_FILE_VERSION};
 pub use roster::{derive_attributions, derive_playing_time, derive_roster, PlayingTime, Roster};
 pub use score::{derive_quarter_scores, derive_score, Score};
 pub use stats::{derive_stats, Conversions, PlayerStats, StatsReport, TeamStats};

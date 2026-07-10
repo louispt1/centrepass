@@ -74,6 +74,27 @@ pub fn derive_stats(log: JsValue) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&report).map_err(JsValue::from)
 }
 
+/// Serialize a match to its portable Match File JSON (a `MatchFile` value in,
+/// per `web/src/types/`, a version-tagged JSON string out). The core owns the
+/// schema and version envelope; the UI only moves the bytes to a file or the
+/// share sheet.
+#[wasm_bindgen]
+pub fn serialize_match_file(match_file: JsValue) -> Result<String, JsValue> {
+    let match_file: netball_core::MatchFile = serde_wasm_bindgen::from_value(match_file)?;
+    Ok(match_file.to_json())
+}
+
+/// Parse a Match File JSON string back into a `MatchFile` (per `web/src/types/`).
+/// An unrecognised version or malformed content throws the core's clear,
+/// human-readable message and yields no value, so the UI can surface it and
+/// leave no partial import behind.
+#[wasm_bindgen]
+pub fn parse_match_file(json: &str) -> Result<JsValue, JsValue> {
+    let match_file = netball_core::MatchFile::from_json(json)
+        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_wasm_bindgen::to_value(&match_file).map_err(JsValue::from)
+}
+
 /// The action taxonomy as data (`ActionKindInfo[]`): which actions exist,
 /// which positions each is legal for, whether Failed applies, and the
 /// available sub-types. The UI derives its buttons from this so it can never

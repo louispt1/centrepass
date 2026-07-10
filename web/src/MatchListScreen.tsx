@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { listMatches, putMatch, type StoredMatch } from "./storage";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { deleteMatch, listMatches, putMatch, type StoredMatch } from "./storage";
+import { exportMatch, parseMatchFile } from "./matchFile";
 
 function todayIsoDate(): string {
   const now = new Date();
@@ -17,15 +18,31 @@ const inputStyle = {
   marginTop: "0.25rem",
   boxSizing: "border-box",
 } as const;
+const smallButton = {
+  padding: "0.35rem 0.6rem",
+  fontSize: "0.85rem",
+  border: "1px solid #999",
+  borderRadius: "6px",
+  background: "#fff",
+  cursor: "pointer",
+} as const;
 
 export default function MatchListScreen({ engineDescription }: { engineDescription: string }) {
   const [matches, setMatches] = useState<StoredMatch[] | null>(null);
   const [teamAName, setTeamAName] = useState("");
   const [teamBName, setTeamBName] = useState("");
   const [date, setDate] = useState(todayIsoDate);
+  const [importError, setImportError] = useState<string | null>(null);
+  // Which match, if any, is mid-rename or awaiting a delete confirmation.
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameA, setRenameA] = useState("");
+  const [renameB, setRenameB] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const refresh = () => listMatches().then(setMatches);
 
   useEffect(() => {
-    void listMatches().then(setMatches);
+    void refresh();
   }, []);
 
   async function createMatch(submit: FormEvent) {
@@ -42,6 +59,51 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
     // Match setup continues with the roster; it can be left blank or partial
     // and completed mid-match, so it never delays the first centre pass.
     window.location.hash = `#/match/${match.id}/roster`;
+  }
+
+  async function importFile(change: ChangeEvent<HTMLInputElement>) {
+    const file = change.target.files?.[0];
+    // Let the same file be picked again after an error (input keeps its value).
+    change.target.value = "";
+    if (!file) return;
+    setImportError(null);
+    try {
+      // Validate through the core before touching storage, so a bad file
+      // leaves no partial match behind.
+      const parsed = parseMatchFile(await file.text());
+      const match: StoredMatch = {
+        id: crypto.randomUUID(),
+        teamAName: parsed.teamAName,
+        teamBName: parsed.teamBName,
+        date: parsed.date,
+        createdAtMs: Date.now(),
+        log: parsed.log,
+      };
+      await putMatch(match);
+      await refresh();
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  function startRename(match: StoredMatch) {
+    setConfirmDeleteId(null);
+    setRenamingId(match.id);
+    setRenameA(match.teamAName);
+    setRenameB(match.teamBName);
+  }
+
+  async function saveRename(match: StoredMatch, submit: FormEvent) {
+    submit.preventDefault();
+    await putMatch({ ...match, teamAName: renameA.trim(), teamBName: renameB.trim() });
+    setRenamingId(null);
+    await refresh();
+  }
+
+  async function confirmDelete(id: string) {
+    await deleteMatch(id);
+    setConfirmDeleteId(null);
+    await refresh();
   }
 
   return (
@@ -87,6 +149,22 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
       </form>
 
       <h2>Matches</h2>
+      <label style={{ ...fieldStyle, fontSize: "0.9rem" }}>
+        Import a match file
+        <input
+          data-testid="import-match"
+          style={inputStyle}
+          type="file"
+          accept="application/json,.json"
+          onChange={importFile}
+        />
+      </label>
+      {importError && (
+        <p data-testid="import-error" role="alert" style={{ color: "#a11", fontSize: "0.9rem" }}>
+          {importError}
+        </p>
+      )}
+
       {matches === null ? (
         <p>Loading…</p>
       ) : matches.length === 0 ? (
@@ -94,10 +172,82 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
       ) : (
         <ul data-testid="match-list" style={{ listStyle: "none", padding: 0 }}>
           {matches.map((match) => (
-            <li key={match.id} style={{ marginBottom: "0.5rem" }}>
-              <a href={`#/match/${match.id}`} style={{ fontSize: "1.1rem" }}>
-                {match.teamAName} vs {match.teamBName} — {match.date}
-              </a>
+            <li
+              key={match.id}
+              data-testid={`match-item-${match.id}`}
+              style={{ marginBottom: "0.75rem", borderBottom: "1px solid #eee", paddingBottom: "0.75rem" }}
+            >
+              {renamingId === match.id ? (
+                <form onSubmit={(submit) => void saveRename(match, submit)}>
+                  <input
+                    data-testid={`rename-a-${match.id}`}
+                    style={inputStyle}
+                    value={renameA}
+                    onChange={(change) => setRenameA(change.target.value)}
+                    aria-label="Your team"
+                    required
+                  />
+                  <input
+                    data-testid={`rename-b-${match.id}`}
+                    style={inputStyle}
+                    value={renameB}
+                    onChange={(change) => setRenameB(change.target.value)}
+                    aria-label="Opposition"
+                    required
+                  />
+                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem" }}>
+                    <button type="submit" data-testid={`save-rename-${match.id}`} style={smallButton}>
+                      Save
+                    </button>
+                    <button type="button" style={smallButton} onClick={() => setRenamingId(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <a href={`#/match/${match.id}`} style={{ fontSize: "1.1rem" }}>
+                    {match.teamAName} vs {match.teamBName} — {match.date}
+                  </a>
+                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.4rem" }}>
+                    <button
+                      data-testid={`export-${match.id}`}
+                      style={smallButton}
+                      onClick={() => void exportMatch(match)}
+                    >
+                      Export
+                    </button>
+                    <button data-testid={`rename-${match.id}`} style={smallButton} onClick={() => startRename(match)}>
+                      Rename
+                    </button>
+                    {confirmDeleteId === match.id ? (
+                      <>
+                        <button
+                          data-testid={`confirm-delete-${match.id}`}
+                          style={{ ...smallButton, borderColor: "#a11", color: "#a11" }}
+                          onClick={() => void confirmDelete(match.id)}
+                        >
+                          Confirm delete
+                        </button>
+                        <button style={smallButton} onClick={() => setConfirmDeleteId(null)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        data-testid={`delete-${match.id}`}
+                        style={smallButton}
+                        onClick={() => {
+                          setRenamingId(null);
+                          setConfirmDeleteId(match.id);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </li>
           ))}
         </ul>
