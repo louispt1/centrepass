@@ -85,6 +85,20 @@ macro_rules! position_subset {
                 }
             }
         }
+
+        impl $name {
+            /// Narrow a [`Position`] to this subset, or `None` if the position
+            /// is one this action does not allow. The inverse of the `From`
+            /// widening above; the Shorthand parser uses it to reject an
+            /// illegal position/action pairing at the offending token.
+            pub fn from_position(position: Position) -> Option<$name> {
+                match position {
+                    $(Position::$variant => Some($name::$variant),)+
+                    #[allow(unreachable_patterns)]
+                    _ => None,
+                }
+            }
+        }
     };
 }
 
@@ -104,13 +118,6 @@ impl CourtPosition {
         CourtPosition::GD,
         CourtPosition::GK,
     ];
-
-    /// Narrow a [`Position`] to a court position; `None` for TEAM.
-    pub fn from_position(position: Position) -> Option<CourtPosition> {
-        CourtPosition::ALL
-            .into_iter()
-            .find(|&court| Position::from(court) == position)
-    }
 }
 
 position_subset!(

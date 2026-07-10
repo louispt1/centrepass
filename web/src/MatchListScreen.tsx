@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { deleteMatch, listMatches, putMatch, type StoredMatch } from "./storage";
 import { exportMatch, parseMatchFile } from "./matchFile";
+import { parseShorthand } from "./engine";
 
 function todayIsoDate(): string {
   const now = new Date();
@@ -33,6 +34,8 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
   const [teamBName, setTeamBName] = useState("");
   const [date, setDate] = useState(todayIsoDate);
   const [importError, setImportError] = useState<string | null>(null);
+  const [shorthand, setShorthand] = useState("");
+  const [shorthandError, setShorthandError] = useState<string | null>(null);
   // Which match, if any, is mid-rename or awaiting a delete confirmation.
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameA, setRenameA] = useState("");
@@ -83,6 +86,31 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
       await refresh();
     } catch (error) {
       setImportError(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function importShorthand(submit: FormEvent) {
+    submit.preventDefault();
+    setShorthandError(null);
+    try {
+      // Parse through the core before touching storage, so a bad token leaves
+      // no partial match behind. Team names and date come from the form above;
+      // the transcription itself carries neither.
+      const log = parseShorthand(shorthand);
+      const match: StoredMatch = {
+        id: crypto.randomUUID(),
+        teamAName: teamAName.trim(),
+        teamBName: teamBName.trim(),
+        date,
+        createdAtMs: Date.now(),
+        log,
+      };
+      await putMatch(match);
+      // Imported matches have no timestamps (no Playing Time); the stat views
+      // are where an import proves out, so land there.
+      window.location.hash = `#/match/${match.id}/stats`;
+    } catch (error) {
+      setShorthandError(error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -162,6 +190,32 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
       {importError && (
         <p data-testid="import-error" role="alert" style={{ color: "#a11", fontSize: "0.9rem" }}>
           {importError}
+        </p>
+      )}
+
+      <form onSubmit={(submit) => void importShorthand(submit)}>
+        <label style={{ ...fieldStyle, fontSize: "0.9rem" }}>
+          Import from Shorthand
+          <textarea
+            data-testid="shorthand-input"
+            style={{ ...inputStyle, minHeight: "6rem", fontFamily: "ui-monospace, monospace" }}
+            value={shorthand}
+            onChange={(change) => setShorthand(change.target.value)}
+            placeholder={"a2c 2f 1g\nQT\nb8g"}
+            required
+          />
+        </label>
+        <p style={{ margin: "0 0 0.5rem", color: "#666", fontSize: "0.8rem" }}>
+          Uses the team names and date above. Imported matches have no timing, so Playing Time is
+          unavailable.
+        </p>
+        <button data-testid="import-shorthand" type="submit" style={smallButton}>
+          Import Shorthand
+        </button>
+      </form>
+      {shorthandError && (
+        <p data-testid="shorthand-error" role="alert" style={{ color: "#a11", fontSize: "0.9rem" }}>
+          {shorthandError}
         </p>
       )}
 
