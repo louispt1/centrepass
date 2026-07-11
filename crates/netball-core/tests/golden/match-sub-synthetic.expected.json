@@ -1,0 +1,188 @@
+{
+  "score": {
+    "teamA": 2,
+    "teamB": 0
+  },
+  "teams": {
+    "A": {
+      "conversions": {
+        "centrePassGoals": 1,
+        "centrePassTotal": 1,
+        "gainGoals": 0,
+        "gainTotal": 0
+      },
+      "players": {
+        "Ada": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 1,
+          "shots": 1,
+          "unforcedTurnovers": 0
+        },
+        "Bea": {
+          "attackingRebounds": 0,
+          "completedFeeds": 2,
+          "defensiveRebounds": 0,
+          "feeds": 2,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Cat": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Deb": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Eve": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Fay": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Gia": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Hana": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 1,
+          "shots": 2,
+          "unforcedTurnovers": 0
+        }
+      },
+      "totals": {
+        "feedsWithShot": 2,
+        "goalAssists": 2,
+        "infringements": 0
+      }
+    },
+    "B": {
+      "conversions": {
+        "centrePassGoals": 0,
+        "centrePassTotal": 0,
+        "gainGoals": 0,
+        "gainTotal": 0
+      },
+      "players": {
+        "Ivy": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Joy": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Kim": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Lea": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Mia": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Ola": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "Uma": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        }
+      },
+      "totals": {
+        "feedsWithShot": 0,
+        "goalAssists": 0,
+        "infringements": 0
+      }
+    }
+  }
+}

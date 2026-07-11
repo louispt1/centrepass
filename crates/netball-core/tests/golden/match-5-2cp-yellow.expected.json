@@ -1,0 +1,178 @@
+{
+  "score": {
+    "teamA": 6,
+    "teamB": 7
+  },
+  "teams": {
+    "A": {
+      "conversions": {
+        "centrePassGoals": 3,
+        "centrePassTotal": 6,
+        "gainGoals": 0,
+        "gainTotal": 1
+      },
+      "players": {
+        "13": {
+          "attackingRebounds": 0,
+          "completedFeeds": 2,
+          "defensiveRebounds": 0,
+          "feeds": 2,
+          "gains": 1,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 1
+        },
+        "20": {
+          "attackingRebounds": 1,
+          "completedFeeds": 6,
+          "defensiveRebounds": 0,
+          "feeds": 6,
+          "gains": 0,
+          "goals": 3,
+          "shots": 3,
+          "unforcedTurnovers": 1
+        },
+        "3": {
+          "attackingRebounds": 1,
+          "completedFeeds": 1,
+          "defensiveRebounds": 0,
+          "feeds": 1,
+          "gains": 0,
+          "goals": 3,
+          "shots": 8,
+          "unforcedTurnovers": 0
+        },
+        "4": {
+          "attackingRebounds": 0,
+          "completedFeeds": 5,
+          "defensiveRebounds": 0,
+          "feeds": 5,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "5": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 2,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "7": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 1
+        },
+        "8": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        }
+      },
+      "totals": {
+        "feedsWithShot": 10,
+        "goalAssists": 5,
+        "infringements": 0
+      }
+    },
+    "B": {
+      "conversions": {
+        "centrePassGoals": 3,
+        "centrePassTotal": 7,
+        "gainGoals": 1,
+        "gainTotal": 2
+      },
+      "players": {
+        "14": {
+          "attackingRebounds": 2,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 4,
+          "shots": 9,
+          "unforcedTurnovers": 0
+        },
+        "16": {
+          "attackingRebounds": 0,
+          "completedFeeds": 6,
+          "defensiveRebounds": 0,
+          "feeds": 6,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 1
+        },
+        "18": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 1,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "19": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 0,
+          "feeds": 0,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "2": {
+          "attackingRebounds": 0,
+          "completedFeeds": 2,
+          "defensiveRebounds": 0,
+          "feeds": 3,
+          "gains": 0,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        },
+        "6": {
+          "attackingRebounds": 2,
+          "completedFeeds": 1,
+          "defensiveRebounds": 0,
+          "feeds": 3,
+          "gains": 1,
+          "goals": 3,
+          "shots": 5,
+          "unforcedTurnovers": 0
+        },
+        "9": {
+          "attackingRebounds": 0,
+          "completedFeeds": 0,
+          "defensiveRebounds": 1,
+          "feeds": 0,
+          "gains": 1,
+          "goals": 0,
+          "shots": 0,
+          "unforcedTurnovers": 0
+        }
+      },
+      "totals": {
+        "feedsWithShot": 9,
+        "goalAssists": 3,
+        "infringements": 0
+      }
+    }
+  }
+}
