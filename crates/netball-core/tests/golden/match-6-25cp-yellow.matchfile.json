@@ -1,0 +1,928 @@
+{
+  "version": 1,
+  "teamAName": "Purple",
+  "teamBName": "Yellow",
+  "date": "2026-04-18",
+  "log": [
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GS",
+      "player": "14",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GA",
+      "player": "6",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "WA",
+      "player": "22",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "C",
+      "player": "11",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "WD",
+      "player": "5",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GD",
+      "player": "7",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GK",
+      "player": "25",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GS",
+      "player": "21",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GA",
+      "player": "23",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "WA",
+      "player": "17",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "C",
+      "player": "26",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "WD",
+      "player": "29",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GD",
+      "player": "28",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GK",
+      "player": "9",
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Gain",
+        "position": "GK"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Gain",
+        "position": "GD"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WD",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "C",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Rebound",
+        "position": "GS"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WD",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Gain",
+        "position": "GK"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Gain",
+        "position": "WD"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "C",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "UnforcedTurnover",
+        "position": "GS"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Gain",
+        "position": "GS"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Gain",
+        "position": "WD"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Gain",
+        "position": "C"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Rebound",
+        "position": "GS"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "C",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Rebound",
+        "position": "GD"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "C",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "UnforcedTurnover",
+        "position": "GS"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Rebound",
+        "position": "GS"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WD",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "UnforcedTurnover",
+        "position": "GA"
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "C",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Feed",
+        "position": "C",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "B",
+      "action": {
+        "type": "Goal",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    }
+  ]
+}

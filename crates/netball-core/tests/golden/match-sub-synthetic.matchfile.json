@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "teamAName": "Sharks",
+  "teamBName": "Rovers",
+  "date": "2026-07-11",
+  "log": [
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GS",
+      "player": "Ola",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GA",
+      "player": "Uma",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "WA",
+      "player": "Ivy",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "C",
+      "player": "Joy",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "WD",
+      "player": "Kim",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GD",
+      "player": "Lea",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "B",
+      "position": "GK",
+      "player": "Mia",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GS",
+      "player": "Ada",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GA",
+      "player": "Bea",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "WA",
+      "player": "Cat",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "C",
+      "player": "Deb",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "WD",
+      "player": "Eve",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GD",
+      "player": "Fay",
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GK",
+      "player": "Gia",
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "CentrePassReceive",
+        "position": "WA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Substitution",
+      "team": "A",
+      "position": "GS",
+      "player": "Hana",
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Feed",
+        "position": "GA",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": false
+      },
+      "flagged": false,
+      "timestampMs": null
+    },
+    {
+      "kind": "Event",
+      "team": "A",
+      "action": {
+        "type": "Goal",
+        "position": "GS",
+        "failed": true
+      },
+      "flagged": false,
+      "timestampMs": null
+    }
+  ]
+}

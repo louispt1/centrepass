@@ -1,0 +1,44 @@
+[
+  {
+    "fixture": "match-4-29cp-purple",
+    "path": "teams.B.conversions.gainTotal",
+    "oracle": 6,
+    "engine": 5,
+    "reason": "derived-possession-boundaries"
+  },
+  {
+    "fixture": "match-5-2cp-yellow",
+    "path": "teams.B.conversions.gainTotal",
+    "oracle": 2,
+    "engine": 1,
+    "reason": "derived-possession-boundaries"
+  },
+  {
+    "fixture": "match-5-2cp-yellow",
+    "path": "teams.B.conversions.gainGoals",
+    "oracle": 1,
+    "engine": 0,
+    "reason": "derived-possession-boundaries"
+  },
+  {
+    "fixture": "match-6-25cp-yellow",
+    "path": "teams.A.conversions.gainTotal",
+    "oracle": 2,
+    "engine": 1,
+    "reason": "derived-possession-boundaries"
+  },
+  {
+    "fixture": "match-6-25cp-yellow",
+    "path": "teams.A.conversions.gainGoals",
+    "oracle": 1,
+    "engine": 0,
+    "reason": "derived-possession-boundaries"
+  },
+  {
+    "fixture": "match-6-25cp-yellow",
+    "path": "teams.B.conversions.centrePassGoals",
+    "oracle": 3,
+    "engine": 4,
+    "reason": "derived-possession-boundaries"
+  }
+]
