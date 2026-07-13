@@ -115,3 +115,14 @@ pub fn parse_shorthand(input: &str) -> Result<JsValue, JsValue> {
 pub fn action_taxonomy() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&netball_core::action_taxonomy()).map_err(JsValue::from)
 }
+
+/// The action and modifier definitions as data: a `[Descriptor[], Descriptor[]]`
+/// pair of `[actions, modifiers]`, each carrying the NVAC descriptor, its
+/// definition text, and how it is resolved. The in-app quick reference renders
+/// this, so it and the generated `DEFINITIONS.md` are the same core data
+/// (issue 10).
+#[wasm_bindgen]
+pub fn definitions() -> Result<JsValue, JsValue> {
+    let reference = (netball_core::definitions(), netball_core::modifiers());
+    serde_wasm_bindgen::to_value(&reference).map_err(JsValue::from)
+}

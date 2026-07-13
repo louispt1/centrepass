@@ -4,6 +4,7 @@
 // wasm-bindgen signatures meet them.
 import {
   action_taxonomy,
+  definitions,
   derive_attributions,
   derive_playing_time,
   derive_quarter_scores,
@@ -14,6 +15,7 @@ import {
   parse_shorthand,
 } from "./wasm/netball";
 import type { ActionKindInfo } from "./types/ActionKindInfo";
+import type { Descriptor } from "./types/Descriptor";
 import type { LogEntry } from "./types/LogEntry";
 import type { PlayingTime } from "./types/PlayingTime";
 import type { Roster } from "./types/Roster";
@@ -94,4 +96,20 @@ export function parseShorthand(input: string): LogEntry[] {
  */
 export function actionTaxonomy(): ActionKindInfo[] {
   return action_taxonomy() as ActionKindInfo[];
+}
+
+/** The action and modifier reference from netball-core. */
+export interface Definitions {
+  actions: Descriptor[];
+  modifiers: Descriptor[];
+}
+
+/**
+ * The NVAC action and modifier definitions as data from netball-core: the same
+ * descriptors that generate DEFINITIONS.md, so the in-app quick reference is
+ * never a hand-maintained copy (issue 10).
+ */
+export function definitionsReference(): Definitions {
+  const [actions, modifiers] = definitions() as [Descriptor[], Descriptor[]];
+  return { actions, modifiers };
 }

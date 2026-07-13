@@ -9,7 +9,8 @@
     "dev": "npm run build:wasm && npm run build:types && vite",
     "build": "npm run build:wasm && npm run build:types && tsc --noEmit && vite build",
     "preview": "vite preview --port 4173 --strictPort",
-    "test": "playwright test"
+    "test": "playwright test",
+    "screenshots": "SCREENSHOTS=1 playwright test screenshots"
   },
   "dependencies": {
     "react": "^19.2.7",
