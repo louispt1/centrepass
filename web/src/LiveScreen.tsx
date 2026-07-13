@@ -12,6 +12,7 @@ import {
   deriveScore,
 } from "./engine";
 import { ACTION_LABELS, SUB_TYPE_LABELS, buildAction, formatEntry } from "./events";
+import ReferencePanel from "./ReferencePanel";
 import { getMatch, putMatch, type StoredMatch } from "./storage";
 import { useScreenWakeLock } from "./wakeLock";
 
@@ -57,6 +58,9 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [failed, setFailed] = useState(false);
   const [flagged, setFlagged] = useState(false);
+  // The quick reference is an overlay, so opening it leaves this screen — and
+  // all of the coding state above — mounted and untouched.
+  const [showReference, setShowReference] = useState(false);
 
   // Keep the phone awake while a match is open for coding.
   useScreenWakeLock(match != null);
@@ -161,12 +165,30 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
         margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <a href="#/">← Matches</a>
-        <span style={{ color: "#666", fontSize: "0.8rem" }}>
-          {match.log.length} event{match.log.length === 1 ? "" : "s"} · {match.date}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <span style={{ color: "#666", fontSize: "0.8rem" }}>
+            {match.log.length} event{match.log.length === 1 ? "" : "s"} · {match.date}
+          </span>
+          <button
+            data-testid="open-reference"
+            onClick={() => setShowReference(true)}
+            style={{
+              minHeight: "36px",
+              padding: "0 0.6rem",
+              fontSize: "0.85rem",
+              border: "1px solid #999",
+              borderRadius: "8px",
+              background: "#fff",
+            }}
+          >
+            Reference
+          </button>
+        </div>
       </div>
+
+      {showReference && <ReferencePanel onClose={() => setShowReference(false)} />}
 
       <div
         style={{

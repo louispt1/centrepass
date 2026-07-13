@@ -61,7 +61,10 @@ pub enum ShorthandErrorKind {
     /// An action letter the grammar does not define.
     UnknownAction { found: char },
     /// A position this action may never be coded for (e.g. a shot by WD).
-    IllegalPosition { position: Position, action: ActionKind },
+    IllegalPosition {
+        position: Position,
+        action: ActionKind,
+    },
     /// A Failed (`x`) modifier on an action that cannot fail.
     FailedNotApplicable { action: ActionKind },
     /// The same modifier (`x` or `!`) given twice on one event.
@@ -82,7 +85,11 @@ pub enum ShorthandErrorKind {
 
 impl fmt::Display for ShorthandError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Line {}, column {}: {}", self.line, self.column, self.kind)
+        write!(
+            f,
+            "Line {}, column {}: {}",
+            self.line, self.column, self.kind
+        )
     }
 }
 
@@ -94,7 +101,10 @@ impl fmt::Display for ShorthandErrorKind {
                 write!(f, "expected a position digit 1–8 to start the event")
             }
             ShorthandErrorKind::InvalidPosition { digit } => {
-                write!(f, "'{digit}' is not a position; use 1–8 (GS, GA, WA, C, WD, GD, GK, TEAM)")
+                write!(
+                    f,
+                    "'{digit}' is not a position; use 1–8 (GS, GA, WA, C, WD, GD, GK, TEAM)"
+                )
             }
             ShorthandErrorKind::MissingAction => {
                 write!(f, "this position needs an action ({ACTIONS})")
@@ -121,10 +131,16 @@ impl fmt::Display for ShorthandErrorKind {
                 write!(f, "a quarter break (QT) must be on its own line")
             }
             ShorthandErrorKind::EmptyPossession { prefix } => {
-                write!(f, "team prefix '{prefix}' must be followed by at least one event")
+                write!(
+                    f,
+                    "team prefix '{prefix}' must be followed by at least one event"
+                )
             }
             ShorthandErrorKind::SubstitutionNotSupported => {
-                write!(f, "substitution markers (S) are not supported by Shorthand import yet")
+                write!(
+                    f,
+                    "substitution markers (S) are not supported by Shorthand import yet"
+                )
             }
             ShorthandErrorKind::UnclosedComment => {
                 write!(f, "this '(' comment is never closed")
@@ -159,7 +175,11 @@ pub fn parse_shorthand(input: &str) -> Result<Vec<LogEntry>, ShorthandError> {
 
 /// Parse one line, appending its entries (zero for a blank line, one for a
 /// marker, one per event token for a possession) to `log`.
-fn parse_line(line: &str, line_number: usize, log: &mut Vec<LogEntry>) -> Result<(), ShorthandError> {
+fn parse_line(
+    line: &str,
+    line_number: usize,
+    log: &mut Vec<LogEntry>,
+) -> Result<(), ShorthandError> {
     let masked = strip_comments(line, line_number)?;
     let tokens = tokenize(&masked);
     let Some(&(first_column, ref first)) = tokens.first() else {
@@ -193,11 +213,16 @@ fn parse_line(line: &str, line_number: usize, log: &mut Vec<LogEntry>) -> Result
 
     // Otherwise a possession: an optional leading a/b picks the team, then one
     // event per token.
-    let mut token_slices: Vec<(usize, &[char])> = tokens.iter().map(|(c, t)| (*c, t.as_slice())).collect();
+    let mut token_slices: Vec<(usize, &[char])> =
+        tokens.iter().map(|(c, t)| (*c, t.as_slice())).collect();
     let mut team = Team::A;
     let (first_col, first_chars) = token_slices[0];
     if matches!(first_chars[0], 'a' | 'b') {
-        team = if first_chars[0] == 'a' { Team::A } else { Team::B };
+        team = if first_chars[0] == 'a' {
+            Team::A
+        } else {
+            Team::B
+        };
         if first_chars.len() == 1 {
             // Detached prefix: `a 1c 2f`. Drop the prefix token.
             token_slices.remove(0);
@@ -206,7 +231,9 @@ fn parse_line(line: &str, line_number: usize, log: &mut Vec<LogEntry>) -> Result
                     line: line_number,
                     column: first_col,
                     token: first_chars.iter().collect(),
-                    kind: ShorthandErrorKind::EmptyPossession { prefix: first_chars[0] },
+                    kind: ShorthandErrorKind::EmptyPossession {
+                        prefix: first_chars[0],
+                    },
                 });
             }
         } else {
@@ -217,12 +244,13 @@ fn parse_line(line: &str, line_number: usize, log: &mut Vec<LogEntry>) -> Result
     }
 
     for (column, token) in token_slices {
-        let (action, flagged) = parse_event_token(token).map_err(|(offset, kind)| ShorthandError {
-            line: line_number,
-            column: column + offset,
-            token: token.iter().collect(),
-            kind,
-        })?;
+        let (action, flagged) =
+            parse_event_token(token).map_err(|(offset, kind)| ShorthandError {
+                line: line_number,
+                column: column + offset,
+                token: token.iter().collect(),
+                kind,
+            })?;
         log.push(LogEntry::Event(Event {
             team,
             action,
@@ -241,7 +269,9 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
     // Position: exactly one digit, 1–8.
     let position = match token[0] {
         c @ '1'..='8' => POSITIONS[(c as usize) - ('1' as usize)],
-        c if c.is_ascii_digit() => return Err((0, ShorthandErrorKind::InvalidPosition { digit: c })),
+        c if c.is_ascii_digit() => {
+            return Err((0, ShorthandErrorKind::InvalidPosition { digit: c }))
+        }
         _ => return Err((0, ShorthandErrorKind::MissingPosition)),
     };
 
@@ -281,16 +311,25 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
         match token[index] {
             'x' => {
                 if !kind.can_fail() {
-                    return Err((index, ShorthandErrorKind::FailedNotApplicable { action: kind }));
+                    return Err((
+                        index,
+                        ShorthandErrorKind::FailedNotApplicable { action: kind },
+                    ));
                 }
                 if failed {
-                    return Err((index, ShorthandErrorKind::DuplicateModifier { modifier: 'x' }));
+                    return Err((
+                        index,
+                        ShorthandErrorKind::DuplicateModifier { modifier: 'x' },
+                    ));
                 }
                 failed = true;
             }
             '!' => {
                 if flagged {
-                    return Err((index, ShorthandErrorKind::DuplicateModifier { modifier: '!' }));
+                    return Err((
+                        index,
+                        ShorthandErrorKind::DuplicateModifier { modifier: '!' },
+                    ));
                 }
                 flagged = true;
             }
@@ -299,8 +338,13 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
         index += 1;
     }
 
-    let action = build_action(kind, sub_type, position, failed)
-        .ok_or((0, ShorthandErrorKind::IllegalPosition { position, action: kind }))?;
+    let action = build_action(kind, sub_type, position, failed).ok_or((
+        0,
+        ShorthandErrorKind::IllegalPosition {
+            position,
+            action: kind,
+        },
+    ))?;
     Ok((action, flagged))
 }
 
@@ -736,7 +780,10 @@ mod tests {
         let err = error("9g");
         assert_eq!((err.line, err.column), (1, 1));
         assert_eq!(err.kind, ShorthandErrorKind::InvalidPosition { digit: '9' });
-        assert_eq!(error("0g").kind, ShorthandErrorKind::InvalidPosition { digit: '0' });
+        assert_eq!(
+            error("0g").kind,
+            ShorthandErrorKind::InvalidPosition { digit: '0' }
+        );
     }
 
     #[test]
@@ -795,15 +842,24 @@ mod tests {
     fn a_repeated_modifier_is_rejected_at_the_second_one() {
         let err = error("1gxx");
         assert_eq!((err.line, err.column), (1, 4));
-        assert_eq!(err.kind, ShorthandErrorKind::DuplicateModifier { modifier: 'x' });
-        assert_eq!(error("1g!!").kind, ShorthandErrorKind::DuplicateModifier { modifier: '!' });
+        assert_eq!(
+            err.kind,
+            ShorthandErrorKind::DuplicateModifier { modifier: 'x' }
+        );
+        assert_eq!(
+            error("1g!!").kind,
+            ShorthandErrorKind::DuplicateModifier { modifier: '!' }
+        );
     }
 
     #[test]
     fn trailing_junk_after_an_event_points_at_it() {
         let err = error("1gz");
         assert_eq!((err.line, err.column), (1, 3));
-        assert_eq!(err.kind, ShorthandErrorKind::UnexpectedTrailing { found: 'z' });
+        assert_eq!(
+            err.kind,
+            ShorthandErrorKind::UnexpectedTrailing { found: 'z' }
+        );
     }
 
     #[test]
@@ -817,7 +873,10 @@ mod tests {
     fn a_lone_team_prefix_is_an_empty_possession() {
         let err = error("a");
         assert_eq!((err.line, err.column), (1, 1));
-        assert_eq!(err.kind, ShorthandErrorKind::EmptyPossession { prefix: 'a' });
+        assert_eq!(
+            err.kind,
+            ShorthandErrorKind::EmptyPossession { prefix: 'a' }
+        );
     }
 
     #[test]
@@ -846,10 +905,13 @@ mod tests {
         let err = error("1g\n2f\n5g\n1c");
         assert_eq!(err.line, 3);
         assert_eq!(err.column, 1);
-        assert_eq!(err.kind, ShorthandErrorKind::IllegalPosition {
-            position: Position::WD,
-            action: ActionKind::Goal,
-        });
+        assert_eq!(
+            err.kind,
+            ShorthandErrorKind::IllegalPosition {
+                position: Position::WD,
+                action: ActionKind::Goal,
+            }
+        );
     }
 
     #[test]
@@ -857,10 +919,13 @@ mod tests {
         // The comment is blanked in place, so the bad token keeps its column.
         let err = error("1g (nice pass) 5g");
         assert_eq!((err.line, err.column), (1, 16));
-        assert_eq!(err.kind, ShorthandErrorKind::IllegalPosition {
-            position: Position::WD,
-            action: ActionKind::Goal,
-        });
+        assert_eq!(
+            err.kind,
+            ShorthandErrorKind::IllegalPosition {
+                position: Position::WD,
+                action: ActionKind::Goal,
+            }
+        );
     }
 
     #[test]
@@ -902,7 +967,10 @@ b8g";
         // The missed shot then rebound then goal in team A's second possession.
         assert_eq!(
             events(&[log[7].clone()])[0].action,
-            Action::Goal { position: GoalPosition::GS, failed: true }
+            Action::Goal {
+                position: GoalPosition::GS,
+                failed: true
+            }
         );
     }
 }

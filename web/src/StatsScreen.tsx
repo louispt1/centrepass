@@ -4,6 +4,7 @@ import type { PlayerStats } from "./types/PlayerStats";
 import type { TeamStats } from "./types/TeamStats";
 import { deriveStats } from "./engine";
 import { getMatch, type StoredMatch } from "./storage";
+import { shareSummaryImage } from "./summaryImage";
 
 // The payoff screen: after (or during) a match the coach reads per-player and
 // team statistics, all from a single netball-core derivation over the log
@@ -213,10 +214,26 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
       </h1>
       <div style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1rem" }}>{match.date}</div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
         <span data-testid="final-score" style={{ fontSize: "2rem", fontWeight: 700 }}>
           {report.score.teamA}–{report.score.teamB}
         </span>
+        <button
+          data-testid="share-summary-image"
+          onClick={() => void shareSummaryImage(match, report)}
+          style={{
+            minHeight: "44px",
+            padding: "0 1rem",
+            fontSize: "0.95rem",
+            fontWeight: 600,
+            color: "#fff",
+            background: "#0f4c5c",
+            border: "none",
+            borderRadius: "8px",
+          }}
+        >
+          Share summary image
+        </button>
       </div>
 
       <h2 style={{ fontSize: "1.05rem" }}>Score by quarter</h2>

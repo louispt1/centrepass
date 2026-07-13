@@ -4,6 +4,7 @@
 //! plain data-in, data-out Rust, tested natively with `cargo test`. The
 //! browser boundary lives in the sibling `netball-wasm` crate.
 
+pub mod definitions;
 pub mod event;
 pub mod match_file;
 pub mod roster;
@@ -12,6 +13,9 @@ pub mod shorthand;
 pub mod stats;
 pub mod taxonomy;
 
+pub use definitions::{
+    definitions, definitions_markdown, deviations, modifiers, Descriptor, Deviation, Resolution,
+};
 pub use event::{
     Action, CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType,
     GoalPosition, LogEntry, Position, QuarterBreak, ReboundPosition, Substitution, Team,
