@@ -18,10 +18,10 @@ function useHashRoute(): string {
   return hash;
 }
 
-export default function App({ engineDescription }: { engineDescription: string }) {
+export default function App() {
   const route = useHashRoute();
   const match = /^#\/match\/([^/]+)(\/roster|\/stats)?$/.exec(route);
-  if (!match) return <MatchListScreen engineDescription={engineDescription} />;
+  if (!match) return <MatchListScreen />;
   const [, matchId, section] = match;
   if (section === "/roster") return <RosterScreen matchId={matchId} />;
   if (section === "/stats") return <StatsScreen matchId={matchId} />;

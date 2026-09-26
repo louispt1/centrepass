@@ -20,19 +20,10 @@ fn parse_team(team: JsValue) -> Result<netball_core::Team, JsValue> {
     serde_wasm_bindgen::from_value(team).map_err(JsValue::from)
 }
 
-/// Derive the match score from a log.
-///
-/// `log` is a `LogEntry[]` and the result a `Score`, per the TypeScript
-/// types generated from the `netball-core` types (`web/src/types/`); the
-/// typed wrapper lives in `web/src/engine.ts`.
-#[wasm_bindgen]
-pub fn derive_score(log: JsValue) -> Result<JsValue, JsValue> {
-    let score = netball_core::derive_score(&parse_log(log)?);
-    serde_wasm_bindgen::to_value(&score).map_err(JsValue::from)
-}
-
 /// Derive per-quarter scores (`Score[]`, one per quarter so far) from a log
-/// (`LogEntry[]`). The current quarter is the length of the result.
+/// (`LogEntry[]`), per the TypeScript types generated from the `netball-core`
+/// types (`web/src/types/`); the typed wrappers live in `web/src/engine.ts`.
+/// The current quarter is the length of the result; the match score is its sum.
 #[wasm_bindgen]
 pub fn derive_quarter_scores(log: JsValue) -> Result<JsValue, JsValue> {
     let scores = netball_core::derive_quarter_scores(&parse_log(log)?);

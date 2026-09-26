@@ -10,7 +10,6 @@ import {
   deriveAttributions,
   derivePlayingTime,
   deriveQuarterScores,
-  deriveScore,
   deriveTeamInPossession,
   resolveTeam,
 } from "./engine";
@@ -96,7 +95,6 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     () =>
       match
         ? {
-            score: deriveScore(match.log),
             quarterScores: deriveQuarterScores(match.log),
             attributions: deriveAttributions(match.log),
             playingTime: (["A", "B"] as const).map((team) => ({
@@ -120,7 +118,11 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
       </main>
     );
   }
-  const { score, quarterScores, attributions, playingTime } = derived;
+  const { quarterScores, attributions, playingTime } = derived;
+  const score = quarterScores.reduce((sum, q) => ({
+    teamA: sum.teamA + q.teamA,
+    teamB: sum.teamB + q.teamB,
+  }));
   const inPossession = overrideTeam ?? derived.teamInPossession;
   const teamName = (team: Team) => (team === "A" ? match.teamAName : match.teamBName);
   const teamFor = (kind: ActionKind) =>

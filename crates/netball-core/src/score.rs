@@ -40,15 +40,12 @@ impl Score {
 /// (a Goal with `failed: true` is a missed shot), credited to the team the
 /// event carries. Marker entries never score.
 pub fn derive_score(log: &[LogEntry]) -> Score {
-    let mut score = Score::NIL_ALL;
-    for entry in log {
-        if let LogEntry::Event(event) = entry {
-            if let Action::Goal { failed: false, .. } = event.action {
-                score.credit(event.team);
-            }
-        }
-    }
-    score
+    derive_quarter_scores(log)
+        .iter()
+        .fold(Score::NIL_ALL, |total, quarter| Score {
+            team_a: total.team_a + quarter.team_a,
+            team_b: total.team_b + quarter.team_b,
+        })
 }
 
 /// Derive the score of each quarter separately: the log split at its

@@ -2,13 +2,10 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { deleteMatch, listMatches, putMatch, type StoredMatch } from "./storage";
 import { exportMatch, parseMatchFile } from "./matchFile";
 import { parseShorthand } from "./engine";
+import { engine_description } from "./wasm/netball";
 
-function todayIsoDate(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
+// Swedish locale formats as YYYY-MM-DD in local time.
+const todayIsoDate = () => new Date().toLocaleDateString("sv-SE");
 
 const fieldStyle = { display: "block", marginBottom: "0.75rem" } as const;
 const inputStyle = {
@@ -28,7 +25,7 @@ const smallButton = {
   cursor: "pointer",
 } as const;
 
-export default function MatchListScreen({ engineDescription }: { engineDescription: string }) {
+export default function MatchListScreen() {
   const [matches, setMatches] = useState<StoredMatch[] | null>(null);
   const [teamAName, setTeamAName] = useState("");
   const [teamBName, setTeamBName] = useState("");
@@ -337,7 +334,7 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
       )}
 
       <footer style={{ marginTop: "3rem", color: "#666", fontSize: "0.8rem" }}>
-        Engine: <span data-testid="engine-description">{engineDescription}</span>
+        Engine: <span data-testid="engine-description">{engine_description()}</span>
       </footer>
     </main>
   );

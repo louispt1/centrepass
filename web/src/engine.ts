@@ -9,10 +9,8 @@ import {
   derive_playing_time,
   derive_quarter_scores,
   derive_roster,
-  derive_score,
   derive_stats,
   derive_team_in_possession,
-  engine_description,
   parse_shorthand,
   resolve_team,
 } from "./wasm/netball";
@@ -27,13 +25,17 @@ import type { Score } from "./types/Score";
 import type { StatsReport } from "./types/StatsReport";
 import type { Team } from "./types/Team";
 
-export function engineDescription(): string {
-  return engine_description();
-}
-
-/** Derive the match score from a log, in netball-core across the WASM boundary. */
-export function deriveScore(log: LogEntry[]): Score {
-  return derive_score(log) as Score;
+/**
+ * Call a throwing wasm-bindgen function, normalising its thrown Rust error
+ * string to an `Error` (with `fallback` when the message is empty).
+ */
+export function wasmCall<T>(call: () => T, fallback: string): T {
+  try {
+    return call();
+  } catch (thrown) {
+    const message = typeof thrown === "string" ? thrown : (thrown as Error)?.message;
+    throw new Error(message || fallback);
+  }
 }
 
 /**
@@ -105,13 +107,10 @@ export function resolveTeam(
  * caller never imports a partial match. The entries carry no timestamps.
  */
 export function parseShorthand(input: string): LogEntry[] {
-  try {
-    return parse_shorthand(input) as LogEntry[];
-  } catch (thrown) {
-    // wasm-bindgen throws the Rust error as a string; normalise to an Error.
-    const message = typeof thrown === "string" ? thrown : (thrown as Error)?.message;
-    throw new Error(message || "This Shorthand could not be parsed.");
-  }
+  return wasmCall(
+    () => parse_shorthand(input) as LogEntry[],
+    "This Shorthand could not be parsed.",
+  );
 }
 
 /**

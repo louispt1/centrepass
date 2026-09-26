@@ -8,6 +8,7 @@
 import type { StatsReport } from "./types/StatsReport";
 import type { TeamStats } from "./types/TeamStats";
 import type { StoredMatch } from "./storage";
+import { matchBaseName, shareOrDownload } from "./matchFile";
 
 // A portrait canvas that reads well as a chat image: large enough that the text
 // stays legible when a messenger shrinks it to message width.
@@ -21,8 +22,8 @@ const ACCENT = "#ffd23f";
 
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
-/** "made/att (pct%)", or "–" when nothing was attempted. */
-function ratio(made: number, total: number): string {
+/** "made/total (pct%)", or "–" when nothing was attempted. */
+export function ratio(made: number, total: number): string {
   if (total === 0) return "–";
   return `${made}/${total} (${Math.round((made / total) * 100)}%)`;
 }
@@ -160,15 +161,6 @@ export function summaryImageBlob(match: StoredMatch, report: StatsReport): Promi
   });
 }
 
-/** A filesystem-safe name for the shared image. */
-export function summaryImageName(match: StoredMatch): string {
-  const base = `${match.teamAName} vs ${match.teamBName} ${match.date}`
-    .replace(/[/\\?%*:|"<>]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-  return `${base}.png`;
-}
-
 /**
  * Render and share the Summary Image: hand it to the native share sheet when
  * the platform can share files (a phone courtside), otherwise download it.
@@ -176,26 +168,6 @@ export function summaryImageName(match: StoredMatch): string {
  */
 export async function shareSummaryImage(match: StoredMatch, report: StatsReport): Promise<void> {
   const blob = await summaryImageBlob(match, report);
-  const fileName = summaryImageName(match);
-  const file = new File([blob], fileName, { type: "image/png" });
-
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: `${match.teamAName} v ${match.teamBName}` });
-      return;
-    } catch (error) {
-      // A cancelled share is not a failure; anything else falls through to a
-      // download so the image is never simply lost.
-      if (error instanceof DOMException && error.name === "AbortError") return;
-    }
-  }
-
-  const url = URL.createObjectURL(file);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  const file = new File([blob], `${matchBaseName(match)}.png`, { type: "image/png" });
+  await shareOrDownload(file, `${match.teamAName} v ${match.teamBName}`);
 }

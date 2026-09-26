@@ -6,7 +6,7 @@ import type { TeamTotals } from "./types/TeamTotals";
 import { deriveStats } from "./engine";
 import { TEAM_COLOURS } from "./events";
 import { getMatch, type StoredMatch } from "./storage";
-import { shareSummaryImage } from "./summaryImage";
+import { ratio, shareSummaryImage } from "./summaryImage";
 
 // The payoff screen: after (or during) a match the coach reads per-player and
 // team statistics, all from a single netball-core derivation over the log
@@ -17,12 +17,6 @@ function formatMinutes(milliseconds: number): string {
   const totalSeconds = Math.floor(milliseconds / 1000);
   const seconds = totalSeconds % 60;
   return `${Math.floor(totalSeconds / 60)}:${String(seconds).padStart(2, "0")}`;
-}
-
-/** "made/total (pct%)", or "–" when there is nothing attempted. */
-function ratio(made: number, total: number): string {
-  if (total === 0) return "–";
-  return `${made}/${total} (${Math.round((made / total) * 100)}%)`;
 }
 
 const cell = { padding: "0.35rem 0.5rem", textAlign: "right", whiteSpace: "nowrap" } as const;
