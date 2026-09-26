@@ -89,7 +89,7 @@ Modifier marking an event for later human review. Part of the event model even w
 _Avoid_: starred
 
 **Quarter**:
-One of the four periods of a match. Quarter boundaries are coded as markers in the event log.
+One of the four periods of a match. Quarter boundaries are coded as markers in the event log; the fourth marker is **Full Time**, and a match without it is still in progress.
 
 **Substitution**:
 A change of which player occupies a position, effective from a moment in the match. The sequence of substitutions determines each player's Playing Time.
@@ -105,7 +105,7 @@ Derived per-player time on court, computed from roster assignments and substitut
 ### Sharing
 
 **Match File**:
-The portable, self-contained representation of one match: its event log plus metadata. The unit of export, import, backup, and migration.
+The portable, self-contained representation of one match: its event log plus metadata, including the match's stable identity. The unit of export, import, backup, and migration. Importing a Match File for a match already on the device replaces that copy (ADR-0005).
 _Avoid_: export, backup file, save file
 
 **Summary Image**:

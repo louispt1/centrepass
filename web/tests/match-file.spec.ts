@@ -94,6 +94,64 @@ test("export a coded match → delete it → re-import → stats are identical",
   await expectStats(page);
 });
 
+test("re-importing a match already on the device replaces it, after confirming", async ({ page }) => {
+  await createMatchWithRoster(page);
+  await page.getByTestId("choose-team-A").click();
+  await code(page, "GA", "CentrePassReceive");
+  await code(page, "GS", "Goal");
+  await expect(page.getByTestId("score-team-a")).toHaveText("1");
+
+  // Send it at 1–0, then keep coding locally: their centre pass, their goal.
+  await page.getByRole("link", { name: "← Matches" }).click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export" }).click();
+  const filePath = await (await downloadPromise).path();
+  await page.getByRole("link", { name: /Hornets U13 vs Riverside/ }).click();
+  await expect(page.getByTestId("score-team-a")).toHaveText("1");
+  await code(page, "GA", "CentrePassReceive");
+  await code(page, "GS", "Goal");
+  await expect(page.getByTestId("score-team-b")).toHaveText("1");
+
+  // Importing the sent file asks first; keeping mine changes nothing.
+  await page.getByRole("link", { name: "← Matches" }).click();
+  await page.getByTestId("import-match").setInputFiles(filePath);
+  await expect(page.getByTestId("confirm-replace")).toBeVisible();
+  await page.getByRole("button", { name: "Keep mine" }).click();
+  await expect(page.getByTestId("confirm-replace")).toBeHidden();
+
+  // Replacing swaps in the file's log, with still just one match in the list.
+  await page.getByTestId("import-match").setInputFiles(filePath);
+  await page.getByRole("button", { name: "Replace my copy" }).click();
+  await expect(page.getByRole("link", { name: /Hornets U13 vs Riverside/ })).toHaveCount(1);
+  await page.getByRole("link", { name: /Hornets U13 vs Riverside/ }).click();
+  await expect(page.getByTestId("score-team-a")).toHaveText("1");
+  await expect(page.getByTestId("score-team-b")).toHaveText("0");
+});
+
+test("the match list marks matches changed since they were last sent", async ({ page }) => {
+  await createMatchWithRoster(page);
+  await page.getByTestId("choose-team-A").click();
+  await code(page, "GA", "CentrePassReceive");
+  await code(page, "GS", "Goal");
+  await expect(page.getByTestId("score-team-a")).toHaveText("1");
+
+  const notSent = page.getByTestId(/^not-sent-/);
+  await page.getByRole("link", { name: "← Matches" }).click();
+  await expect(notSent).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export" }).click();
+  await downloadPromise;
+  await expect(notSent).toBeHidden();
+
+  // Any later change to the log brings the marker back.
+  await page.getByRole("link", { name: /Hornets U13 vs Riverside/ }).click();
+  await page.getByTestId("undo").click();
+  await expect(page.getByTestId("score-team-a")).toHaveText("0");
+  await page.getByRole("link", { name: "← Matches" }).click();
+  await expect(notSent).toBeVisible();
+});
+
 test("a match can be renamed and deleted from the match list", async ({ page }) => {
   await createMatchWithRoster(page);
 

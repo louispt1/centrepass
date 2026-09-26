@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { test, expect, type Page } from "@playwright/test";
 
 async function createMatch(page: Page) {
@@ -130,6 +131,15 @@ test("the fourth quarter break is full time and stops the quarter clock", async 
   }
   await expect(page.getByTestId("quarter-break")).toHaveText("Full time");
   await page.getByTestId("quarter-break").click();
+
+  // Full time lands on the stats, where the Match File is sent to the club.
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("send-match-file").click();
+  const sent = JSON.parse(await readFile(await (await downloadPromise).path(), "utf8"));
+  expect(sent.version).toBe(3);
+  expect(sent.log.filter((entry: { kind: string }) => entry.kind === "QuarterBreak")).toHaveLength(4);
+
+  await page.getByRole("link", { name: "← Live coding" }).click();
   await expect(page.getByTestId("current-quarter")).toHaveText("FT");
   await expect(page.getByTestId("quarter-break")).toBeDisabled();
 

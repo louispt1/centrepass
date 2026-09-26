@@ -1,6 +1,6 @@
 # CentrePass Roadmap
 
-Plan for building CentrePass v1, as decided in the design session of 2026-07-10 in the predecessor repo ([louispt1/Netballstats](https://github.com/louispt1/Netballstats)). Companion documents: [CONTEXT.md](../CONTEXT.md) (glossary), [docs/adr/](./adr/) (decisions 0001–0003), and [.scratch/v1/PRD.md](../.scratch/v1/PRD.md) (the v1 spec). Implementation is broken into tracer-bullet issues under [.scratch/v1/issues/](../.scratch/v1/issues/).
+Plan for building CentrePass v1, as decided in the design session of 2026-07-10 in the predecessor repo ([louispt1/Netballstats](https://github.com/louispt1/Netballstats)). Companion documents: [CONTEXT.md](../CONTEXT.md) (glossary), [docs/adr/](./adr/) (decisions 0001–0005). The v1 spec and tracer-bullet issues (`.scratch/v1/`) are complete and were removed in `494d96c`; they remain in git history. Current work: [.scratch/rollout/](../.scratch/rollout/).
 
 ## Decisions already made
 
@@ -23,7 +23,7 @@ Plan for building CentrePass v1, as decided in the design session of 2026-07-10 
 
 ## Phases
 
-The tracer-bullet issues in `.scratch/v1/issues/` supersede the phase-by-phase plan; dependency order there is authoritative. Broad shape:
+v1 is complete: all four phases shipped and the exit criterion below has been met. Broad shape, for the record:
 
 1. **Walking skeleton** (issue 01) — workspace, PWA shell, CI, Pages deploy; a Rust function called from the deployed offline-capable app.
 2. **Domain slices** (issues 02–05) — record a Goal end to end, then widen: full taxonomy, quarters/rosters/substitutions, stat views.
@@ -33,6 +33,10 @@ The tracer-bullet issues in `.scratch/v1/issues/` supersede the phase-by-phase p
 **Correctness anchor**: the golden parity suite (issue 08) — real matches from the predecessor's SQLite database with the Python app's derived stats as fixtures; the Rust engine must reproduce them exactly.
 
 **Make-or-break UI**: the live coding screen. Test it at an actual match early; the v1 exit criterion is coding a full real match live on a phone, offline, then sharing the Summary Image to a club chat.
+
+## Rollout (current)
+
+In-person rollout to the maintainer's club, where volunteers take turns coding on their own phones. After each match, coders send the Match File to a shared club place, which serves as both backup and collection point. Work: [.scratch/rollout/](../.scratch/rollout/) — match identity across devices (ADR-0005), send at full time, "not sent" marker, persistent storage. **Collections + cross-match stats are next** (moved up from the backlog below).
 
 ## v1.x backlog (explicitly deferred)
 

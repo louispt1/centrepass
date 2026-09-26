@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { deleteMatch, listMatches, putMatch, type StoredMatch } from "./storage";
+import { deleteMatch, getMatch, listMatches, markSent, notSent, putMatch, type StoredMatch } from "./storage";
 import { exportMatch, parseMatchFile } from "./matchFile";
+import type { MatchFile } from "./types/MatchFile";
 import { parseShorthand } from "./engine";
 import { engine_description } from "./wasm/netball";
 
@@ -31,6 +32,9 @@ export default function MatchListScreen() {
   const [teamBName, setTeamBName] = useState("");
   const [date, setDate] = useState(todayIsoDate);
   const [importError, setImportError] = useState<string | null>(null);
+  // An imported file for a match already on this device, awaiting the coder's
+  // go-ahead to replace the local copy (ADR-0005).
+  const [pendingReplace, setPendingReplace] = useState<{ local: StoredMatch; file: MatchFile } | null>(null);
   const [shorthand, setShorthand] = useState("");
   const [shorthandError, setShorthandError] = useState<string | null>(null);
   // Which match, if any, is mid-rename or awaiting a delete confirmation.
@@ -67,12 +71,20 @@ export default function MatchListScreen() {
     change.target.value = "";
     if (!file) return;
     setImportError(null);
+    setPendingReplace(null);
     try {
       // Validate through the core before touching storage, so a bad file
       // leaves no partial match behind.
       const parsed = parseMatchFile(await file.text());
+      // A match keeps its id across devices; one already here is replaced
+      // only once the coder confirms. Pre-v3 files have no id: always new.
+      const local = parsed.id ? await getMatch(parsed.id) : undefined;
+      if (local) {
+        setPendingReplace({ local, file: parsed });
+        return;
+      }
       const match: StoredMatch = {
-        id: crypto.randomUUID(),
+        id: parsed.id ?? crypto.randomUUID(),
         teamAName: parsed.teamAName,
         teamBName: parsed.teamBName,
         date: parsed.date,
@@ -80,10 +92,22 @@ export default function MatchListScreen() {
         log: parsed.log,
       };
       await putMatch(match);
+      // It arrived as a file, so the club already has this version.
+      await markSent(match.id);
       await refresh();
     } catch (error) {
       setImportError(error instanceof Error ? error.message : String(error));
     }
+  }
+
+  async function confirmReplace() {
+    if (!pendingReplace) return;
+    const { local, file } = pendingReplace;
+    const { teamAName, teamBName, date, log } = file;
+    await putMatch({ ...local, teamAName, teamBName, date, log });
+    await markSent(local.id);
+    setPendingReplace(null);
+    await refresh();
   }
 
   async function importShorthand(submit: FormEvent) {
@@ -218,6 +242,25 @@ export default function MatchListScreen() {
           {importError}
         </p>
       )}
+      {pendingReplace && (
+        <div data-testid="confirm-replace" role="alert" style={{ marginBottom: "0.75rem", fontSize: "0.9rem" }}>
+          <p style={{ margin: "0 0 0.5rem" }}>
+            You already have {pendingReplace.local.teamAName} vs {pendingReplace.local.teamBName} —{" "}
+            {pendingReplace.local.date}. Replace your copy with the one in this file?
+          </p>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              style={{ ...smallButton, borderColor: "#a11", color: "#a11" }}
+              onClick={() => void confirmReplace()}
+            >
+              Replace my copy
+            </button>
+            <button style={smallButton} onClick={() => setPendingReplace(null)}>
+              Keep mine
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={(submit) => void importShorthand(submit)}>
         <label style={{ ...fieldStyle, fontSize: "0.9rem" }}>
@@ -289,11 +332,19 @@ export default function MatchListScreen() {
                   <a href={`#/match/${match.id}`} style={{ fontSize: "1.1rem" }}>
                     {match.teamAName} vs {match.teamBName} — {match.date}
                   </a>
+                  {notSent(match) && (
+                    <span
+                      data-testid={`not-sent-${match.id}`}
+                      style={{ marginLeft: "0.5rem", fontSize: "0.75rem", color: "#a60", fontWeight: 600 }}
+                    >
+                      Not sent
+                    </span>
+                  )}
                   <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.4rem" }}>
                     <button
                       data-testid={`export-${match.id}`}
                       style={smallButton}
-                      onClick={() => void exportMatch(match)}
+                      onClick={() => void exportMatch(match).then(refresh)}
                     >
                       Export
                     </button>

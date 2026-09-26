@@ -5,7 +5,7 @@
 import { parse_match_file, serialize_match_file } from "./wasm/netball";
 import { wasmCall } from "./engine";
 import type { MatchFile } from "./types/MatchFile";
-import type { StoredMatch } from "./storage";
+import { markSent, type StoredMatch } from "./storage";
 
 /**
  * Parse a Match File JSON string, or throw an `Error` carrying the core's
@@ -29,17 +29,18 @@ export function matchBaseName(match: StoredMatch): string {
 
 /**
  * Hand a file to the native share sheet when the platform can share files (a
- * phone courtside), otherwise fall back to a download.
+ * phone courtside), otherwise fall back to a download. Resolves false only
+ * when the coder cancelled the share sheet.
  */
-export async function shareOrDownload(file: File, title: string): Promise<void> {
+export async function shareOrDownload(file: File, title: string): Promise<boolean> {
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title });
-      return;
+      return true;
     } catch (error) {
       // A user cancelling the share sheet is not a failure; anything else
       // falls through to a download so the file is never simply lost.
-      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (error instanceof DOMException && error.name === "AbortError") return false;
     }
   }
 
@@ -51,12 +52,16 @@ export async function shareOrDownload(file: File, title: string): Promise<void> 
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
+  return true;
 }
 
-/** Export a match as its versioned Match File JSON (core owns the schema). */
+/** Export a match as its versioned Match File JSON (core owns the schema),
+ * marking it sent unless the coder cancelled. */
 export async function exportMatch(match: StoredMatch): Promise<void> {
-  const { teamAName, teamBName, date, log } = match;
-  const json = serialize_match_file({ teamAName, teamBName, date, log } satisfies MatchFile);
+  const { id, teamAName, teamBName, date, log } = match;
+  const json = serialize_match_file({ id, teamAName, teamBName, date, log } satisfies MatchFile);
   const fileName = `${matchBaseName(match)}.centrepass.json`;
-  await shareOrDownload(new File([json], fileName, { type: "application/json" }), fileName);
+  if (await shareOrDownload(new File([json], fileName, { type: "application/json" }), fileName)) {
+    await markSent(match.id);
+  }
 }

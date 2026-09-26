@@ -4,7 +4,7 @@ Netball match statistics for clubs — coded live, courtside, on the phone in yo
 
 CentrePass is a local-first Progressive Web App: open a link, add it to your home screen, and record a match with big tap targets, fully offline. Every statistic is derived from an append-only event log by a pure Rust engine compiled to WebAssembly, following the [NVAC](https://doi.org/10.1136/bjsports-2022-106187) video-analysis taxonomy. No server, no accounts, no install.
 
-**Status: v1 feature-complete.** Create a match, enter a roster, code live with big tap targets (undo, quarters, substitutions), read per-player and team stats, export/import a Match File, and share a Summary Image — all offline. See [docs/ROADMAP.md](docs/ROADMAP.md) for the plan and [.scratch/v1/PRD.md](.scratch/v1/PRD.md) for the spec.
+**Status: v1 feature-complete.** Create a match, enter a roster, code live with big tap targets (undo, quarters, substitutions), read per-player and team stats, export/import a Match File, and share a Summary Image — all offline. See [docs/ROADMAP.md](docs/ROADMAP.md) for the plan and the plan.
 
 - **New here? [Quickstart](docs/quickstart.md)** — code your first match in five minutes.
 - Compact text input: [Shorthand reference](docs/shorthand.md)

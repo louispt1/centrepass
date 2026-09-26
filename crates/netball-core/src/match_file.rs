@@ -2,8 +2,10 @@
 //! its event log plus metadata — and the unit of export, import, backup, and
 //! migration (ADR-0003, `CONTEXT.md`).
 //!
-//! A Match File is a versioned JSON document (`"version": 2`); older versions
-//! are migrated on read. (De)serialization
+//! A Match File is a versioned JSON document (`"version": 3`); older versions
+//! are migrated on read. It carries the match's stable id, so a match keeps its
+//! identity across devices and re-importing it replaces rather than duplicates
+//! (ADR-0005). (De)serialization
 //! lives here in the core, not the UI, so every entry path shares one schema and
 //! one validation: a file round-trips perfectly (importing an exported match on
 //! another device yields an identical match, and so identical stats), and an
@@ -19,7 +21,7 @@ use crate::event::LogEntry;
 /// The Match File format version this engine writes. Bump this only alongside
 /// a migration; [`MatchFile::from_json`] migrates older versions and rejects
 /// newer ones.
-pub const MATCH_FILE_VERSION: u32 = 2;
+pub const MATCH_FILE_VERSION: u32 = 3;
 
 /// One match in its portable form: the append-only log that is the only stored
 /// truth (ADR-0003), plus the metadata needed to name and date it. The `version`
@@ -29,6 +31,9 @@ pub const MATCH_FILE_VERSION: u32 = 2;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub struct MatchFile {
+    /// The match's stable identity across devices (ADR-0005). `None` only for
+    /// files written before version 3, which import as new matches.
+    pub id: Option<String>,
     /// Name of team A.
     pub team_a_name: String,
     /// Name of team B.
@@ -46,6 +51,8 @@ pub struct MatchFile {
 #[serde(rename_all = "camelCase")]
 struct VersionedMatchFile {
     version: u32,
+    #[serde(default)]
+    id: Option<String>,
     team_a_name: String,
     team_b_name: String,
     date: String,
@@ -88,6 +95,7 @@ impl MatchFile {
     pub fn to_json(&self) -> String {
         let versioned = VersionedMatchFile {
             version: MATCH_FILE_VERSION,
+            id: self.id.clone(),
             team_a_name: self.team_a_name.clone(),
             team_b_name: self.team_b_name.clone(),
             date: self.date.clone(),
@@ -114,14 +122,24 @@ impl MatchFile {
             serde_json::from_str(json).map_err(|_| MatchFileError::Malformed)?;
         match peek.version {
             None | Some(0) => return Err(MatchFileError::Malformed),
+            // Versions 1 and 2 predate the id; it simply reads as absent.
             Some(1) => migrate_v1_log(&mut value["log"]),
-            Some(MATCH_FILE_VERSION) => {}
+            Some(2 | MATCH_FILE_VERSION) => {}
             Some(version) => return Err(MatchFileError::UnsupportedVersion { found: version }),
         }
 
         let versioned: VersionedMatchFile =
             serde_json::from_value(value).map_err(|_| MatchFileError::Malformed)?;
+        // The id becomes a storage key and part of the app's URL, so only a
+        // plain token is accepted from a file.
+        if let Some(id) = &versioned.id {
+            let plain = |c: char| c.is_ascii_alphanumeric() || c == '-' || c == '_';
+            if id.is_empty() || id.len() > 64 || !id.chars().all(plain) {
+                return Err(MatchFileError::Malformed);
+            }
+        }
         Ok(MatchFile {
+            id: versioned.id,
             team_a_name: versioned.team_a_name,
             team_b_name: versioned.team_b_name,
             date: versioned.date,
@@ -161,6 +179,7 @@ mod tests {
 
     fn sample_match() -> MatchFile {
         MatchFile {
+            id: Some("0b7e5c1a-3f2d-4c9e-8a61-2d4f9b7c1e05".to_string()),
             team_a_name: "Hornets U13".to_string(),
             team_b_name: "Riverside".to_string(),
             date: "2026-07-10".to_string(),
@@ -191,8 +210,8 @@ mod tests {
     fn to_json_tags_the_current_version() {
         let json = sample_match().to_json();
         assert!(
-            json.starts_with(r#"{"version":2,"#),
-            "expected a version-2 envelope, got {json}"
+            json.starts_with(r#"{"version":3,"#),
+            "expected a version-3 envelope, got {json}"
         );
     }
 
@@ -205,14 +224,14 @@ mod tests {
 
     #[test]
     fn an_unrecognised_version_is_rejected_with_its_number() {
-        let json = r#"{"version":3,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
+        let json = r#"{"version":4,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
         assert_eq!(
             MatchFile::from_json(json),
-            Err(MatchFileError::UnsupportedVersion { found: 3 })
+            Err(MatchFileError::UnsupportedVersion { found: 4 })
         );
         // The message names the offending version and points at the fix.
-        let message = MatchFileError::UnsupportedVersion { found: 3 }.to_string();
-        assert!(message.contains('3'));
+        let message = MatchFileError::UnsupportedVersion { found: 4 }.to_string();
+        assert!(message.contains('4'));
         assert!(message.contains("Update CentrePass"));
     }
 
@@ -250,6 +269,27 @@ mod tests {
     }
 
     #[test]
+    fn a_version_2_file_reads_without_an_id() {
+        let json = r#"{"version":2,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
+        assert_eq!(MatchFile::from_json(json).unwrap().id, None);
+    }
+
+    #[test]
+    fn an_id_that_is_not_a_plain_token_is_malformed() {
+        for id in ["", "a/b", "../x", "has space", &"x".repeat(65)] {
+            let json = format!(
+                r#"{{"version":3,"id":{},"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}}"#,
+                serde_json::to_string(id).unwrap()
+            );
+            assert_eq!(
+                MatchFile::from_json(&json),
+                Err(MatchFileError::Malformed),
+                "{id}"
+            );
+        }
+    }
+
+    #[test]
     fn a_file_without_a_version_is_malformed_not_imported() {
         let json = r#"{"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
         assert_eq!(MatchFile::from_json(json), Err(MatchFileError::Malformed));
@@ -268,7 +308,7 @@ mod tests {
         // A shot by WD cannot exist in the model; the file is rejected whole,
         // leaving no partial match behind.
         let json = concat!(
-            r#"{"version":2,"teamAName":"A","teamBName":"B","date":"2026-07-10","#,
+            r#"{"version":3,"teamAName":"A","teamBName":"B","date":"2026-07-10","#,
             r#""log":[{"kind":"Event","team":"A","#,
             r#""action":{"type":"Goal","position":"WD","failed":false},"#,
             r#""flagged":false,"timestampMs":1}]}"#
@@ -389,12 +429,14 @@ mod tests {
 
     fn arb_match_file() -> impl Strategy<Value = MatchFile> {
         (
+            prop::option::of("[A-Za-z0-9_-]{1,64}"),
             ".*",
             ".*",
             ".*",
             prop::collection::vec(arb_log_entry(), 0..40),
         )
-            .prop_map(|(team_a_name, team_b_name, date, log)| MatchFile {
+            .prop_map(|(id, team_a_name, team_b_name, date, log)| MatchFile {
+                id,
                 team_a_name,
                 team_b_name,
                 date,

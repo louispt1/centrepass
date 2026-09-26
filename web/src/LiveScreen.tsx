@@ -180,8 +180,10 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     if (lastEvent) replaceLast({ ...lastEvent, flagged: !lastEvent.flagged });
   }
 
-  function recordQuarterBreak() {
-    append({ kind: "QuarterBreak", timestampMs: Date.now() });
+  async function recordQuarterBreak() {
+    await replaceLog([...match!.log, { kind: "QuarterBreak", timestampMs: Date.now() }]);
+    // Full time: on to the stats, where the Match File is sent to the club.
+    if (quarterBreaks + 1 >= QUARTERS) window.location.hash = `#/match/${matchId}/stats`;
   }
 
   function undo() {
@@ -413,7 +415,7 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
         <button
           data-testid="quarter-break"
           style={tapButton}
-          onClick={recordQuarterBreak}
+          onClick={() => void recordQuarterBreak()}
           disabled={fullTime}
         >
           {quarterBreaks >= QUARTERS - 1 ? "Full time" : `End Q${quarterBreaks + 1}`}

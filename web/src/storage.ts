@@ -13,6 +13,15 @@ export interface StoredMatch {
   createdAtMs: number;
   /** The append-only log: coded events plus quarter/substitution markers. */
   log: LogEntry[];
+  /** Local only, never in the Match File: when this copy last changed and was
+   * last sent (exported or shared). Absent on matches from before tracking. */
+  changedAtMs?: number;
+  sentAtMs?: number;
+}
+
+/** Changed since it was last sent to the club, or never sent at all. */
+export function notSent(match: StoredMatch): boolean {
+  return match.sentAtMs === undefined || (match.changedAtMs ?? 0) > match.sentAtMs;
 }
 
 const DB_NAME = "centrepass";
@@ -117,9 +126,18 @@ export async function getMatch(id: string): Promise<StoredMatch | undefined> {
   return asPromise(store.get(id) as IDBRequest<StoredMatch | undefined>);
 }
 
+/** Save a match; every save counts as a change for the "not sent" marker. */
 export async function putMatch(match: StoredMatch): Promise<void> {
   const store = await matchStore("readwrite");
-  await asPromise(store.put(match));
+  await asPromise(store.put({ ...match, changedAtMs: Date.now() }));
+}
+
+/** Record that the match, as currently stored, has been sent. */
+export async function markSent(id: string): Promise<void> {
+  const match = await getMatch(id);
+  if (!match) return;
+  const store = await matchStore("readwrite");
+  await asPromise(store.put({ ...match, sentAtMs: Date.now() }));
 }
 
 export async function deleteMatch(id: string): Promise<void> {

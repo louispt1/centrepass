@@ -7,6 +7,7 @@ import { deriveStats } from "./engine";
 import { TEAM_COLOURS } from "./events";
 import { getMatch, type StoredMatch } from "./storage";
 import { ratio, shareSummaryImage } from "./summaryImage";
+import { exportMatch } from "./matchFile";
 
 // The payoff screen: after (or during) a match the coach reads per-player and
 // team statistics, all from a single netball-core derivation over the log
@@ -251,7 +252,7 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
       </h1>
       <div style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1rem" }}>{match.date}</div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
         <span data-testid="final-score" style={{ fontSize: "2rem", fontWeight: 700 }}>
           {report.score.teamA}–{report.score.teamB}
         </span>
@@ -271,7 +272,27 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
         >
           Share summary image
         </button>
+        <button
+          data-testid="send-match-file"
+          onClick={() => void exportMatch(match)}
+          style={{
+            minHeight: "44px",
+            padding: "0 1rem",
+            fontSize: "0.95rem",
+            fontWeight: 600,
+            color: "#0f4c5c",
+            background: "#fff",
+            border: "2px solid #0f4c5c",
+            borderRadius: "8px",
+          }}
+        >
+          Send match file
+        </button>
       </div>
+      <p style={{ color: "#666", fontSize: "0.85rem", margin: "-0.5rem 0 1rem" }}>
+        Send the match file to your club's chat or shared folder — it's your backup, and how the
+        club collects every match.
+      </p>
 
       <h2 style={{ fontSize: "1.05rem" }}>Head to head</h2>
       <HeadToHead a={report.teams[0]} b={report.teams[1]} teamName={teamName} />

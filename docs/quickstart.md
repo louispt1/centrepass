@@ -81,8 +81,14 @@ you coded — nothing is entered twice.
 
 - **Share summary image** on the stats screen makes a picture of the headline
   numbers, ready to drop into the club chat.
-- **Export** (on the match list) saves the whole match as a file you can back up
-  or send to another device, where **Import** brings it back in exactly.
+- **Send match file** (on the stats screen, where tapping **Full time** takes
+  you) sends the whole match as a file. Send it to your club's chat or shared
+  folder. It's your backup, and it's how the club collects every match.
+  **Export** on the match list does the same. A match marked **Not sent** on
+  the list has changes the club hasn't had yet.
+- **Import** brings a match file back in exactly. If you already have that
+  match (say, a corrected copy was re-sent), you're asked before your copy is
+  replaced.
 
 ## Faster input: Shorthand
 
