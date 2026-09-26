@@ -113,5 +113,9 @@ A shareable rendered picture of a match's headline statistics, intended for club
 _Avoid_: stats card, report
 
 **Collection**:
-A named grouping of matches (e.g. a season or tournament) used to scope cross-match statistics.
+A named grouping of matches (e.g. a season or tournament) used to scope cross-match statistics. Local to the device that built it; a match may belong to any number of Collections.
 _Avoid_: folder, season (as the generic term)
+
+**Player Alias**:
+Within a Collection, a rule folding one recorded player name into another for cross-match aggregation (e.g. "Ali" → "Alice"), because the same player's name may be spelled differently across matches. Scoped to that Collection; the underlying Match Files and their event logs are never changed.
+_Avoid_: merge (as the noun), canonical name

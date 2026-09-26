@@ -169,5 +169,5 @@ export function summaryImageBlob(match: StoredMatch, report: StatsReport): Promi
 export async function shareSummaryImage(match: StoredMatch, report: StatsReport): Promise<void> {
   const blob = await summaryImageBlob(match, report);
   const file = new File([blob], `${matchBaseName(match)}.png`, { type: "image/png" });
-  await shareOrDownload(file, `${match.teamAName} v ${match.teamBName}`);
+  await shareOrDownload([file], `${match.teamAName} v ${match.teamBName}`);
 }

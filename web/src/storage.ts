@@ -24,9 +24,21 @@ export function notSent(match: StoredMatch): boolean {
   return match.sentAtMs === undefined || (match.changedAtMs ?? 0) > match.sentAtMs;
 }
 
+/** A named, local-only grouping of matches for cross-match stats. A match
+ * deleted since is simply skipped wherever its id is read. */
+export interface StoredCollection {
+  id: string;
+  name: string;
+  matchIds: string[];
+  /** "Ali" -> "Alice"; resolved transitively (merging A->B then B->C moves A's stats to C). */
+  playerAliases: Record<string, string>;
+  createdAtMs: number;
+}
+
 const DB_NAME = "centrepass";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const MATCH_STORE = "matches";
+const COLLECTION_STORE = "collections";
 
 let dbPromise: Promise<IDBDatabase> | undefined;
 
@@ -36,8 +48,11 @@ function openDb(): Promise<IDBDatabase> {
     request.onupgradeneeded = (upgrade) => {
       if (upgrade.oldVersion < 1) {
         request.result.createObjectStore(MATCH_STORE, { keyPath: "id" });
-      } else {
+      } else if (upgrade.oldVersion < 4) {
         migrateMatches(request.transaction!.objectStore(MATCH_STORE), upgrade.oldVersion);
+      }
+      if (upgrade.oldVersion < 5) {
+        request.result.createObjectStore(COLLECTION_STORE, { keyPath: "id" });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -109,10 +124,13 @@ function asPromise<T>(request: IDBRequest<T>): Promise<T> {
   });
 }
 
-async function matchStore(mode: IDBTransactionMode): Promise<IDBObjectStore> {
+async function objectStore(name: string, mode: IDBTransactionMode): Promise<IDBObjectStore> {
   const db = await openDb();
-  return db.transaction(MATCH_STORE, mode).objectStore(MATCH_STORE);
+  return db.transaction(name, mode).objectStore(name);
 }
+
+const matchStore = (mode: IDBTransactionMode) => objectStore(MATCH_STORE, mode);
+const collectionStore = (mode: IDBTransactionMode) => objectStore(COLLECTION_STORE, mode);
 
 /** All matches, most recently created first. */
 export async function listMatches(): Promise<StoredMatch[]> {
@@ -143,4 +161,40 @@ export async function markSent(id: string): Promise<void> {
 export async function deleteMatch(id: string): Promise<void> {
   const store = await matchStore("readwrite");
   await asPromise(store.delete(id));
+}
+
+/** All collections, oldest first. */
+export async function listCollections(): Promise<StoredCollection[]> {
+  const store = await collectionStore("readonly");
+  const collections = await asPromise(store.getAll() as IDBRequest<StoredCollection[]>);
+  return collections.sort((a, b) => a.createdAtMs - b.createdAtMs);
+}
+
+export async function getCollection(id: string): Promise<StoredCollection | undefined> {
+  const store = await collectionStore("readonly");
+  return asPromise(store.get(id) as IDBRequest<StoredCollection | undefined>);
+}
+
+/** Create, rename, or change a collection's matches or aliases. */
+export async function putCollection(collection: StoredCollection): Promise<void> {
+  const store = await collectionStore("readwrite");
+  await asPromise(store.put(collection));
+}
+
+export async function deleteCollection(id: string): Promise<void> {
+  const store = await collectionStore("readwrite");
+  await asPromise(store.delete(id));
+}
+
+/** A new, empty collection, saved. */
+export async function createCollection(name: string): Promise<StoredCollection> {
+  const collection: StoredCollection = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    matchIds: [],
+    playerAliases: {},
+    createdAtMs: Date.now(),
+  };
+  await putCollection(collection);
+  return collection;
 }

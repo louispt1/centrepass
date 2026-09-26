@@ -34,22 +34,42 @@ function gainsLabel(player: PlayerStats): string {
   return parts.length > 0 ? `${player.gains} (${parts.join(" ")})` : `${player.gains}`;
 }
 
-function PlayerTable({ team, teamName }: { team: TeamStats; teamName: string }) {
+/** Per-player stat lines: one match's, or a Collection's summed across
+ * matches (with `gamesPlayed` parallel to `players`). */
+export function PlayerTable({
+  testId,
+  caption,
+  players,
+  note,
+  gamesPlayed,
+  onPlayerClick,
+}: {
+  testId: string;
+  caption: string;
+  players: PlayerStats[];
+  note?: string;
+  gamesPlayed?: number[];
+  onPlayerClick?: (player: string) => void;
+}) {
   // A team with no roster (typically the opposition) has no minutes to show.
-  const showTime =
-    team.playingTimeAvailable && team.players.some((player) => player.playingTimeMs != null);
+  const showTime = players.some((player) => player.playingTimeMs != null);
   return (
     <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
       <table
-        data-testid={`player-table-${team.team}`}
+        data-testid={testId}
         style={{ borderCollapse: "collapse", fontSize: "0.85rem", minWidth: "100%" }}
       >
         <caption style={{ textAlign: "left", fontWeight: 700, marginBottom: "0.4rem" }}>
-          {teamName}
+          {caption}
         </caption>
         <thead>
           <tr>
             <th style={{ ...headCell, textAlign: "left" }}>Player</th>
+            {gamesPlayed && (
+              <th style={headCell} title="Games played">
+                GP
+              </th>
+            )}
             <th style={headCell}>Goals</th>
             <th style={headCell}>Feeds</th>
             <th style={headCell} title="Feeds that led to a shot">
@@ -75,9 +95,26 @@ function PlayerTable({ team, teamName }: { team: TeamStats; teamName: string }) 
           </tr>
         </thead>
         <tbody>
-          {team.players.map((player) => (
+          {players.map((player, index) => (
             <tr key={player.player} data-testid={`player-row-${player.player}`}>
-              <td style={nameCell}>{player.player}</td>
+              <td style={nameCell}>
+                {onPlayerClick ? (
+                  <button
+                    data-testid={`player-name-${player.player}`}
+                    onClick={() => onPlayerClick(player.player)}
+                    style={{ font: "inherit", fontWeight: 600, background: "none", border: "none", padding: 0, textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    {player.player}
+                  </button>
+                ) : (
+                  player.player
+                )}
+              </td>
+              {gamesPlayed && (
+                <td style={rowCell} data-testid={`stat-${player.player}-games`}>
+                  {gamesPlayed[index]}
+                </td>
+              )}
               <td style={rowCell} data-testid={`stat-${player.player}-goals`}>
                 {ratio(player.goals, player.shots)}
               </td>
@@ -114,11 +151,7 @@ function PlayerTable({ team, teamName }: { team: TeamStats; teamName: string }) 
           ))}
         </tbody>
       </table>
-      {!team.playingTimeAvailable && (
-        <p style={{ color: "#666", fontSize: "0.8rem", margin: "0.25rem 0" }}>
-          Playing time unavailable — this match has no timestamps.
-        </p>
-      )}
+      {note && <p style={{ color: "#666", fontSize: "0.8rem", margin: "0.25rem 0" }}>{note}</p>}
     </div>
   );
 }
@@ -324,7 +357,16 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
             {team.players.length > 0 && (
               <>
                 <h2 style={{ fontSize: "1.05rem" }}>Players</h2>
-                <PlayerTable team={team} teamName={teamName(team.team)} />
+                <PlayerTable
+                  testId={`player-table-${team.team}`}
+                  caption={teamName(team.team)}
+                  players={team.players}
+                  note={
+                    team.playingTimeAvailable
+                      ? undefined
+                      : "Playing time unavailable — this match has no timestamps."
+                  }
+                />
               </>
             )}
           </section>

@@ -141,3 +141,15 @@ pub fn definitions() -> Result<JsValue, JsValue> {
     let reference = (netball_core::definitions(), netball_core::modifiers());
     serde_wasm_bindgen::to_value(&reference).map_err(JsValue::from)
 }
+
+/// Sum per-player stats across a Collection's matches (`CollectionStats`):
+/// `matches` is `MatchFile[]` (extra fields ignored), `aliases` a
+/// `Record<string, string>` of Player Aliases.
+#[wasm_bindgen]
+pub fn derive_collection_stats(matches: JsValue, aliases: JsValue) -> Result<JsValue, JsValue> {
+    let matches: Vec<netball_core::MatchFile> = serde_wasm_bindgen::from_value(matches)?;
+    let aliases: std::collections::HashMap<String, String> =
+        serde_wasm_bindgen::from_value(aliases)?;
+    let stats = netball_core::derive_collection_stats(&matches, &aliases);
+    serde_wasm_bindgen::to_value(&stats).map_err(JsValue::from)
+}

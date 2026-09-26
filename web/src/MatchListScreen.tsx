@@ -1,5 +1,17 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { deleteMatch, getMatch, listMatches, markSent, notSent, putMatch, type StoredMatch } from "./storage";
+import {
+  createCollection,
+  deleteMatch,
+  getMatch,
+  listCollections,
+  listMatches,
+  markSent,
+  notSent,
+  putCollection,
+  putMatch,
+  type StoredCollection,
+  type StoredMatch,
+} from "./storage";
 import { exportMatch, parseMatchFile } from "./matchFile";
 import type { MatchFile } from "./types/MatchFile";
 import { parseShorthand } from "./engine";
@@ -41,8 +53,18 @@ export default function MatchListScreen() {
   const [renameA, setRenameA] = useState("");
   const [renameB, setRenameB] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [collections, setCollections] = useState<StoredCollection[]>([]);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  // Which match, if any, has its Collections picker open, and the name typed
+  // there for a new collection to add it to.
+  const [collectingId, setCollectingId] = useState<string | null>(null);
+  const [pickerCollectionName, setPickerCollectionName] = useState("");
 
-  const refresh = () => listMatches().then(setMatches);
+  const refresh = () =>
+    Promise.all([listMatches(), listCollections()]).then(([all, groups]) => {
+      setMatches(all);
+      setCollections(groups);
+    });
 
   useEffect(() => {
     void refresh();
@@ -148,6 +170,29 @@ export default function MatchListScreen() {
     await refresh();
   }
 
+  async function toggleInCollection(collection: StoredCollection, matchId: string) {
+    const matchIds = collection.matchIds.includes(matchId)
+      ? collection.matchIds.filter((id) => id !== matchId)
+      : [...collection.matchIds, matchId];
+    await putCollection({ ...collection, matchIds });
+    await refresh();
+  }
+
+  async function addCollection(submit: FormEvent) {
+    submit.preventDefault();
+    await createCollection(newCollectionName);
+    setNewCollectionName("");
+    await refresh();
+  }
+
+  async function addCollectionWithMatch(submit: FormEvent, matchId: string) {
+    submit.preventDefault();
+    const collection = await createCollection(pickerCollectionName);
+    await putCollection({ ...collection, matchIds: [matchId] });
+    setPickerCollectionName("");
+    await refresh();
+  }
+
   async function confirmDelete(id: string) {
     await deleteMatch(id);
     setConfirmDeleteId(null);
@@ -222,6 +267,37 @@ export default function MatchListScreen() {
           style={{ padding: "0.75rem 1.5rem", fontSize: "1rem", marginTop: "0.25rem" }}
         >
           Create match
+        </button>
+      </form>
+
+      <h2>Collections</h2>
+      <p style={{ margin: "0 0 0.5rem", color: "#666", fontSize: "0.85rem" }}>
+        Group matches — a season, a tournament — for per-player totals across them.
+      </p>
+      {collections.length > 0 && (
+        <ul data-testid="collection-list" style={{ paddingLeft: "1.25rem" }}>
+          {collections.map((collection) => (
+            <li key={collection.id} style={{ marginBottom: "0.4rem" }}>
+              <a href={`#/collection/${collection.id}`}>{collection.name}</a>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form
+        onSubmit={(submit) => void addCollection(submit)}
+        style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}
+      >
+        <input
+          data-testid="new-collection-name"
+          aria-label="Collection name"
+          placeholder="e.g. Autumn 2026"
+          style={{ flex: 1, padding: "0.5rem", fontSize: "1rem" }}
+          value={newCollectionName}
+          onChange={(change) => setNewCollectionName(change.target.value)}
+          required
+        />
+        <button data-testid="create-collection" type="submit" style={smallButton}>
+          Create collection
         </button>
       </form>
 
@@ -350,6 +426,13 @@ export default function MatchListScreen() {
                     <button data-testid={`rename-${match.id}`} style={smallButton} onClick={() => startRename(match)}>
                       Rename
                     </button>
+                    <button
+                      data-testid={`collections-${match.id}`}
+                      style={smallButton}
+                      onClick={() => setCollectingId(collectingId === match.id ? null : match.id)}
+                    >
+                      Collections
+                    </button>
                     {confirmDeleteId === match.id ? (
                       <>
                         <button
@@ -376,6 +459,37 @@ export default function MatchListScreen() {
                       </button>
                     )}
                   </div>
+                  {collectingId === match.id && (
+                    <div data-testid={`collection-picker-${match.id}`} style={{ marginTop: "0.5rem", fontSize: "0.9rem" }}>
+                      {collections.map((collection) => (
+                        <label key={collection.id} style={{ display: "block", padding: "0.2rem 0" }}>
+                          <input
+                            type="checkbox"
+                            data-testid={`in-collection-${collection.id}-${match.id}`}
+                            checked={collection.matchIds.includes(match.id)}
+                            onChange={() => void toggleInCollection(collection, match.id)}
+                          />{" "}
+                          {collection.name}
+                        </label>
+                      ))}
+                      <form
+                        onSubmit={(submit) => void addCollectionWithMatch(submit, match.id)}
+                        style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem" }}
+                      >
+                        <input
+                          aria-label="New collection"
+                          placeholder="New collection"
+                          style={{ flex: 1, padding: "0.35rem" }}
+                          value={pickerCollectionName}
+                          onChange={(change) => setPickerCollectionName(change.target.value)}
+                          required
+                        />
+                        <button type="submit" style={smallButton}>
+                          Add
+                        </button>
+                      </form>
+                    </div>
+                  )}
                 </>
               )}
             </li>

@@ -6,6 +6,7 @@ import {
   action_taxonomy,
   definitions,
   derive_attributions,
+  derive_collection_stats,
   derive_playing_time,
   derive_quarter_scores,
   derive_roster,
@@ -17,7 +18,9 @@ import {
 import type { ActionKind } from "./types/ActionKind";
 import type { Position } from "./types/Position";
 import type { ActionKindInfo } from "./types/ActionKindInfo";
+import type { CollectionStats } from "./types/CollectionStats";
 import type { Descriptor } from "./types/Descriptor";
+import type { MatchFile } from "./types/MatchFile";
 import type { LogEntry } from "./types/LogEntry";
 import type { PlayingTime } from "./types/PlayingTime";
 import type { Roster } from "./types/Roster";
@@ -77,6 +80,18 @@ export function derivePlayingTime(log: LogEntry[], team: Team): PlayingTime[] | 
  */
 export function deriveStats(log: LogEntry[]): StatsReport {
   return derive_stats(log) as StatsReport;
+}
+
+/**
+ * Per-player stats summed across a Collection's matches, bucketed by team
+ * and player name (trimmed, case-insensitive) with player names folded
+ * through `aliases`. Teams come most-matches first.
+ */
+export function deriveCollectionStats(
+  matches: MatchFile[],
+  aliases: Record<string, string>,
+): CollectionStats {
+  return derive_collection_stats(matches, aliases) as CollectionStats;
 }
 
 /**

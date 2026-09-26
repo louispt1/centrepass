@@ -24,13 +24,13 @@ async function code(page: Page, position: string, action: string) {
 test("the full v1 flow works with the network disabled", async ({ page, context }) => {
   // One online visit to prime the service-worker cache (shell + WASM).
   await page.goto("/centrepass/");
-  await expect(page.getByTestId("engine-description")).toContainText("NVAC");
+  await expect(page.getByRole("heading", { name: "CentrePass" })).toBeVisible();
   await page.evaluate(() => navigator.serviceWorker.ready);
 
   // Cut the network for the remainder of the audit.
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByTestId("engine-description")).toContainText("NVAC");
+  await expect(page.getByRole("heading", { name: "CentrePass" })).toBeVisible();
   expect(await page.evaluate(() => navigator.onLine)).toBe(false);
 
   // Create a match.

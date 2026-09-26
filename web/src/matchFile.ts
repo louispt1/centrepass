@@ -28,14 +28,14 @@ export function matchBaseName(match: StoredMatch): string {
 }
 
 /**
- * Hand a file to the native share sheet when the platform can share files (a
- * phone courtside), otherwise fall back to a download. Resolves false only
- * when the coder cancelled the share sheet.
+ * Hand files to the native share sheet when the platform can share them (a
+ * phone courtside), otherwise fall back to downloading each. Resolves false
+ * only when the coder cancelled the share sheet.
  */
-export async function shareOrDownload(file: File, title: string): Promise<boolean> {
-  if (navigator.canShare?.({ files: [file] })) {
+export async function shareOrDownload(files: File[], title: string): Promise<boolean> {
+  if (navigator.canShare?.({ files })) {
     try {
-      await navigator.share({ files: [file], title });
+      await navigator.share({ files, title });
       return true;
     } catch (error) {
       // A user cancelling the share sheet is not a failure; anything else
@@ -44,24 +44,36 @@ export async function shareOrDownload(file: File, title: string): Promise<boolea
     }
   }
 
-  const url = URL.createObjectURL(file);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = file.name;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  for (const file of files) {
+    const url = URL.createObjectURL(file);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = file.name;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
   return true;
 }
 
-/** Export a match as its versioned Match File JSON (core owns the schema),
- * marking it sent unless the coder cancelled. */
-export async function exportMatch(match: StoredMatch): Promise<void> {
+/** A match as its versioned Match File JSON (core owns the schema). */
+function matchFileOf(match: StoredMatch): File {
   const { id, teamAName, teamBName, date, log } = match;
   const json = serialize_match_file({ id, teamAName, teamBName, date, log } satisfies MatchFile);
-  const fileName = `${matchBaseName(match)}.centrepass.json`;
-  if (await shareOrDownload(new File([json], fileName, { type: "application/json" }), fileName)) {
-    await markSent(match.id);
+  return new File([json], `${matchBaseName(match)}.centrepass.json`, { type: "application/json" });
+}
+
+/** Export a match as its Match File, marking it sent unless the coder cancelled. */
+export async function exportMatch(match: StoredMatch): Promise<void> {
+  const file = matchFileOf(match);
+  if (await shareOrDownload([file], file.name)) await markSent(match.id);
+}
+
+/** Export every member match's Match File in one share (or download each),
+ * marking them sent unless the coder cancelled. */
+export async function exportCollection(name: string, matches: StoredMatch[]): Promise<void> {
+  if (await shareOrDownload(matches.map(matchFileOf), name)) {
+    for (const match of matches) await markSent(match.id);
   }
 }

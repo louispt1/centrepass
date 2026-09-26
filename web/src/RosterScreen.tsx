@@ -94,6 +94,9 @@ export default function RosterScreen({ matchId }: { matchId: string }) {
         that moment; positions can stay blank and be filled later. Unnamed positions report stats
         by position.
       </p>
+      <p data-testid="naming-notice" style={{ color: "#666", fontSize: "0.9rem" }}>
+        Spell each player's name the same way every match — season stats add up matches by name.
+      </p>
       <form onSubmit={save}>
         {TEAMS.map((team) => (
           <fieldset

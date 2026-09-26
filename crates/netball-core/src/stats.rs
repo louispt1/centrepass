@@ -93,7 +93,7 @@ pub struct PlayerStats {
 }
 
 impl PlayerStats {
-    fn new(player: String) -> PlayerStats {
+    pub(crate) fn new(player: String) -> PlayerStats {
         PlayerStats {
             player,
             goals: 0,
