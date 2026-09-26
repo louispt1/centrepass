@@ -31,6 +31,19 @@ const POSITION_GRID: Position[] = ["GS", "GA", "WA", "C", "WD", "GD", "GK", "TEA
 // A netball match has four quarters, so the fourth break is full time.
 const QUARTERS = 4;
 
+// Row order for the main action grid. Gain is deliberately absent: courtside,
+// the coder always taps a sub-type instead (Pick-up when unsure), so no bare
+// Gain button is offered — the core still accepts one bare, e.g. from
+// Shorthand (see GainSubType's doc comment).
+const MAIN_ACTION_GRID: ActionKind[] = [
+  "CentrePassReceive",
+  "Feed",
+  "Goal",
+  "Rebound",
+  "UnforcedTurnover",
+  "Infringement",
+];
+
 const tapButton = {
   minHeight: "48px",
   padding: "0.5rem",
@@ -91,6 +104,7 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
 
   const taxonomy = useMemo(() => actionTaxonomy(), []);
   const gainInfo = taxonomy.find((info) => info.kind === "Gain")!;
+  const actionByKind = (kind: ActionKind) => taxonomy.find((info) => info.kind === kind)!;
   const derived = useMemo(
     () =>
       match
@@ -292,7 +306,6 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
           <>
             <span style={{ fontWeight: 600 }}>
               ▶ {teamName(inPossession)} in possession
-              {overrideTeam !== null && " (this tap)"}
             </span>
             <button
               data-testid="flip-possession"
@@ -357,19 +370,19 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
       </div>
 
       <div style={gridStyle(3)}>
-        {taxonomy.map((info) => (
-          <ActionButton
-            key={info.kind}
-            testId={`action-${info.kind}`}
-            label={ACTION_LABELS[info.kind]}
-            team={canRecord(info) ? teamFor(info.kind) : null}
-            teamName={teamName}
-            onClick={() => record(info.kind)}
-          />
-        ))}
-      </div>
-
-      <div style={gridStyle(3)}>
+        {MAIN_ACTION_GRID.map((kind) => {
+          const info = actionByKind(kind);
+          return (
+            <ActionButton
+              key={kind}
+              testId={`action-${kind}`}
+              label={ACTION_LABELS[kind]}
+              team={canRecord(info) ? teamFor(kind) : null}
+              teamName={teamName}
+              onClick={() => record(kind)}
+            />
+          );
+        })}
         {gainInfo.subTypes.map((subType) => (
           <ActionButton
             key={subType}

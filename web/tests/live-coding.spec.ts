@@ -151,7 +151,7 @@ test("never offers a position/action combination the core would reject", async (
 
   // No position selected yet: nothing recordable.
   await expect(page.getByTestId("action-Goal")).toBeDisabled();
-  await expect(page.getByTestId("action-Gain")).toBeDisabled();
+  await expect(page.getByTestId("subtype-Interception")).toBeDisabled();
 
   // Nor before anyone has the ball.
   await page.getByTestId("position-WD").click();
@@ -182,7 +182,7 @@ test("never offers a position/action combination the core would reject", async (
   // Failed stays off for a Gain, Flag does not.
   await expect(page.getByTestId("toggle-failed")).toBeDisabled();
   await expect(page.getByTestId("toggle-flagged")).toBeDisabled();
-  await page.getByTestId("action-Gain").click();
+  await page.getByTestId("subtype-PickUp").click();
   await expect(page.getByTestId("toggle-failed")).toBeDisabled();
   await expect(page.getByTestId("toggle-flagged")).toBeEnabled();
 });

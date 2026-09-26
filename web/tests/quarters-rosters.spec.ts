@@ -38,8 +38,8 @@ test("roster → code → substitute → quarter break → per-quarter score and
   const strip = page.getByTestId("event-strip");
   await expect(strip).toContainText("Beth GA Goal");
   await page.getByTestId("position-WD").click();
-  await page.getByTestId("action-Gain").click();
-  await expect(strip.getByTestId("event-strip-item").last()).toHaveText("WD Gain");
+  await page.getByTestId("subtype-PickUp").click();
+  await expect(strip.getByTestId("event-strip-item").last()).toHaveText("WD Pick-up");
 
   // Substitution: Dana takes over GA mid-quarter (completing/amending the
   // roster mid-match is the same flow). Subsequent GA events are hers.

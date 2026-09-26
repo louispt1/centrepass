@@ -3,7 +3,6 @@ import { deleteMatch, getMatch, listMatches, markSent, notSent, putMatch, type S
 import { exportMatch, parseMatchFile } from "./matchFile";
 import type { MatchFile } from "./types/MatchFile";
 import { parseShorthand } from "./engine";
-import { engine_description } from "./wasm/netball";
 
 // Swedish locale formats as YYYY-MM-DD in local time.
 const todayIsoDate = () => new Date().toLocaleDateString("sv-SE");
@@ -383,10 +382,6 @@ export default function MatchListScreen() {
           ))}
         </ul>
       )}
-
-      <footer style={{ marginTop: "3rem", color: "#666", fontSize: "0.8rem" }}>
-        Engine: <span data-testid="engine-description">{engine_description()}</span>
-      </footer>
     </main>
   );
 }
