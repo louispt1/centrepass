@@ -27,8 +27,11 @@ test("roster → code → substitute → quarter break → per-quarter score and
   await page.getByTestId("save-roster").click();
   await expect(page.getByTestId("current-quarter")).toHaveText("Q1");
 
-  // Q1: Beth (GA) scores; a gain by the unrostered WD attributes to no one.
+  // Q1: Beth (GA) takes the first centre pass and scores; a gain by the
+  // unrostered WD attributes to no player.
+  await page.getByTestId("choose-team-A").click();
   await page.getByTestId("position-GA").click();
+  await page.getByTestId("action-CentrePassReceive").click();
   await page.getByTestId("action-Goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
   const strip = page.getByTestId("event-strip");
@@ -53,10 +56,11 @@ test("roster → code → substitute → quarter break → per-quarter score and
   await page.getByTestId("quarter-break").click();
   await expect(page.getByTestId("current-quarter")).toHaveText("Q2");
 
-  // Q2: Alice (GS) scores, then the opposition answer.
+  // Q2: Alice (GS) scores, then the opposition answer off their centre pass.
   await page.getByTestId("position-GS").click();
   await page.getByTestId("action-Goal").click();
-  await page.getByTestId("goal-opposition").click();
+  await expect(page.getByTestId("action-Goal")).toHaveAttribute("data-team", "B");
+  await page.getByTestId("action-Goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("3");
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
 
@@ -85,6 +89,7 @@ test("roster → code → substitute → quarter break → per-quarter score and
   expect(kinds).toEqual([
     "Substitution", // Alice GS
     "Substitution", // Beth GA
+    "Event",
     "Event",
     "Event",
     "Substitution", // Dana GA

@@ -9,7 +9,8 @@
 //! possession ends, and a *Goal Assist* when that shot scores directly (a
 //! rebound between feed and goal breaks the link); the conversion rates count
 //! possessions that began with a centre pass or a gain and ended in a goal.
-//! These follow the NVAC deviations recorded in `CONTEXT.md`.
+//! Possessions come from [`crate::possession`] (ADR-0004). These follow the
+//! NVAC deviations recorded in `CONTEXT.md`.
 //!
 //! Count-based statistics stay exact on a timestamp-free log (e.g. a Shorthand
 //! import); only Playing Time needs the clock, so it is reported absent —
@@ -18,6 +19,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::event::{Action, LogEntry, Position, Team};
+use crate::possession::{segment_possessions, Origin, Possession};
 use crate::roster::{derive_attributions, derive_playing_time};
 use crate::score::{derive_quarter_scores, derive_score, Score};
 
@@ -41,8 +43,10 @@ pub struct StatsReport {
 pub struct TeamStats {
     pub team: Team,
     /// Players who occupied a position or were credited an event, in order of
-    /// first appearance in the log.
+    /// first appearance in the log. An event at a position no player has been
+    /// named for is credited to the position itself (e.g. "GS").
     pub players: Vec<PlayerStats>,
+    pub totals: TeamTotals,
     pub conversions: Conversions,
     /// Whether Playing Time could be derived for this team (false when any of
     /// its substitutions lacks a timestamp); when false every player's
@@ -111,13 +115,32 @@ impl PlayerStats {
     }
 }
 
+/// A team's head-to-head totals: every one of its events counted, whether or
+/// not it could be credited to a player (TEAM events included).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub struct TeamTotals {
+    pub goals: u32,
+    pub shots: u32,
+    pub gains: u32,
+    pub unforced_turnovers: u32,
+    /// Penalties conceded.
+    pub infringements: u32,
+    /// Possessions the team held (ADR-0004).
+    pub possessions: u32,
+    /// …of which ended in a goal.
+    pub possession_goals: u32,
+}
+
 /// A team's possession-conversion rates: how many possessions that started a
 /// given way ended in a goal.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub struct Conversions {
-    /// Possessions that began with a centre pass receive.
+    /// Possessions that began with a centre pass, whether or not the receive
+    /// was coded.
     pub centre_pass_total: u32,
     /// …of which ended in a goal.
     pub centre_pass_goals: u32,
@@ -125,68 +148,6 @@ pub struct Conversions {
     pub gain_total: u32,
     /// …of which ended in a goal.
     pub gain_goals: u32,
-}
-
-/// A maximal run of one team's consecutive events, ended by the team losing
-/// the ball. Beyond the "team changes" boundary of the glossary definition, a
-/// made goal, an unforced turnover, and an infringement each end a possession
-/// even when the same team is coded next (they have to win the ball back
-/// first, which the log records as a new gain or centre pass). Quarter breaks
-/// end a possession; substitutions are transparent to it.
-struct Possession {
-    team: Team,
-    /// Log indices of this possession's events, in order.
-    events: Vec<usize>,
-}
-
-/// Whether this action, once recorded, ends the active team's possession.
-fn ends_possession(action: &Action) -> bool {
-    matches!(
-        action,
-        Action::Goal { failed: false, .. }
-            | Action::UnforcedTurnover { .. }
-            | Action::Infringement { .. }
-    )
-}
-
-/// Split the log's events into possessions in match order.
-fn segment_possessions(log: &[LogEntry]) -> Vec<Possession> {
-    let mut possessions = Vec::new();
-    let mut current: Option<Possession> = None;
-    for (index, entry) in log.iter().enumerate() {
-        match entry {
-            LogEntry::QuarterBreak(_) => {
-                if let Some(possession) = current.take() {
-                    possessions.push(possession);
-                }
-            }
-            LogEntry::Substitution(_) => {}
-            LogEntry::Event(event) => {
-                let continues = matches!(&current, Some(p) if p.team == event.team);
-                if !continues {
-                    if let Some(possession) = current.take() {
-                        possessions.push(possession);
-                    }
-                    current = Some(Possession {
-                        team: event.team,
-                        events: Vec::new(),
-                    });
-                }
-                current
-                    .as_mut()
-                    .expect("just ensured Some")
-                    .events
-                    .push(index);
-                if ends_possession(&event.action) {
-                    possessions.push(current.take().expect("just pushed onto Some"));
-                }
-            }
-        }
-    }
-    if let Some(possession) = current.take() {
-        possessions.push(possession);
-    }
-    possessions
 }
 
 /// The [`Event`](crate::event::Event) at `index`, which callers only ever hand
@@ -208,10 +169,29 @@ fn tally<'a>(
     players.iter_mut().find(|stats| stats.player == name)
 }
 
+/// Who each log entry is credited to: the attributed player, or failing that
+/// the event's position (e.g. "GS") when no player has been named for it —
+/// an unnamed opposition, typically. TEAM events stay uncredited.
+fn credited_players(log: &[LogEntry]) -> Vec<Option<String>> {
+    derive_attributions(log)
+        .into_iter()
+        .zip(log)
+        .map(|(player, entry)| match entry {
+            LogEntry::Event(event) => player.or_else(|| match event.action.position() {
+                Position::Team => None,
+                position => serde_json::to_value(position)
+                    .ok()
+                    .and_then(|v| v.as_str().map(str::to_string)),
+            }),
+            _ => player,
+        })
+        .collect()
+}
+
 /// Derive the full statistics report from a match log in one pass over the
 /// coded truth.
 pub fn derive_stats(log: &[LogEntry]) -> StatsReport {
-    let attributions = derive_attributions(log);
+    let attributions = credited_players(log);
     let possessions = segment_possessions(log);
     let teams = vec![
         build_team_stats(log, &attributions, &possessions, Team::A),
@@ -265,12 +245,23 @@ fn build_team_stats(
         .collect();
 
     // Direct per-event counts, credited to the event's attributed player.
+    let mut totals = TeamTotals::default();
     for (index, entry) in log.iter().enumerate() {
         let LogEntry::Event(event) = entry else {
             continue;
         };
         if event.team != team {
             continue;
+        }
+        match event.action {
+            Action::Goal { failed, .. } => {
+                totals.shots += 1;
+                totals.goals += u32::from(!failed);
+            }
+            Action::Gain { .. } => totals.gains += 1,
+            Action::UnforcedTurnover { .. } => totals.unforced_turnovers += 1,
+            Action::Infringement { .. } => totals.infringements += 1,
+            _ => {}
         }
         let Some(stats) = tally(&mut players, &attributions[index]) else {
             continue;
@@ -314,7 +305,14 @@ fn build_team_stats(
     let mut conversions = Conversions::default();
     for possession in possessions.iter().filter(|p| p.team == team) {
         let mut last_feed: Option<usize> = None;
-        for &index in &possession.events {
+        // Only the possessing team's own events: an opposition infringement
+        // inside the possession is neither a feed nor a shot.
+        let own = possession
+            .events
+            .iter()
+            .copied()
+            .filter(|&index| event_at(log, index).team == team);
+        for index in own {
             match event_at(log, index).action {
                 Action::Feed { .. } => last_feed = Some(index),
                 Action::Goal { failed, .. } => {
@@ -335,21 +333,21 @@ fn build_team_stats(
         // Conversion rates: classify the possession by how it started and
         // whether it ended in a goal.
         let converted = possession.events.iter().any(|&index| {
-            matches!(
-                event_at(log, index).action,
-                Action::Goal { failed: false, .. }
-            )
+            let event = event_at(log, index);
+            event.team == team && matches!(event.action, Action::Goal { failed: false, .. })
         });
-        match event_at(log, possession.events[0]).action {
-            Action::CentrePassReceive { .. } => {
+        totals.possessions += 1;
+        totals.possession_goals += u32::from(converted);
+        match possession.origin {
+            Origin::CentrePass => {
                 conversions.centre_pass_total += 1;
                 conversions.centre_pass_goals += u32::from(converted);
             }
-            Action::Gain { .. } => {
+            Origin::Gain => {
                 conversions.gain_total += 1;
                 conversions.gain_goals += u32::from(converted);
             }
-            _ => {}
+            Origin::Other => {}
         }
     }
 
@@ -368,6 +366,7 @@ fn build_team_stats(
     TeamStats {
         team,
         players,
+        totals,
         conversions,
         playing_time_available,
     }
@@ -402,13 +401,7 @@ mod tests {
     }
 
     fn cpr(team: Team, position: CentrePassReceivePosition) -> LogEntry {
-        event(
-            team,
-            Action::CentrePassReceive {
-                position,
-                failed: false,
-            },
-        )
+        event(team, Action::CentrePassReceive { position })
     }
 
     fn feed(team: Team, position: FeedPosition, failed: bool) -> LogEntry {
@@ -833,5 +826,43 @@ mod tests {
         // With no substitutions at all, Playing Time is an empty availability,
         // not withheld.
         assert!(report.teams[0].playing_time_available);
+    }
+
+    #[test]
+    fn head_to_head_totals_count_every_event_and_unnamed_positions_report_as_positions() {
+        let log = [
+            cpr(Team::A, CentrePassReceivePosition::WA),
+            infringement(Team::B, Position::GD),
+            goal(Team::A, GoalPosition::GS),
+            cpr(Team::B, CentrePassReceivePosition::GA),
+            turnover(Team::B, Position::Team),
+            gain(Team::A, Position::GK, None),
+            shot(Team::A, GoalPosition::GA, true),
+        ];
+        let report = derive_stats(&log);
+        let (a, b) = (&report.teams[0], &report.teams[1]);
+        assert_eq!(
+            a.totals,
+            TeamTotals {
+                goals: 1,
+                shots: 2,
+                gains: 1,
+                unforced_turnovers: 0,
+                infringements: 0,
+                possessions: 2,
+                possession_goals: 1,
+            }
+        );
+        assert_eq!(
+            (b.totals.infringements, b.totals.unforced_turnovers),
+            (1, 1)
+        );
+        assert_eq!(b.totals.possessions, 1);
+        // No roster: A's players are their positions; B's TEAM turnover is
+        // counted in the totals but credited to no one.
+        let names: Vec<&str> = a.players.iter().map(|p| p.player.as_str()).collect();
+        assert_eq!(names, ["WA", "GS", "GK", "GA"]);
+        let names: Vec<&str> = b.players.iter().map(|p| p.player.as_str()).collect();
+        assert_eq!(names, ["GD", "GA"]);
     }
 }

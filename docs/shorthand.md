@@ -42,7 +42,8 @@ tokens, or a single marker. Each event token is:
   | `r` | Rebound |
 
 - **Modifiers** — a trailing `x` (Failed) and/or `!` (Flagged), in either order.
-  `x` is only legal on the actions that can fail: receive, feed, and goal.
+  `x` is only legal on the actions that can fail: feed and goal. A centre pass
+  that goes astray is an unforced turnover (`e`), not a failed receive.
 
 Positions and actions are joined with no space: `1g` is a goal by GS, `3c` a
 centre-pass receive by WA, `6pi` a gain-by-interception by GD.
@@ -53,9 +54,12 @@ centre-pass receive by WA, `6pi` a gain-by-interception by GD.
 
 ## Teams, quarters, comments
 
-- **Team** — a leading `a` or `b` on a line chooses the possession's team
-  (`a` = your team, `b` = the opposition). With no prefix the line belongs to
-  your team.
+- **Team** — a leading `a` or `b` on a line chooses the possession's team: the
+  team with the ball. With no prefix the line belongs to team `a`. Every event
+  on the line is that team's **except an infringement (`i`)**, which is always
+  committed by the team *out of* possession — `a 2c 6i 1g` is B's GD
+  infringing while A attack. (An attacking infringement loses the ball, so code
+  it as an unforced turnover, `e`.)
 - **Quarter break** — a line of just `QT`.
 - **Comments** — anything in `(parentheses)` is ignored, handy for notes.
 - Substitutions are not yet importable from Shorthand.

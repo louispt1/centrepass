@@ -1,9 +1,8 @@
 //! The coded event model: the only stored truth for a match (ADR-0003).
 //!
-//! The model is two-team-native — every event carries a [`Team`] — even
-//! though the v1 tap UI codes only the active team in detail. Opposition
-//! goals are ordinary Goal events attributed to the other team; nothing in
-//! this crate special-cases them.
+//! The model is two-team-native — every event carries a [`Team`] — and both
+//! teams are coded in full (ADR-0004); which team holds the ball is derived
+//! in [`crate::possession`], never stored.
 //!
 //! Invalid events are unrepresentable: each [`Action`] variant that is only
 //! legal for some positions carries a position-subset enum rather than a bare
@@ -15,8 +14,8 @@
 use serde::{Deserialize, Serialize};
 
 /// One of the two teams in a match, identified positionally. Which name each
-/// slot carries (and which one the coder codes in detail) is match metadata
-/// owned by the caller, not part of the event model.
+/// slot carries is match metadata owned by the caller, not part of the event
+/// model.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub enum Team {
@@ -139,7 +138,7 @@ position_subset!(
 
 position_subset!(
     /// Shots may only be taken by GS or GA. TEAM covers a goal whose shooter
-    /// is not coded — the one-tap Opposition goal in the v1 UI.
+    /// is not coded.
     GoalPosition { GS, GA, Team }
 );
 
@@ -165,15 +164,15 @@ pub enum GainSubType {
 /// Variants carry their own position (restricted to the legal subset) and,
 /// where an unsuccessful attempt is meaningful, a `failed` flag: a Goal with
 /// `failed: true` is a missed shot, a failed Feed is an incomplete one.
-/// Turnovers and infringements are already failures, and a Rebound is by
-/// definition a successful regather, so those cannot carry `failed`.
+/// Turnovers and infringements are already failures, a Rebound is by
+/// definition a successful regather, and a lost centre pass is coded as an
+/// Unforced Turnover, so those cannot carry `failed`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub enum Action {
     CentrePassReceive {
         position: CentrePassReceivePosition,
-        failed: bool,
     },
     Feed {
         position: FeedPosition,
@@ -327,7 +326,6 @@ mod tests {
                 team: Team::A,
                 action: Action::CentrePassReceive {
                     position: CentrePassReceivePosition::GA,
-                    failed: false,
                 },
                 flagged: false,
                 timestamp_ms: Some(1),

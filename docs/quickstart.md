@@ -13,21 +13,34 @@ to move matches between them.
 
 ## 1. Create the match
 
-Tap **New match**, enter your team, the opposition, and the date.
+Tap **New match**, enter both teams' names and the date.
 
 ![Creating a match](img/01-create-match.png)
 
 ## 2. Enter your roster
 
-Put a player's name (or number) against each position. You can substitute
-players later from the **Roster / Sub** button during the match; playing time is
+Put a player's name (or number) against each position. The other team's roster
+is optional — any position left blank reports its stats under the position
+(GS, GA, …). You can substitute players later from the **Roster / Sub** button during the match; playing time is
 worked out from when each change happens.
 
 ![Entering the roster](img/02-roster.png)
 
 ## 3. Code the match
 
-This is the screen you'll use courtside. To record something a player did:
+This is the screen you'll use courtside. You code **both teams**, and the app
+keeps track of who has the ball: the banner under the score says which team is
+in possession, and every action button names (and is outlined in the colour of)
+the team a tap will be recorded for.
+
+At the first centre pass the banner asks **who has the centre pass** — pick the
+team that won the toss. After that, possession follows the play: a turnover
+hands the ball over, a **Gain** or an **Infringement** is always by the team
+*without* the ball, a GD/GK **Rebound** belongs to the defenders, and after each
+goal (and each quarter) the centre pass alternates. If the app ever has it
+wrong, tap **Flip ⇄** — it swaps the team for your next tap only.
+
+To record something a player did:
 
 1. Tap the **position** (GS, GA, … or TEAM if you can't attribute it).
 2. Tap the **action** (Goal / Shot, Feed, Gain, …).
@@ -39,13 +52,13 @@ That's two taps per event. A few extras:
 - **Flag ⚑** — tap straight after an event to mark it for review later.
 
 Failed and Flag always apply to the last event you recorded.
-- **Opposition goal** — one tap adds a goal for the other team to the scoreboard.
 - **Undo** — removes the last thing you recorded.
 - **End Q1 / Q2 / Q3** — marks the end of each quarter (the fourth is full time).
 - **Reference** — a reminder of every position, action, and modifier, without
   losing your place.
 
-The strip under the score shows your last few events so you can spot-check.
+The strip under the score shows your last few events, each in its team's
+colour, so you can spot-check.
 
 ![Live coding](img/03-live-coding.png)
 
@@ -56,8 +69,9 @@ coding screen and closes straight back to it, exactly where you were.
 
 ## 4. Read the stats
 
-Tap **Stats** for the full picture: the final score and per-quarter scores,
-each player's goals, feeds, assists, rebounds, turnovers and gains, and the
+Tap **Stats** for the full picture: a head-to-head of both teams (shooting,
+possessions converted, gains, turnovers, penalties), the final score and
+per-quarter scores, each player's goals, feeds, assists, rebounds, turnovers and gains, and the
 team's centre-pass and gain conversion rates. Everything is derived from what
 you coded — nothing is entered twice.
 

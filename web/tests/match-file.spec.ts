@@ -50,16 +50,22 @@ async function expectStats(page: Page) {
 test("export a coded match → delete it → re-import → stats are identical", async ({ page }) => {
   await createMatchWithRoster(page);
 
-  // A short but distinctive match: a converted centre pass, an opposition
-  // reply, then a gain converted to a second goal.
+  // A short but distinctive match: a converted centre pass, a gain off their
+  // centre pass converted to a second goal, then their reply.
+  await page.getByTestId("choose-team-A").click();
   await code(page, "GA", "CentrePassReceive");
   await code(page, "WA", "Feed");
   await code(page, "GS", "Goal");
-  await page.getByTestId("goal-opposition").click();
+  await code(page, "GA", "CentrePassReceive"); // theirs
   await page.getByTestId("position-GD").click();
   await page.getByTestId("subtype-Interception").click();
   await code(page, "GS", "Goal");
   await expect(page.getByTestId("score-team-a")).toHaveText("2");
+  // Our centre pass is turned over and they score.
+  await code(page, "WA", "CentrePassReceive");
+  await code(page, "C", "UnforcedTurnover");
+  await code(page, "GS", "Goal");
+  await expect(page.getByTestId("score-team-b")).toHaveText("1");
 
   // Baseline: the exporting device's stats.
   await expectStats(page);

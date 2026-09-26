@@ -2,7 +2,8 @@
 //! its event log plus metadata — and the unit of export, import, backup, and
 //! migration (ADR-0003, `CONTEXT.md`).
 //!
-//! A Match File is a versioned JSON document (`"version": 1`). (De)serialization
+//! A Match File is a versioned JSON document (`"version": 2`); older versions
+//! are migrated on read. (De)serialization
 //! lives here in the core, not the UI, so every entry path shares one schema and
 //! one validation: a file round-trips perfectly (importing an exported match on
 //! another device yields an identical match, and so identical stats), and an
@@ -15,9 +16,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::event::LogEntry;
 
-/// The Match File format version this engine reads and writes. Bump this only
-/// alongside a migration; [`MatchFile::from_json`] rejects any other version.
-pub const MATCH_FILE_VERSION: u32 = 1;
+/// The Match File format version this engine writes. Bump this only alongside
+/// a migration; [`MatchFile::from_json`] migrates older versions and rejects
+/// newer ones.
+pub const MATCH_FILE_VERSION: u32 = 2;
 
 /// One match in its portable form: the append-only log that is the only stored
 /// truth (ADR-0003), plus the metadata needed to name and date it. The `version`
@@ -27,9 +29,9 @@ pub const MATCH_FILE_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub struct MatchFile {
-    /// Name of team A — the active team, coded in detail.
+    /// Name of team A.
     pub team_a_name: String,
-    /// Name of team B — the opposition.
+    /// Name of team B.
     pub team_b_name: String,
     /// Match date, `YYYY-MM-DD`.
     pub date: String,
@@ -108,22 +110,43 @@ impl MatchFile {
         }
         let peek: VersionPeek =
             serde_json::from_str(json).map_err(|_| MatchFileError::Malformed)?;
+        let mut value: serde_json::Value =
+            serde_json::from_str(json).map_err(|_| MatchFileError::Malformed)?;
         match peek.version {
-            None => return Err(MatchFileError::Malformed),
-            Some(version) if version != MATCH_FILE_VERSION => {
-                return Err(MatchFileError::UnsupportedVersion { found: version })
-            }
-            Some(_) => {}
+            None | Some(0) => return Err(MatchFileError::Malformed),
+            Some(1) => migrate_v1_log(&mut value["log"]),
+            Some(MATCH_FILE_VERSION) => {}
+            Some(version) => return Err(MatchFileError::UnsupportedVersion { found: version }),
         }
 
         let versioned: VersionedMatchFile =
-            serde_json::from_str(json).map_err(|_| MatchFileError::Malformed)?;
+            serde_json::from_value(value).map_err(|_| MatchFileError::Malformed)?;
         Ok(MatchFile {
             team_a_name: versioned.team_a_name,
             team_b_name: versioned.team_b_name,
             date: versioned.date,
             log: versioned.log,
         })
+    }
+}
+
+/// Version 1 → 2: a Centre Pass Receive can no longer fail (ADR-0004). A
+/// failed one is rewritten as the Unforced Turnover it is now coded as, at the
+/// same position for the same team; a successful one just drops the flag.
+fn migrate_v1_log(log: &mut serde_json::Value) {
+    let Some(entries) = log.as_array_mut() else {
+        return;
+    };
+    for entry in entries {
+        let Some(action) = entry.get_mut("action").and_then(|a| a.as_object_mut()) else {
+            continue;
+        };
+        if action.get("type").and_then(|t| t.as_str()) != Some("CentrePassReceive") {
+            continue;
+        }
+        if action.remove("failed") == Some(true.into()) {
+            action.insert("type".into(), "UnforcedTurnover".into());
+        }
     }
 }
 
@@ -168,8 +191,8 @@ mod tests {
     fn to_json_tags_the_current_version() {
         let json = sample_match().to_json();
         assert!(
-            json.starts_with(r#"{"version":1,"#),
-            "expected a version-1 envelope, got {json}"
+            json.starts_with(r#"{"version":2,"#),
+            "expected a version-2 envelope, got {json}"
         );
     }
 
@@ -182,15 +205,48 @@ mod tests {
 
     #[test]
     fn an_unrecognised_version_is_rejected_with_its_number() {
-        let json = r#"{"version":2,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
+        let json = r#"{"version":3,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
         assert_eq!(
             MatchFile::from_json(json),
-            Err(MatchFileError::UnsupportedVersion { found: 2 })
+            Err(MatchFileError::UnsupportedVersion { found: 3 })
         );
         // The message names the offending version and points at the fix.
-        let message = MatchFileError::UnsupportedVersion { found: 2 }.to_string();
-        assert!(message.contains('2'));
+        let message = MatchFileError::UnsupportedVersion { found: 3 }.to_string();
+        assert!(message.contains('3'));
         assert!(message.contains("Update CentrePass"));
+    }
+
+    #[test]
+    fn a_version_1_file_migrates_failed_centre_pass_receives_to_turnovers() {
+        let json = concat!(
+            r#"{"version":1,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":["#,
+            r#"{"kind":"Event","team":"A","action":{"type":"CentrePassReceive","position":"WA","failed":false},"flagged":false,"timestampMs":1},"#,
+            r#"{"kind":"Event","team":"B","action":{"type":"CentrePassReceive","position":"GD","failed":true},"flagged":true,"timestampMs":2},"#,
+            r#"{"kind":"QuarterBreak","timestampMs":3}]}"#
+        );
+        let log = MatchFile::from_json(json).unwrap().log;
+        let event = |entry: &LogEntry| match entry {
+            LogEntry::Event(event) => event.clone(),
+            other => panic!("expected an event, got {other:?}"),
+        };
+        assert_eq!(
+            event(&log[0]).action,
+            Action::CentrePassReceive {
+                position: CentrePassReceivePosition::WA
+            }
+        );
+        assert_eq!(
+            event(&log[1]),
+            Event {
+                team: Team::B,
+                action: Action::UnforcedTurnover {
+                    position: Position::GD
+                },
+                flagged: true,
+                timestamp_ms: Some(2),
+            }
+        );
+        assert!(matches!(log[2], LogEntry::QuarterBreak(_)));
     }
 
     #[test]
@@ -212,7 +268,7 @@ mod tests {
         // A shot by WD cannot exist in the model; the file is rejected whole,
         // leaving no partial match behind.
         let json = concat!(
-            r#"{"version":1,"teamAName":"A","teamBName":"B","date":"2026-07-10","#,
+            r#"{"version":2,"teamAName":"A","teamBName":"B","date":"2026-07-10","#,
             r#""log":[{"kind":"Event","team":"A","#,
             r#""action":{"type":"Goal","position":"WD","failed":false},"#,
             r#""flagged":false,"timestampMs":1}]}"#
@@ -258,16 +314,13 @@ mod tests {
 
     fn arb_action() -> impl Strategy<Value = Action> {
         prop_oneof![
-            (
-                prop_oneof![
-                    Just(CentrePassReceivePosition::GA),
-                    Just(CentrePassReceivePosition::WA),
-                    Just(CentrePassReceivePosition::WD),
-                    Just(CentrePassReceivePosition::GD),
-                ],
-                any::<bool>()
-            )
-                .prop_map(|(position, failed)| Action::CentrePassReceive { position, failed }),
+            prop_oneof![
+                Just(CentrePassReceivePosition::GA),
+                Just(CentrePassReceivePosition::WA),
+                Just(CentrePassReceivePosition::WD),
+                Just(CentrePassReceivePosition::GD),
+            ]
+            .prop_map(|position| Action::CentrePassReceive { position }),
             (
                 prop_oneof![
                     Just(FeedPosition::GS),

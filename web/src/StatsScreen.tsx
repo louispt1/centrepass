@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { Conversions } from "./types/Conversions";
 import type { PlayerStats } from "./types/PlayerStats";
 import type { TeamStats } from "./types/TeamStats";
+import type { TeamTotals } from "./types/TeamTotals";
 import { deriveStats } from "./engine";
+import { TEAM_COLOURS } from "./events";
 import { getMatch, type StoredMatch } from "./storage";
 import { shareSummaryImage } from "./summaryImage";
 
@@ -38,7 +40,9 @@ function gainsLabel(player: PlayerStats): string {
 }
 
 function PlayerTable({ team, teamName }: { team: TeamStats; teamName: string }) {
-  const showTime = team.playingTimeAvailable;
+  // A team with no roster (typically the opposition) has no minutes to show.
+  const showTime =
+    team.playingTimeAvailable && team.players.some((player) => player.playingTimeMs != null);
   return (
     <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
       <table
@@ -108,19 +112,58 @@ function PlayerTable({ team, teamName }: { team: TeamStats; teamName: string }) 
               </td>
               {showTime && (
                 <td style={rowCell} data-testid={`stat-${player.player}-mins`}>
-                  {player.playingTimeMs === null ? "–" : formatMinutes(player.playingTimeMs)}
+                  {player.playingTimeMs == null ? "–" : formatMinutes(player.playingTimeMs)}
                 </td>
               )}
             </tr>
           ))}
         </tbody>
       </table>
-      {!showTime && (
+      {!team.playingTimeAvailable && (
         <p style={{ color: "#666", fontSize: "0.8rem", margin: "0.25rem 0" }}>
           Playing time unavailable — this match has no timestamps.
         </p>
       )}
     </div>
+  );
+}
+
+/** Head-to-head rows: label and how to render one team's totals. */
+const HEAD_TO_HEAD: [label: string, key: string, show: (t: TeamTotals) => string][] = [
+  ["Goals", "goals", (t) => ratio(t.goals, t.shots)],
+  ["Possessions → goal", "possessions", (t) => ratio(t.possessionGoals, t.possessions)],
+  ["Gains", "gains", (t) => `${t.gains}`],
+  ["Unforced turnovers", "turnovers", (t) => `${t.unforcedTurnovers}`],
+  ["Penalties conceded", "infringements", (t) => `${t.infringements}`],
+];
+
+function HeadToHead({ a, b, teamName }: { a: TeamStats; b: TeamStats; teamName: (t: string) => string }) {
+  return (
+    <table
+      data-testid="head-to-head"
+      style={{ borderCollapse: "collapse", fontSize: "0.9rem", marginBottom: "1.5rem", width: "100%" }}
+    >
+      <thead>
+        <tr>
+          <th style={{ ...headCell, color: TEAM_COLOURS.A }}>{teamName("A")}</th>
+          <th style={{ ...headCell, textAlign: "center" }} />
+          <th style={{ ...headCell, textAlign: "left", color: TEAM_COLOURS.B }}>{teamName("B")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {HEAD_TO_HEAD.map(([label, key, show]) => (
+          <tr key={key}>
+            <td style={rowCell} data-testid={`h2h-A-${key}`}>
+              {show(a.totals)}
+            </td>
+            <td style={{ ...rowCell, textAlign: "center", fontWeight: 600 }}>{label}</td>
+            <td style={{ ...rowCell, textAlign: "left" }} data-testid={`h2h-B-${key}`}>
+              {show(b.totals)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -235,6 +278,9 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
           Share summary image
         </button>
       </div>
+
+      <h2 style={{ fontSize: "1.05rem" }}>Head to head</h2>
+      <HeadToHead a={report.teams[0]} b={report.teams[1]} teamName={teamName} />
 
       <h2 style={{ fontSize: "1.05rem" }}>Score by quarter</h2>
       <table style={{ borderCollapse: "collapse", fontSize: "0.9rem", marginBottom: "1.5rem" }}>

@@ -11,6 +11,12 @@ import type { GoalPosition } from "./types/GoalPosition";
 import type { LogEntry } from "./types/LogEntry";
 import type { Position } from "./types/Position";
 import type { ReboundPosition } from "./types/ReboundPosition";
+import type { Team } from "./types/Team";
+
+/** Fixed team colours: every tap and log entry shows whose it is. */
+export const TEAM_COLOURS: Record<Team, string> = { A: "#0f4c5c", B: "#a4343a" };
+
+export const otherTeam = (team: Team): Team => (team === "A" ? "B" : "A");
 
 /**
  * Build an Action for a taxonomy-driven tap. The casts narrow Position to
@@ -25,7 +31,7 @@ export function buildAction(
 ): Action {
   switch (kind) {
     case "CentrePassReceive":
-      return { type: "CentrePassReceive", position: position as CentrePassReceivePosition, failed };
+      return { type: "CentrePassReceive", position: position as CentrePassReceivePosition };
     case "Feed":
       return { type: "Feed", position: position as FeedPosition, failed };
     case "Goal":
@@ -71,7 +77,8 @@ export const SUB_TYPE_LABELS: Record<GainSubType, string> = {
 
 /**
  * One-line rendering of a log entry for the spot-check strip, e.g.
- * "WD Intercept", "Beth GA Goal ✕ ⚑", "Dana → GA", or "Q break". A coded
+ * "WD Intercept", "Beth GA Goal ✕ ⚑", "Dana → GA", or "Q break"; the caller
+ * marks which team it belongs to. A coded
  * event's attributed player (from deriveAttributions) leads when known, so a
  * substitution's effect is visible on the very next tap.
  */
@@ -87,6 +94,5 @@ export function formatEntry(entry: LogEntry, player: string | null = null): stri
   if (player) parts.unshift(player);
   if ("failed" in action && action.failed) parts.push("✕");
   if (entry.flagged) parts.push("⚑");
-  if (entry.team === "B") parts.unshift("Opp");
   return parts.join(" ");
 }

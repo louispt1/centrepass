@@ -7,6 +7,7 @@
 pub mod definitions;
 pub mod event;
 pub mod match_file;
+pub mod possession;
 pub mod roster;
 pub mod score;
 pub mod shorthand;
@@ -21,10 +22,11 @@ pub use event::{
     GoalPosition, LogEntry, Position, QuarterBreak, ReboundPosition, Substitution, Team,
 };
 pub use match_file::{MatchFile, MatchFileError, MATCH_FILE_VERSION};
+pub use possession::{derive_team_in_possession, resolve_team};
 pub use roster::{derive_attributions, derive_playing_time, derive_roster, PlayingTime, Roster};
 pub use score::{derive_quarter_scores, derive_score, Score};
 pub use shorthand::{parse_shorthand, ShorthandError, ShorthandErrorKind};
-pub use stats::{derive_stats, Conversions, PlayerStats, StatsReport, TeamStats};
+pub use stats::{derive_stats, Conversions, PlayerStats, StatsReport, TeamStats, TeamTotals};
 pub use taxonomy::{action_taxonomy, ActionKind, ActionKindInfo};
 
 /// The event taxonomy this engine implements, with its citation.

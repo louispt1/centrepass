@@ -6,9 +6,7 @@ import type { LogEntry } from "./types/LogEntry";
 
 export interface StoredMatch {
   id: string;
-  /** Name of team A — the active team, coded in detail. */
   teamAName: string;
-  /** Name of team B — the opposition. */
   teamBName: string;
   /** Match date, YYYY-MM-DD. */
   date: string;
@@ -18,7 +16,7 @@ export interface StoredMatch {
 }
 
 const DB_NAME = "centrepass";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const MATCH_STORE = "matches";
 
 let dbPromise: Promise<IDBDatabase> | undefined;
@@ -29,8 +27,8 @@ function openDb(): Promise<IDBDatabase> {
     request.onupgradeneeded = (upgrade) => {
       if (upgrade.oldVersion < 1) {
         request.result.createObjectStore(MATCH_STORE, { keyPath: "id" });
-      } else if (upgrade.oldVersion < 3) {
-        migrateToV3Log(request.transaction!.objectStore(MATCH_STORE));
+      } else {
+        migrateMatches(request.transaction!.objectStore(MATCH_STORE), upgrade.oldVersion);
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -39,37 +37,60 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
+// One cursor pass applying every migration step newer than the stored
+// version, in order (separate cursors over the same store would interleave).
+function migrateMatches(store: IDBObjectStore, oldVersion: number) {
+  store.openCursor().onsuccess = (found) => {
+    const cursor = (found.target as IDBRequest<IDBCursorWithValue | null>).result;
+    if (!cursor) return;
+    let match = cursor.value;
+    if (oldVersion < 3) match = migrateToV3Log(match);
+    if (oldVersion < 4) match = migrateToV4Log(match);
+    cursor.update(match);
+    cursor.continue();
+  };
+}
+
+// v4 (Match File v2, ADR-0004): a Centre Pass Receive can no longer fail. A
+// failed one becomes the Unforced Turnover it is now coded as, same position
+// and team; a successful one just drops the flag. Mirrors the core's Match
+// File migration.
+function migrateToV4Log(match: StoredMatch): StoredMatch {
+  const log = match.log.map((entry) => {
+    if (entry.kind !== "Event" || entry.action.type !== "CentrePassReceive") return entry;
+    const { failed, ...action } = entry.action as typeof entry.action & { failed?: boolean };
+    return {
+      ...entry,
+      action: failed ? { type: "UnforcedTurnover" as const, position: action.position } : action,
+    };
+  });
+  return { ...match, log };
+}
+
 // v3 renamed `events` to `log` and made each entry a kind-tagged LogEntry so
 // quarter breaks and substitutions live in the same log as coded events.
 // v1 (issue 02) is also handled here: it stored an event's action as the
 // bare string "Goal", with no coded shooter, so those become TEAM-attributed
 // goals.
-function migrateToV3Log(store: IDBObjectStore) {
+function migrateToV3Log(stored: unknown): StoredMatch {
   type PreV3Event = {
     team: "A" | "B";
     action: unknown;
     flagged?: boolean;
     timestampMs: number | null;
   };
-  store.openCursor().onsuccess = (found) => {
-    const cursor = (found.target as IDBRequest<IDBCursorWithValue | null>).result;
-    if (!cursor) return;
-    const { events, ...match } = cursor.value as Omit<StoredMatch, "log"> & {
-      events: PreV3Event[];
-    };
-    const log = events.map((event) => ({
-      kind: "Event",
-      team: event.team,
-      action:
-        event.action === "Goal"
-          ? { type: "Goal", position: "TEAM", failed: false }
-          : event.action,
-      flagged: event.flagged ?? false,
-      timestampMs: event.timestampMs,
-    }));
-    cursor.update({ ...match, log });
-    cursor.continue();
+  const { events, ...match } = stored as Omit<StoredMatch, "log"> & {
+    events: PreV3Event[];
   };
+  const log = events.map((event) => ({
+    kind: "Event",
+    team: event.team,
+    action:
+      event.action === "Goal" ? { type: "Goal", position: "TEAM", failed: false } : event.action,
+    flagged: event.flagged ?? false,
+    timestampMs: event.timestampMs,
+  }));
+  return { ...match, log } as StoredMatch;
 }
 
 function asPromise<T>(request: IDBRequest<T>): Promise<T> {

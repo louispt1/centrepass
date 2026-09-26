@@ -10,12 +10,9 @@ Recording netball match events courtside and deriving team and player statistics
 The person recording events during or after a match — typically a club volunteer courtside with a phone or tablet.
 _Avoid_: stats-keeper, scorer, user
 
-**Active Team**:
-The team whose players an event's position codes refer to. Every event belongs to exactly one team.
-_Avoid_: our team, home team
-
-**Opposition**:
-The team the coder is not coding in detail. In v1 live coding only their goals are recorded, as ordinary Goal events attributed to them.
+**Team**:
+One of the two sides in a match, A or B, both coded in full. Every event belongs to exactly one team, whose players its position code refers to.
+_Avoid_: active team, opposition, home/away team
 
 ### Recording
 
@@ -28,8 +25,15 @@ One coded observation: a position, an action, and optional modifiers, attributed
 _Avoid_: stat, record, entry
 
 **Possession**:
-A maximal run of consecutive events by the same team. Possession boundaries are derived from the event log, not coded.
+A span of the log during which one team is the Team in Possession, from winning the ball (centre pass, gain, rebound) until it changes hands or a goal is scored. Events by the other team (an infringement) may fall inside it. Possession boundaries are derived from the event log, not coded.
 _Avoid_: play, phase
+
+**Team in Possession**:
+The team derived to hold the ball after the latest event, and so the default team for the next coded event. The coder may override it; the override is simply the team recorded on the next event. Undetermined before the first event — the first centre pass (decided by the toss) is whichever team the coder codes it for.
+_Avoid_: current team, attacking team
+
+**Centre Pass Alternation**:
+The rule that centre passes alternate between the teams throughout the match, regardless of who scored, carrying across quarter breaks. After a goal or a quarter break, the Team in Possession is the team due the next centre pass. The alternation is anchored on the team actually coded for each centre pass, so correcting one re-aligns every later prediction.
 
 **Coded**:
 Describes a datum the coder enters directly (e.g. a Goal).
@@ -39,7 +43,7 @@ Describes a datum computed from coded events (e.g. Goal Assist, possession bound
 _Avoid_: calculated, synthetic
 
 **Shorthand**:
-The compact text grammar for describing events (`1c 2f 1gx`), one possession per line. A power-user input and interchange format, not the primary interface.
+The compact text grammar for describing events (`1c 2f 1gx`), one possession per line; a line's team is its Team in Possession, so an infringement on it belongs to the other team. A power-user input and interchange format, not the primary interface.
 _Avoid_: coding string, batch format
 
 **Position**:
@@ -48,7 +52,7 @@ One of the seven on-court netball positions (GS, GA, WA, C, WD, GD, GK), or TEAM
 ### Actions (NVAC-aligned)
 
 **Centre Pass Receive**:
-Receiving the ball from the centre pass within the centre third.
+Receiving the ball from the centre pass within the centre third. Cannot fail: a centre pass that goes astray is an Unforced Turnover.
 _Avoid_: CPR (in prose)
 
 **Feed**:
@@ -60,19 +64,19 @@ A successful shot. A **Shot** with the Failed modifier is an unsuccessful attemp
 _Avoid_: score, basket
 
 **Gain**:
-Winning possession from the opposition while play continues. Optional sub-types: **Interception**, **Deflection**, **Pick-up**.
+Winning possession from the opposition while play continues, coded once for the winning team — always the team not previously in possession; the losing team records nothing. Optional sub-types: **Interception**, **Deflection**, **Pick-up**.
 _Avoid_: steal, takeaway, general play turnover
 
 **Unforced Turnover**:
-Losing possession through the active team's own error or infringement.
+Losing possession through the team's own error or infringement.
 _Avoid_: error (as a term of art)
 
 **Infringement**:
-An action contrary to the rules, penalised by the umpire.
+An action contrary to the rules, penalised by the umpire, committed by the team not in possession; it does not change the Team in Possession. An infringement by the team in possession is an Unforced Turnover.
 _Avoid_: penalty
 
 **Rebound**:
-Regathering the ball after an unsuccessful shot. Attacking (by GS/GA) or Defensive (by GD/GK) is derived from position.
+Regathering the ball after an unsuccessful shot. Attacking (by GS/GA) or Defensive (by GD/GK) is derived from position; an Attacking Rebound belongs to the shooting team, a Defensive one to its opponent.
 
 ### Modifiers and structure
 

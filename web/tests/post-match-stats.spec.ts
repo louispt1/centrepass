@@ -36,13 +36,15 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
 
   // Possession 1 — our centre pass converts: Beth (GA) receives, Wanda (WA)
   // feeds, Alice (GS) scores. That feed is a feed-with-shot and an assist.
+  await page.getByTestId("choose-team-A").click();
   await code(page, "GA", "CentrePassReceive");
   await code(page, "WA", "Feed");
   await code(page, "GS", "Goal");
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
 
-  // The opposition answer from their own centre pass.
-  await page.getByTestId("goal-opposition").click();
+  // The opposition answer from their own centre pass (their GA is unnamed).
+  await code(page, "GA", "CentrePassReceive");
+  await code(page, "GA", "Goal");
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
 
   // Possession 2 — our centre pass is turned over by Cara (C): no goal.
@@ -66,12 +68,15 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await page.getByTestId("quarter-break").click();
   await expect(page.getByTestId("current-quarter")).toHaveText("Q2");
 
-  // Possession 4 — Kira (GK) deflects a gain but then infringes: no goal.
-  await page.getByTestId("position-GK").click();
-  await page.getByTestId("subtype-Deflection").click();
+  // Q2 opens with their centre pass: Kira (GK) infringes defending it, then
+  // deflects a gain; we turn it over (TEAM) with no goal.
   await code(page, "GK", "Infringement");
+  await page.getByTestId("subtype-Deflection").click();
+  await code(page, "TEAM", "UnforcedTurnover");
 
-  // Possession 5 — Kira takes a defensive rebound under her own post.
+  // Their GS misses and Kira takes the defensive rebound.
+  await code(page, "GS", "Goal");
+  await page.getByTestId("toggle-failed").click();
   await code(page, "GK", "Rebound");
 
   // --- The stat views ----------------------------------------------------
@@ -81,6 +86,18 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await expect(page.getByTestId("final-score")).toHaveText("2–1");
   await expect(page.getByTestId("quarter-score-1")).toContainText("2–1");
   await expect(page.getByTestId("quarter-score-2")).toContainText("0–0");
+
+  // Head to head: every event of each team, and their possessions.
+  await expect(page.getByTestId("h2h-A-goals")).toHaveText("2/3 (67%)");
+  await expect(page.getByTestId("h2h-B-goals")).toHaveText("1/2 (50%)");
+  await expect(page.getByTestId("h2h-A-possessions")).toHaveText("2/5 (40%)");
+  await expect(page.getByTestId("h2h-B-possessions")).toHaveText("1/3 (33%)");
+  await expect(page.getByTestId("h2h-A-turnovers")).toHaveText("2");
+  await expect(page.getByTestId("h2h-A-infringements")).toHaveText("1");
+
+  // Their unnamed GA reports under the position.
+  await expect(page.getByTestId("player-table-B")).toContainText("GA");
+  await expect(page.getByTestId("stat-GA-goals")).toHaveText("1/1 (100%)");
 
   // Team conversion rates: two centre passes, one converted; two gains, one
   // converted.

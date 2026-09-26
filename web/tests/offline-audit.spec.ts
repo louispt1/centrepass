@@ -52,10 +52,11 @@ test("the full v1 flow works with the network disabled", async ({ page, context 
   await page.getByTestId("reference-close").click();
 
   // Code a converted centre pass and an opposition reply.
+  await page.getByTestId("choose-team-A").click();
   await code(page, "GA", "CentrePassReceive");
   await code(page, "WA", "Feed");
   await code(page, "GS", "Goal");
-  await page.getByTestId("goal-opposition").click();
+  await code(page, "GS", "Goal"); // their reply, off their centre pass
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
 

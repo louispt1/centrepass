@@ -8,7 +8,7 @@ Plan for building CentrePass v1, as decided in the design session of 2026-07-10 
 - **Platform**: **local-first PWA**, static hosting on GitHub Pages, fully offline-capable, no server, no accounts (ADR-0001).
 - **Architecture**: pure Rust domain crate (`netball-core`) behind wasm-bindgen; TypeScript UI (Vite-based; React or Svelte — pick at scaffold time) owning IndexedDB persistence (ADR-0002).
 - **Data model**: append-only event log per match as source of truth; two-team-native events; JSON **Match File** as the export/share/migration format (ADR-0003).
-- **v1 live coding scope**: active team coded in full + one-tap Opposition goals for the scoreboard. Full two-team tap coding is a later UI addition.
+- **Live coding scope**: both teams coded in full, with a derived Team in Possession choosing each tap's team (ADR-0004). *(v1 originally shipped single-team coding with one-tap Opposition goals.)*
 - **v1 features**: match setup with roster → live tap coding (undo, quarters, substitutions) → per-match stat views (goals, feeds, rebounds, errors, conversions, playing time) → Match File export/import + shareable **Summary Image**. Shorthand import included. Collections, flagged-review UI, and URL share links deferred to v1.x.
 - **License**: MIT OR Apache-2.0 (dual, Rust convention).
 - **Name**: **CentrePass** — verified free on crates.io and unique on GitHub at decision time (2026-07-10).
@@ -19,7 +19,7 @@ Plan for building CentrePass v1, as decided in the design session of 2026-07-10 
 - **Quarter boundaries and substitutions are events in the log**, not side tables, so replay reconstructs everything.
 - **The Flagged modifier is in the event model from day one** even though the review UI is deferred.
 - **NVAC definitions live in `netball-core` as data** and generate the human-readable DEFINITIONS.md.
-- **Opposition goals are ordinary Goal events attributed to the other team** — no special case in the core.
+- **Both teams' events are ordinary events** — no special case in the core; which team has the ball is derived (ADR-0004).
 
 ## Phases
 

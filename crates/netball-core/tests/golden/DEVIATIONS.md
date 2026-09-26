@@ -58,37 +58,55 @@ noted here for the record.
 
 ## Deviation 1 — derived possession boundaries (`derived-possession-boundaries`)
 
-**Every** entry in `deviations.json` is this one difference.
+CentrePass derives possession boundaries from the event log (ADR-0003,
+ADR-0004): a possession begins at a centre pass or a gain and runs while one
+team holds the ball, ended by a made goal, an unforced turnover, a quarter
+break, or the other team taking it. The predecessor app instead recorded an
+explicit `RESET` sentinel every time the coder pressed Enter. The migration does
+**not** carry `RESET` across — there is no "possession boundary" event in the
+CentrePass model, and fabricating one (say, a phantom turnover) would corrupt
+other stats.
 
-CentrePass derives possession boundaries from the event log (ADR-0003): a
-possession is a maximal run of one team's consecutive events, ended only by a
-made goal, an unforced turnover, an infringement, a quarter break, or the
-opposition taking the ball. The predecessor app instead recorded an explicit
-`RESET` sentinel every time the coder pressed Enter. The migration does **not**
-carry `RESET` across — there is no "possession boundary" event in the CentrePass
-model, and fabricating one (say, a phantom turnover) would corrupt other stats.
+Where the coder pressed Enter to split one stretch of play that began with
+neither a centre pass nor a gain, the old app counts two possessions and
+CentrePass one. This only ever reclassifies possession-**conversion** figures:
 
-In a handful of places the coder pressed Enter to split a single stretch of
-one team's play into two coded possessions, with no opposition possession and no
-made goal / turnover / infringement between them. The old app counts those as
-two possessions; CentrePass, reading the log as given, counts one. This only
-ever reclassifies possession-**conversion** figures (the per-event counts,
-feed-with-shot and goal-assist descriptors, and score are unaffected, because
-each stretch's events and its terminal goal are unchanged):
-
-- `match-4` — Yellow codes `3c` (centre pass) then, separately, `6p` (gain).
-  CentrePass reads one centre-pass possession, so the stray gain is not counted:
-  `teams.B.conversions.gainTotal` 6 → 5.
-- `match-5` — Yellow codes `7r` (rebound) then `2p 2fx 3f 1g` (gain → goal).
-  CentrePass reads one rebound-started possession, so the gain and its goal are
-  not a gain conversion: `gainTotal` 2 → 1, `gainGoals` 1 → 0.
-- `match-6` — Purple codes `3fx` then `5p 2f 1g` (gain → goal), read as one
-  feed-started possession: `teams.A.conversions.gainTotal` 2 → 1, `gainGoals`
-  1 → 0. Separately, Yellow codes `2c` (centre pass) then `2f 1g` (feed → goal);
-  CentrePass reads one centre-pass possession that **scored**, so it is a centre
-  pass converted to a goal that the old app missed by splitting it:
+- `match-6` — Yellow codes `2c` (centre pass) then, separately, `2f 1g` (feed →
+  goal). CentrePass reads one centre-pass possession that **scored**, so it is a
+  centre pass converted to a goal that the old app missed by splitting it:
   `teams.B.conversions.centrePassGoals` 3 → 4.
 
-In each case the engine's reading is the more faithful one: it counts the
-possessions netball actually played, not the coder's keystrokes. These are the
-intended semantics, so the deviation is recorded rather than "fixed".
+(Before ADR-0004 this deviation also covered three split stretches where the
+second half began with a gain. A gain now always begins a possession, so those
+now agree with the old app and were pruned from the ledger.)
+
+## Deviation 2 — a gain always begins a possession (`gain-begins-possession`)
+
+Under ADR-0004 a Gain is by definition won by the team out of possession, so it
+always begins a new possession. Historical logs occasionally code a Gain for the
+team that already had the ball — a loose ball recovered by the attack — inside
+one coded possession:
+
+- `match-4` — Purple codes `1gx 4p 4f 1g` (missed shot, C picks up, feed, goal)
+  on one line. The old app counts one gain possession; CentrePass reads the
+  pick-up as beginning a second, so `teams.A.conversions.gainTotal` 5 → 6
+  (`gainGoals` is unchanged: exactly one of the two scored either way).
+
+## Deviation 3 — uncoded centre passes still count (`uncoded-centre-pass`)
+
+A centre pass happens after every goal and quarter break whether or not the
+coder records the receive. CentrePass treats the first possession after a
+restart as a centre-pass possession when it is held by the team that took the
+centre pass (the team due it under Centre Pass Alternation, or at the toss the
+team the first event shows had the ball) — even with no `c` coded. The old app
+only counted possessions that began with a coded `c`.
+
+The historical logs often omit the receive, especially for the opposition
+(a `b 3f 1g` line straight after one of our goals). Each such possession now
+counts towards `centrePassTotal`, and towards `centrePassGoals` when it scored:
+
+- `match-3` — `teams.B`: total 6 → 9, goals 1 → 4.
+- `match-5` — `teams.A`: total 6 → 7, goals 3 → 4.
+- `match-6` — `teams.A`: total 6 → 8, goals 3 → 4.
+- `match-sub-synthetic` — `teams.A`: total 1 → 2 (a missed shot straight after
+  a restart the alternation gives back to A).

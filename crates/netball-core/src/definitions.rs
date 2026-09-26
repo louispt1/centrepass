@@ -101,7 +101,8 @@ pub fn definitions() -> Vec<Descriptor> {
             "Centre Pass Receive",
             "Centre Pass Receiver",
             "The player of the team in possession who receives the ball from the centre pass \
-             within the centre third. Codeable for GA, WA, WD, or GD.",
+             within the centre third. Codeable for GA, WA, WD, or GD. Cannot fail: a centre \
+             pass that goes astray is an Unforced Turnover.",
             Coded,
             None,
         ),
@@ -127,8 +128,9 @@ pub fn definitions() -> Vec<Descriptor> {
             Some("p"),
             "Gain",
             "General play turnover",
-            "Winning possession from the opposition while play continues. Codeable for any \
-             position, or TEAM when unattributable.",
+            "Winning possession from the opposition while play continues, coded once for the \
+             team that wins it (always the team out of possession). Codeable for any position, \
+             or TEAM when unattributable.",
             Coded,
             None,
         ),
@@ -136,8 +138,8 @@ pub fn definitions() -> Vec<Descriptor> {
             Some("e"),
             "Unforced Turnover",
             "Unforced turnover",
-            "Losing possession through the active team's own error or infringement. Codeable \
-             for any position, or TEAM.",
+            "Losing possession through the team's own error or infringement. Codeable for any \
+             position, or TEAM.",
             Coded,
             None,
         ),
@@ -145,8 +147,9 @@ pub fn definitions() -> Vec<Descriptor> {
             Some("i"),
             "Infringement",
             "Infringement",
-            "An action contrary to the rules, penalised by the umpire. Codeable for any \
-             position, or TEAM.",
+            "An action contrary to the rules, penalised by the umpire, committed by the team out \
+             of possession; it does not change possession (an infringement by the team in \
+             possession is an Unforced Turnover). Codeable for any position, or TEAM.",
             Coded,
             None,
         ),
@@ -155,7 +158,8 @@ pub fn definitions() -> Vec<Descriptor> {
             "Rebound",
             "Rebound",
             "Regathering the ball after an unsuccessful shot. Codeable for GS, GA, GD, or GK; \
-             attacking or defensive is derived from the position.",
+             attacking or defensive is derived from the position, and so is the team: the \
+             shooting team for GS/GA, the defending team for GD/GK.",
             Coded,
             None,
         ),
@@ -239,7 +243,7 @@ pub fn modifiers() -> Vec<Descriptor> {
             "Failed",
             "Unsuccessful attempt",
             "Marks an unsuccessful attempt at the preceding action — a missed shot, an \
-             incomplete feed. Applies only to a Receive, Feed, or Goal.",
+             incomplete feed. Applies only to a Feed or Goal.",
             Resolution::Coded,
             None,
         ),
@@ -277,9 +281,11 @@ pub fn deviations() -> Vec<Deviation> {
         ),
         deviation(
             "Derived team gains and possession boundaries",
-            "Possession boundaries are derived from the log, not coded (ADR-0003): a possession \
-             ends at a made goal, an unforced turnover, an infringement, a quarter break, or the \
-             opposition taking the ball. A possession that begins from neither a centre pass nor \
+            "Possession boundaries are derived from the log, not coded (ADR-0003, ADR-0004): a \
+             possession begins at a centre pass (coded or not: the first possession after a goal \
+             or quarter break, held by the team due the centre pass, counts as one) or a gain and ends at a made goal, an unforced \
+             turnover, a quarter break, or the opposition taking the ball; an opposition \
+             infringement falls inside it. A possession that begins from neither a centre pass nor \
              a coded player gain is understood as an unattributed team gain, derived rather than \
              recorded.",
         ),

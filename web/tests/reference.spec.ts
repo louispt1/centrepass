@@ -37,13 +37,14 @@ test("opening and closing the reference does not lose coding state", async ({ pa
 
   // Establish coding state: a selected position and one failed event already
   // in the log.
-  await page.getByTestId("position-GA").click();
-  await page.getByTestId("action-CentrePassReceive").click();
+  await page.getByTestId("choose-team-A").click();
+  await page.getByTestId("position-WA").click();
+  await page.getByTestId("action-Feed").click();
   await page.getByTestId("toggle-failed").click();
   await page.getByTestId("position-GS").click();
   await expect(page.getByTestId("position-GS")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("event-strip")).toContainText("CPR");
+  await expect(page.getByTestId("event-strip")).toContainText("WA Feed ✕");
 
   // Open the reference and return.
   await page.getByTestId("open-reference").click();
@@ -54,7 +55,7 @@ test("opening and closing the reference does not lose coding state", async ({ pa
   // Every piece of coding state survived.
   await expect(page.getByTestId("position-GS")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("event-strip")).toContainText("CPR");
+  await expect(page.getByTestId("event-strip")).toContainText("WA Feed ✕");
 
   // And the still-selected GS scores, proving the selection was truly live,
   // not merely re-rendered.

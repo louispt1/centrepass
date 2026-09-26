@@ -38,15 +38,19 @@ test("capture the quickstart screens", async ({ page }) => {
   await page.getByTestId("save-roster").click();
 
   // Code a lively opening so the live screen has something to show.
+  await page.getByTestId("choose-team-A").click();
   await code(page, "GA", "CentrePassReceive");
   await code(page, "WA", "Feed");
   await code(page, "GS", "Goal");
-  await page.getByTestId("goal-opposition").click();
+  await code(page, "GA", "CentrePassReceive"); // theirs
   await page.getByTestId("position-GD").click();
   await page.getByTestId("subtype-Interception").click();
   await code(page, "GA", "Feed");
   await code(page, "GS", "Goal");
   await expect(page.getByTestId("score-team-a")).toHaveText("2");
+  await code(page, "WA", "CentrePassReceive");
+  await code(page, "C", "UnforcedTurnover");
+  await code(page, "GS", "Goal"); // their reply
   await page.screenshot({ path: `${IMG}/03-live-coding.png` });
 
   await page.getByTestId("open-reference").click();

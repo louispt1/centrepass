@@ -20,15 +20,22 @@ test("create match → record goals for both teams → undo → reload → score
   await page.getByTestId("save-roster").click();
   await expectScore(page, 0, 0);
 
+  // Choose who has the first centre pass once; after each goal the centre
+  // pass alternates without asking again.
+  const banner = page.getByTestId("possession-banner");
   await page.getByTestId("position-GS").click();
+  await page.getByTestId("choose-team-A").click();
   await page.getByTestId("action-Goal").click();
+  await expect(banner).toHaveAttribute("data-team", "B");
   await page.getByTestId("action-Goal").click();
-  await page.getByTestId("goal-opposition").click();
+  await expect(banner).toHaveAttribute("data-team", "A");
+  await page.getByTestId("action-Goal").click();
   await expectScore(page, 2, 1);
+  await expect(page.getByTestId("choose-team-A")).toHaveCount(0);
 
-  // Undo removes the last event (the opposition goal).
+  // Undo removes the last event (A's second goal).
   await page.getByTestId("undo").click();
-  await expectScore(page, 2, 0);
+  await expectScore(page, 1, 1);
 
   // The persisted log carries team attribution and wall-clock timestamps.
   const storedMatches = await page.evaluate(async () => {
@@ -53,7 +60,7 @@ test("create match → record goals for both teams → undo → reload → score
     });
   });
   expect(storedMatches).toHaveLength(1);
-  expect(storedMatches[0].log.map((entry) => entry.team)).toEqual(["A", "A"]);
+  expect(storedMatches[0].log.map((entry) => entry.team)).toEqual(["A", "B"]);
   for (const entry of storedMatches[0].log) {
     expect(entry.kind).toBe("Event");
     expect(entry.action).toMatchObject({ type: "Goal", position: "GS" });
@@ -62,13 +69,13 @@ test("create match → record goals for both teams → undo → reload → score
 
   // Match, events, and score survive a reload…
   await page.reload();
-  await expectScore(page, 2, 0);
+  await expectScore(page, 1, 1);
 
   // …including offline.
   await page.evaluate(() => navigator.serviceWorker.ready);
   await context.setOffline(true);
   await page.reload();
-  await expectScore(page, 2, 0);
+  await expectScore(page, 1, 1);
   await context.setOffline(false);
 
   // The match appears in the list and can be reopened.
@@ -77,5 +84,5 @@ test("create match → record goals for both teams → undo → reload → score
     "Hornets U13 vs Riverside — 2026-07-10",
   );
   await page.getByRole("link", { name: "Hornets U13 vs Riverside — 2026-07-10" }).click();
-  await expectScore(page, 2, 0);
+  await expectScore(page, 1, 1);
 });

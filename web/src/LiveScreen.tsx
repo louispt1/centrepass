@@ -4,14 +4,24 @@ import type { ActionKindInfo } from "./types/ActionKindInfo";
 import type { GainSubType } from "./types/GainSubType";
 import type { LogEntry } from "./types/LogEntry";
 import type { Position } from "./types/Position";
+import type { Team } from "./types/Team";
 import {
   actionTaxonomy,
   deriveAttributions,
   derivePlayingTime,
   deriveQuarterScores,
   deriveScore,
+  deriveTeamInPossession,
+  resolveTeam,
 } from "./engine";
-import { ACTION_LABELS, SUB_TYPE_LABELS, buildAction, formatEntry } from "./events";
+import {
+  ACTION_LABELS,
+  SUB_TYPE_LABELS,
+  TEAM_COLOURS,
+  buildAction,
+  formatEntry,
+  otherTeam,
+} from "./events";
 import ReferencePanel from "./ReferencePanel";
 import { getMatch, putMatch, type StoredMatch } from "./storage";
 import { useScreenWakeLock } from "./wakeLock";
@@ -38,6 +48,10 @@ const selectedButton = {
   borderColor: "#0f4c5c",
 } as const;
 
+/** A button in the colour of the team a tap on it will be coded for. */
+const teamButton = (team: Team | null) =>
+  team ? { ...tapButton, borderColor: TEAM_COLOURS[team], borderWidth: "2px" } : tapButton;
+
 const gridStyle = (columns: number) =>
   ({
     display: "grid",
@@ -59,6 +73,9 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   // The quick reference is an overlay, so opening it leaves this screen — and
   // the selected position — mounted and untouched.
   const [showReference, setShowReference] = useState(false);
+  // One-shot override of the Team in Possession: applies to the next tap
+  // only, then the derivation takes over again (ADR-0004).
+  const [overrideTeam, setOverrideTeam] = useState<Team | null>(null);
 
   // Keep the phone awake while a match is open for coding.
   useScreenWakeLock(match != null);
@@ -82,7 +99,11 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             score: deriveScore(match.log),
             quarterScores: deriveQuarterScores(match.log),
             attributions: deriveAttributions(match.log),
-            playingTime: derivePlayingTime(match.log, "A"),
+            playingTime: (["A", "B"] as const).map((team) => ({
+              team,
+              times: derivePlayingTime(match.log, team),
+            })),
+            teamInPossession: deriveTeamInPossession(match.log),
           }
         : null,
     [match],
@@ -100,6 +121,10 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     );
   }
   const { score, quarterScores, attributions, playingTime } = derived;
+  const inPossession = overrideTeam ?? derived.teamInPossession;
+  const teamName = (team: Team) => (team === "A" ? match.teamAName : match.teamBName);
+  const teamFor = (kind: ActionKind) =>
+    selectedPosition === null ? null : resolveTeam(inPossession, kind, selectedPosition);
   // Quarter breaks recorded so far = quarter segments − 1.
   const quarterBreaks = quarterScores.length - 1;
   const fullTime = quarterBreaks >= QUARTERS;
@@ -117,21 +142,26 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   /** Whether the given action is legal for the selected position. Mirrors
    * what the core would accept, straight from its taxonomy data. */
   function canRecord(info: ActionKindInfo): boolean {
-    return selectedPosition !== null && info.legalPositions.includes(selectedPosition);
+    return (
+      selectedPosition !== null &&
+      info.legalPositions.includes(selectedPosition) &&
+      teamFor(info.kind) !== null
+    );
   }
 
   function record(kind: ActionKind, subType: GainSubType | null = null) {
-    if (selectedPosition === null) return;
+    const team = teamFor(kind);
+    if (selectedPosition === null || team === null) return;
     const action = buildAction(kind, selectedPosition, false, subType);
-    append({ kind: "Event", team: "A", action, flagged: false, timestampMs: Date.now() });
+    append({ kind: "Event", team, action, flagged: false, timestampMs: Date.now() });
+    setOverrideTeam(null);
   }
 
   // Failed and Flag modify the last entry, after its action is recorded.
   const last = match.log.at(-1);
   const lastEvent = last?.kind === "Event" ? last : null;
-  // null when the last entry is not one of our Receives, Feeds, or Shots.
-  const lastFailable =
-    lastEvent?.team === "A" && "failed" in lastEvent.action ? lastEvent.action : null;
+  // null when the last entry is not a Feed or Shot.
+  const lastFailable = lastEvent && "failed" in lastEvent.action ? lastEvent.action : null;
   const lastFailed = lastFailable?.failed ?? null;
 
   function replaceLast(entry: LogEntry) {
@@ -148,22 +178,13 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     if (lastEvent) replaceLast({ ...lastEvent, flagged: !lastEvent.flagged });
   }
 
-  function recordOppositionGoal() {
-    append({
-      kind: "Event",
-      team: "B",
-      action: { type: "Goal", position: "TEAM", failed: false },
-      flagged: false,
-      timestampMs: Date.now(),
-    });
-  }
-
   function recordQuarterBreak() {
     append({ kind: "QuarterBreak", timestampMs: Date.now() });
   }
 
   function undo() {
     void replaceLog(match!.log.slice(0, -1));
+    setOverrideTeam(null);
   }
 
   const lastEntries = match.log.slice(-4);
@@ -233,6 +254,57 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
       </div>
 
       <div
+        data-testid="possession-banner"
+        data-team={inPossession ?? ""}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "0.5rem",
+          padding: "0.4rem 0.6rem",
+          marginBottom: "0.5rem",
+          borderRadius: "8px",
+          color: "#fff",
+          background: inPossession ? TEAM_COLOURS[inPossession] : "#555",
+        }}
+      >
+        {inPossession === null ? (
+          <>
+            <span style={{ fontWeight: 600 }}>Who has the centre pass?</span>
+            <span style={{ display: "flex", gap: "0.4rem" }}>
+              {(["A", "B"] as const).map((team) => (
+                <button
+                  key={team}
+                  data-testid={`choose-team-${team}`}
+                  style={{ ...teamButton(team), color: TEAM_COLOURS[team] }}
+                  onClick={() => setOverrideTeam(team)}
+                >
+                  {teamName(team)}
+                </button>
+              ))}
+            </span>
+          </>
+        ) : (
+          <>
+            <span style={{ fontWeight: 600 }}>
+              ▶ {teamName(inPossession)} in possession
+              {overrideTeam !== null && " (this tap)"}
+            </span>
+            <button
+              data-testid="flip-possession"
+              aria-pressed={overrideTeam !== null}
+              style={tapButton}
+              onClick={() =>
+                setOverrideTeam(overrideTeam === null ? otherTeam(inPossession) : null)
+              }
+            >
+              Flip ⇄
+            </button>
+          </>
+        )}
+      </div>
+
+      <div
         data-testid="event-strip"
         style={{
           display: "flex",
@@ -254,7 +326,11 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             <span
               key={match.log.length - lastEntries.length + index}
               data-testid="event-strip-item"
-              style={{ fontWeight: index === lastEntries.length - 1 ? 700 : 400 }}
+              data-team={"team" in entry ? entry.team : ""}
+              style={{
+                fontWeight: index === lastEntries.length - 1 ? 700 : 400,
+                color: "team" in entry ? TEAM_COLOURS[entry.team] : "inherit",
+              }}
             >
               {formatEntry(entry, lastAttributions[index])}
             </span>
@@ -278,29 +354,27 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
 
       <div style={gridStyle(3)}>
         {taxonomy.map((info) => (
-          <button
+          <ActionButton
             key={info.kind}
-            data-testid={`action-${info.kind}`}
-            style={tapButton}
-            disabled={!canRecord(info)}
+            testId={`action-${info.kind}`}
+            label={ACTION_LABELS[info.kind]}
+            team={canRecord(info) ? teamFor(info.kind) : null}
+            teamName={teamName}
             onClick={() => record(info.kind)}
-          >
-            {ACTION_LABELS[info.kind]}
-          </button>
+          />
         ))}
       </div>
 
       <div style={gridStyle(3)}>
         {gainInfo.subTypes.map((subType) => (
-          <button
+          <ActionButton
             key={subType}
-            data-testid={`subtype-${subType}`}
-            style={tapButton}
-            disabled={!canRecord(gainInfo)}
+            testId={`subtype-${subType}`}
+            label={SUB_TYPE_LABELS[subType]}
+            team={canRecord(gainInfo) ? teamFor("Gain") : null}
+            teamName={teamName}
             onClick={() => record("Gain", subType)}
-          >
-            {SUB_TYPE_LABELS[subType]}
-          </button>
+          />
         ))}
       </div>
 
@@ -326,9 +400,6 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
       </div>
 
       <div style={{ ...gridStyle(2), marginTop: "0.75rem" }}>
-        <button data-testid="goal-opposition" style={tapButton} onClick={recordOppositionGoal}>
-          Opposition goal
-        </button>
         <button
           data-testid="undo"
           style={tapButton}
@@ -391,19 +462,75 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             ))}
           </tbody>
         </table>
-        {playingTime !== null && playingTime.length > 0 && (
-          <table style={{ marginTop: "0.5rem", borderSpacing: "0.75rem 0.15rem" }}>
-            <tbody>
-              {playingTime.map((time) => (
-                <tr key={time.player} data-testid={`playing-time-${time.player}`}>
-                  <td style={{ fontWeight: 600 }}>{time.player}</td>
-                  <td>{formatMinutes(time.milliseconds)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {playingTime.map(
+          ({ team, times }) =>
+            times !== null &&
+            times.length > 0 && (
+              <table
+                key={team}
+                style={{ marginTop: "0.5rem", borderSpacing: "0.75rem 0.15rem" }}
+              >
+                <caption style={{ textAlign: "left", color: TEAM_COLOURS[team] }}>
+                  {teamName(team)}
+                </caption>
+                <tbody>
+                  {times.map((time) => (
+                    <tr key={time.player} data-testid={`playing-time-${time.player}`}>
+                      <td style={{ fontWeight: 600 }}>{time.player}</td>
+                      <td>{formatMinutes(time.milliseconds)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ),
         )}
       </details>
     </main>
+  );
+}
+
+/**
+ * An action tap, bordered in the colour of the team it will be coded for and
+ * naming that team, so colour is never the only cue. Disabled (team null)
+ * when no legal team or position is selected.
+ */
+function ActionButton({
+  testId,
+  label,
+  team,
+  teamName,
+  onClick,
+}: {
+  testId: string;
+  label: string;
+  team: Team | null;
+  teamName: (team: Team) => string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      data-testid={testId}
+      data-team={team ?? ""}
+      style={teamButton(team)}
+      disabled={team === null}
+      onClick={onClick}
+    >
+      {label}
+      {team && (
+        <span
+          style={{
+            display: "block",
+            fontSize: "0.7rem",
+            fontWeight: 400,
+            color: TEAM_COLOURS[team],
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {teamName(team)}
+        </span>
+      )}
+    </button>
   );
 }

@@ -15,9 +15,11 @@
 //!   `i` infringement, `r` rebound. Sub-types match greedily, so `1pi` is a GS
 //!   gain by interception, never a gain (`p`) followed by an infringement.
 //! - **Modifiers** — a trailing `x` (Failed) and/or `!` (Flagged), in either
-//!   order. `x` is only legal on the actions that can fail (receive, feed, goal).
-//! - **Team** — a leading `a`/`b` on the line picks the possession's team; with
-//!   no prefix the possession belongs to team A (the single-team default).
+//!   order. `x` is only legal on the actions that can fail (feed, goal).
+//! - **Team** — a leading `a`/`b` on the line picks the possession's team (its
+//!   Team in Possession); with no prefix the possession belongs to team A.
+//!   Every event on the line is that team's, except an infringement, which is
+//!   always committed by the team out of possession (ADR-0004).
 //! - **Markers** — a line of just `QT` is a quarter break. `S` (substitution)
 //!   is reserved but not yet imported.
 //!
@@ -251,6 +253,10 @@ fn parse_line(
                 token: token.iter().collect(),
                 kind,
             })?;
+        let team = match action {
+            Action::Infringement { .. } => team.other(),
+            _ => team,
+        };
         log.push(LogEntry::Event(Event {
             team,
             action,
@@ -360,7 +366,6 @@ fn build_action(
     Some(match kind {
         ActionKind::CentrePassReceive => Action::CentrePassReceive {
             position: CentrePassReceivePosition::from_position(position)?,
-            failed,
         },
         ActionKind::Feed => Action::Feed {
             position: FeedPosition::from_position(position)?,
@@ -524,8 +529,7 @@ mod tests {
         assert_eq!(
             only_event("2c").action,
             Action::CentrePassReceive {
-                position: CentrePassReceivePosition::GA,
-                failed: false
+                position: CentrePassReceivePosition::GA
             }
         );
         assert_eq!(
@@ -622,13 +626,6 @@ mod tests {
             only_event("1gx").action,
             Action::Goal {
                 position: GoalPosition::GS,
-                failed: true
-            }
-        );
-        assert_eq!(
-            only_event("2cx").action,
-            Action::CentrePassReceive {
-                position: CentrePassReceivePosition::GA,
                 failed: true
             }
         );
@@ -836,6 +833,24 @@ mod tests {
                 action: ActionKind::Gain
             }
         );
+        // A lost centre pass is an unforced turnover, not a failed receive.
+        assert_eq!(
+            error("2cx").kind,
+            ShorthandErrorKind::FailedNotApplicable {
+                action: ActionKind::CentrePassReceive
+            }
+        );
+    }
+
+    #[test]
+    fn an_infringement_belongs_to_the_team_out_of_possession() {
+        let log = parse_shorthand(
+            "a 2c 6i 1g
+b 3c 4i",
+        )
+        .unwrap();
+        let teams: Vec<Team> = events(&log).iter().map(|e| e.team).collect();
+        assert_eq!(teams, [Team::A, Team::B, Team::A, Team::B, Team::A]);
     }
 
     #[test]

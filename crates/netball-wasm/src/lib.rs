@@ -74,6 +74,30 @@ pub fn derive_stats(log: JsValue) -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&report).map_err(JsValue::from)
 }
 
+/// The team holding the ball after the log (`Team | null`): the default team
+/// for the next tap, or null before the first centre pass is coded.
+#[wasm_bindgen]
+pub fn derive_team_in_possession(log: JsValue) -> Result<JsValue, JsValue> {
+    let team = netball_core::derive_team_in_possession(&parse_log(log)?);
+    serde_wasm_bindgen::to_value(&team).map_err(JsValue::from)
+}
+
+/// The team (`Team | null`) an action (`ActionKind`) at a position
+/// (`Position`) is coded for, given the team in possession (`Team | null`).
+#[wasm_bindgen]
+pub fn resolve_team(
+    team_in_possession: JsValue,
+    kind: JsValue,
+    position: JsValue,
+) -> Result<JsValue, JsValue> {
+    let team = netball_core::resolve_team(
+        serde_wasm_bindgen::from_value(team_in_possession)?,
+        serde_wasm_bindgen::from_value(kind)?,
+        serde_wasm_bindgen::from_value(position)?,
+    );
+    serde_wasm_bindgen::to_value(&team).map_err(JsValue::from)
+}
+
 /// Serialize a match to its portable Match File JSON (a `MatchFile` value in,
 /// per `web/src/types/`, a version-tagged JSON string out). The core owns the
 /// schema and version envelope; the UI only moves the bytes to a file or the

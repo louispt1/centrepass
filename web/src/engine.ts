@@ -11,9 +11,13 @@ import {
   derive_roster,
   derive_score,
   derive_stats,
+  derive_team_in_possession,
   engine_description,
   parse_shorthand,
+  resolve_team,
 } from "./wasm/netball";
+import type { ActionKind } from "./types/ActionKind";
+import type { Position } from "./types/Position";
 import type { ActionKindInfo } from "./types/ActionKindInfo";
 import type { Descriptor } from "./types/Descriptor";
 import type { LogEntry } from "./types/LogEntry";
@@ -71,6 +75,27 @@ export function derivePlayingTime(log: LogEntry[], team: Team): PlayingTime[] | 
  */
 export function deriveStats(log: LogEntry[]): StatsReport {
   return derive_stats(log) as StatsReport;
+}
+
+/**
+ * The team holding the ball after the log — the default team for the next
+ * tap — or null before the first centre pass is coded (ADR-0004).
+ */
+export function deriveTeamInPossession(log: LogEntry[]): Team | null {
+  return (derive_team_in_possession(log) as Team | null | undefined) ?? null;
+}
+
+/**
+ * The team an action at a position is coded for, given who holds the ball:
+ * Gain and Infringement go to the team out of possession, a GD/GK Rebound to
+ * the defending team, everything else to the team in possession.
+ */
+export function resolveTeam(
+  teamInPossession: Team | null,
+  kind: ActionKind,
+  position: Position,
+): Team | null {
+  return (resolve_team(teamInPossession, kind, position) as Team | null | undefined) ?? null;
 }
 
 /**

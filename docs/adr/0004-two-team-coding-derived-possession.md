@@ -1,0 +1,11 @@
+# Two-team coding with a derived Team in Possession
+
+Both teams are coded in full; there is no single-team mode. The live UI does not ask the coder to pick a team per event: the core derives the **Team in Possession** from the log (never stored, per ADR-0003) and it becomes the default team for the next tap. Gain and Infringement are always attributed to the team out of possession, and a Rebound to the shooting team (GS/GA) or the defending team (GD/GK), so the common turnover sequences need no manual team choice. Changes of possession are coded once, as NVAC does: an interception is one Gain for the winning team, not also a turnover for the losing one. After a goal or quarter break the ball goes to the team due the next centre pass under **Centre Pass Alternation** — not simply to the conceding team — anchored on the team actually coded for each Centre Pass Receive. A one-shot override flips the team for a single tap; because on-ball actions are trusted as recorded, one correction re-aligns every later prediction without a sticky mode.
+
+Why: comparative, both-team statistics are what coaches expect from a stats app, and two-team coding is only fast enough courtside if the app, not the coder, tracks who has the ball. Rejected: keeping a single-team mode (the possession derivation and automatic teams are meaningless without the other team's events), explicit team selection on every tap (doubles the taps), per-token team prefixes in Shorthand (a line's prefix now means its Team in Possession, and an infringement on it belongs to the other team), and a sticky team toggle (easy to leave on the wrong team).
+
+## Consequences
+
+- A **Possession** is now a span with one Team in Possession, ended by the ball changing hands or a goal; an Infringement no longer ends one, and the other team's infringement may fall inside it. This changes derived stats for some historical matches; the golden-parity ledger records the difference.
+- A **Centre Pass Receive can no longer fail** — a lost centre pass is an Unforced Turnover. The Match File moves to version 2; version-1 files (and stored matches) are migrated by rewriting each failed Centre Pass Receive as an Unforced Turnover at the same position and team.
+- This narrows ADR-0003's note that "the v1 tap UI codes only the active team in detail": that UI is gone.

@@ -46,10 +46,11 @@ test("sharing a finished match downloads a non-trivial summary image PNG", async
 
   // A short coded match so the image has real figures: a converted centre pass
   // (Alice scores) and an opposition reply.
+  await page.getByTestId("choose-team-A").click();
   await code(page, "GA", "CentrePassReceive");
   await code(page, "WA", "Feed");
   await code(page, "GS", "Goal");
-  await page.getByTestId("goal-opposition").click();
+  await code(page, "GS", "Goal"); // their reply, off their centre pass
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
 
   await page.getByTestId("open-stats").click();

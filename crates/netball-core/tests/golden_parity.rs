@@ -1,7 +1,7 @@
 //! Golden parity suite: the correctness anchor for the whole rewrite (issue 08).
 //!
 //! Each fixture under `tests/golden/` is a real historical match — migrated
-//! from the predecessor app's SQLite database to a version-1 Match File — paired
+//! from the predecessor app's SQLite database to a version-1 Match File (migrated to the current version on import) — paired
 //! with that Python app's derived statistics, captured while the old app still
 //! ran. This suite imports every Match File through the same [`MatchFile`] path
 //! the app uses, re-derives its statistics with [`derive_stats`], and asserts
@@ -9,8 +9,9 @@
 //! deliberate, documented deviations.
 //!
 //! Where the Rust engine and the Python oracle legitimately disagree — always
-//! because CentrePass derives possession boundaries from the log rather than
-//! honouring the predecessor's coded `RESET` sentinels (ADR-0003) — the
+//! because CentrePass derives possession boundaries from the log (ADR-0003,
+//! ADR-0004) rather than honouring the predecessor's coded `RESET` sentinels —
+//! the
 //! difference is recorded in `tests/golden/deviations.json`, with its rationale
 //! in `tests/golden/DEVIATIONS.md`. The ledger is self-checking: an
 //! *undocumented* difference fails the suite (a real regression), and a *stale*

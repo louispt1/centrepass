@@ -65,10 +65,7 @@ impl ActionKind {
     /// whether the corresponding [`crate::event::Action`] variant carries a
     /// `failed` flag.
     pub fn can_fail(self) -> bool {
-        matches!(
-            self,
-            ActionKind::CentrePassReceive | ActionKind::Feed | ActionKind::Goal
-        )
+        matches!(self, ActionKind::Feed | ActionKind::Goal)
     }
 
     /// The optional sub-types this action can carry (only Gain has any).
@@ -119,7 +116,7 @@ mod tests {
         let position = serde_json::to_string(&position).unwrap();
         match kind {
             ActionKind::CentrePassReceive => {
-                format!(r#"{{"type":"CentrePassReceive","position":{position},"failed":false}}"#)
+                format!(r#"{{"type":"CentrePassReceive","position":{position}}}"#)
             }
             ActionKind::Feed => {
                 format!(r#"{{"type":"Feed","position":{position},"failed":false}}"#)
@@ -160,19 +157,12 @@ mod tests {
     }
 
     #[test]
-    fn only_receives_feeds_and_shots_can_fail() {
+    fn only_feeds_and_shots_can_fail() {
         let failable: Vec<ActionKind> = ActionKind::ALL
             .into_iter()
             .filter(|kind| kind.can_fail())
             .collect();
-        assert_eq!(
-            failable,
-            [
-                ActionKind::CentrePassReceive,
-                ActionKind::Feed,
-                ActionKind::Goal
-            ]
-        );
+        assert_eq!(failable, [ActionKind::Feed, ActionKind::Goal]);
     }
 
     #[test]
