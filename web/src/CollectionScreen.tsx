@@ -21,6 +21,9 @@ const smallButton = {
   border: "1px solid #999",
   borderRadius: "6px",
   background: "#fff",
+  // Explicit, so no browser default (dark mode, iOS tint) can hide the label.
+  color: "#222",
+  whiteSpace: "nowrap",
   cursor: "pointer",
 } as const;
 

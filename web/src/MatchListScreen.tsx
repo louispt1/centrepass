@@ -34,6 +34,9 @@ const smallButton = {
   border: "1px solid #999",
   borderRadius: "6px",
   background: "#fff",
+  // Explicit, so no browser default (dark mode, iOS tint) can hide the label.
+  color: "#222",
+  whiteSpace: "nowrap",
   cursor: "pointer",
 } as const;
 
@@ -297,7 +300,7 @@ export default function MatchListScreen() {
           required
         />
         <button data-testid="create-collection" type="submit" style={smallButton}>
-          Create collection
+          Create
         </button>
       </form>
 
@@ -415,7 +418,7 @@ export default function MatchListScreen() {
                       Not sent
                     </span>
                   )}
-                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.4rem" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.4rem" }}>
                     <button
                       data-testid={`export-${match.id}`}
                       style={smallButton}
