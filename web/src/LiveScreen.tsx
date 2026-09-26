@@ -56,10 +56,8 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   // undefined = still loading, null = no such match
   const [match, setMatch] = useState<StoredMatch | null | undefined>(undefined);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [flagged, setFlagged] = useState(false);
   // The quick reference is an overlay, so opening it leaves this screen — and
-  // all of the coding state above — mounted and untouched.
+  // the selected position — mounted and untouched.
   const [showReference, setShowReference] = useState(false);
 
   // Keep the phone awake while a match is open for coding.
@@ -116,23 +114,38 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     void replaceLog([...match!.log, entry]);
   }
 
-  /** Whether the given action is currently offerable — legal for the
-   * selected position and compatible with the Failed toggle. Mirrors what
-   * the core would accept, straight from its taxonomy data. */
+  /** Whether the given action is legal for the selected position. Mirrors
+   * what the core would accept, straight from its taxonomy data. */
   function canRecord(info: ActionKindInfo): boolean {
-    return (
-      selectedPosition !== null &&
-      info.legalPositions.includes(selectedPosition) &&
-      (!failed || info.canFail)
-    );
+    return selectedPosition !== null && info.legalPositions.includes(selectedPosition);
   }
 
   function record(kind: ActionKind, subType: GainSubType | null = null) {
     if (selectedPosition === null) return;
-    const action = buildAction(kind, selectedPosition, failed, subType);
-    append({ kind: "Event", team: "A", action, flagged, timestampMs: Date.now() });
-    setFailed(false);
-    setFlagged(false);
+    const action = buildAction(kind, selectedPosition, false, subType);
+    append({ kind: "Event", team: "A", action, flagged: false, timestampMs: Date.now() });
+  }
+
+  // Failed and Flag modify the last entry, after its action is recorded.
+  const last = match.log.at(-1);
+  const lastEvent = last?.kind === "Event" ? last : null;
+  // null when the last entry is not one of our Receives, Feeds, or Shots.
+  const lastFailable =
+    lastEvent?.team === "A" && "failed" in lastEvent.action ? lastEvent.action : null;
+  const lastFailed = lastFailable?.failed ?? null;
+
+  function replaceLast(entry: LogEntry) {
+    void replaceLog([...match!.log.slice(0, -1), entry]);
+  }
+
+  function toggleFailed() {
+    if (lastEvent && lastFailable) {
+      replaceLast({ ...lastEvent, action: { ...lastFailable, failed: !lastFailable.failed } });
+    }
+  }
+
+  function toggleFlagged() {
+    if (lastEvent) replaceLast({ ...lastEvent, flagged: !lastEvent.flagged });
   }
 
   function recordOppositionGoal() {
@@ -249,25 +262,6 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
         )}
       </div>
 
-      <div style={gridStyle(2)}>
-        <button
-          data-testid="toggle-failed"
-          aria-pressed={failed}
-          style={{ ...tapButton, ...(failed ? selectedButton : {}) }}
-          onClick={() => setFailed(!failed)}
-        >
-          Failed ✕
-        </button>
-        <button
-          data-testid="toggle-flagged"
-          aria-pressed={flagged}
-          style={{ ...tapButton, ...(flagged ? selectedButton : {}) }}
-          onClick={() => setFlagged(!flagged)}
-        >
-          Flag ⚑
-        </button>
-      </div>
-
       <div style={gridStyle(4)}>
         {POSITION_GRID.map((position) => (
           <button
@@ -308,6 +302,27 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             {SUB_TYPE_LABELS[subType]}
           </button>
         ))}
+      </div>
+
+      <div style={gridStyle(2)}>
+        <button
+          data-testid="toggle-failed"
+          aria-pressed={lastFailed === true}
+          style={{ ...tapButton, ...(lastFailed ? selectedButton : {}) }}
+          disabled={lastFailed === null}
+          onClick={toggleFailed}
+        >
+          Failed ✕
+        </button>
+        <button
+          data-testid="toggle-flagged"
+          aria-pressed={lastEvent?.flagged ?? false}
+          style={{ ...tapButton, ...(lastEvent?.flagged ? selectedButton : {}) }}
+          disabled={lastEvent === null}
+          onClick={toggleFlagged}
+        >
+          Flag ⚑
+        </button>
       </div>
 
       <div style={{ ...gridStyle(2), marginTop: "0.75rem" }}>

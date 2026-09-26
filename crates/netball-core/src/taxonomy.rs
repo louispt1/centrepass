@@ -45,7 +45,14 @@ impl ActionKind {
             ActionKind::CentrePassReceive => {
                 &[Position::GA, Position::WA, Position::WD, Position::GD]
             }
-            ActionKind::Feed => &[Position::GS, Position::GA, Position::WA, Position::C],
+            ActionKind::Feed => &[
+                Position::GS,
+                Position::GA,
+                Position::WA,
+                Position::C,
+                Position::WD,
+                Position::GD,
+            ],
             ActionKind::Goal => &[Position::GS, Position::GA, Position::Team],
             ActionKind::Gain | ActionKind::UnforcedTurnover | ActionKind::Infringement => {
                 &Position::ALL

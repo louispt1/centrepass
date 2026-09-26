@@ -113,6 +113,12 @@ export default function ReferencePanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
+        <p style={{ fontSize: "0.85rem", margin: "0.75rem 0 0" }}>
+          Tap a position, then an action. Tap <strong>Failed ✕</strong> or <strong>Flag ⚑</strong>{" "}
+          afterwards to modify the event you just recorded. The Shorthand codes are only for typed
+          Shorthand import.
+        </p>
+
         <h3 style={{ fontSize: "0.95rem", marginBottom: "0.25rem" }}>Positions</h3>
         <table style={{ borderCollapse: "collapse", width: "100%", marginBottom: "1rem" }}>
           <tbody>
@@ -129,7 +135,7 @@ export default function ReferencePanel({ onClose }: { onClose: () => void }) {
         <table style={{ borderCollapse: "collapse", width: "100%", marginBottom: "1rem" }}>
           <thead>
             <tr>
-              <th style={th}>Code</th>
+              <th style={th}>Shorthand</th>
               <th style={th}>Descriptor</th>
               <th style={th}>Definition</th>
             </tr>
@@ -143,7 +149,7 @@ export default function ReferencePanel({ onClose }: { onClose: () => void }) {
         <table style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
-              <th style={th}>Code</th>
+              <th style={th}>Shorthand</th>
               <th style={th}>Modifier</th>
               <th style={th}>Definition</th>
             </tr>

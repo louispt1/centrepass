@@ -274,6 +274,8 @@ mod tests {
                     Just(FeedPosition::GA),
                     Just(FeedPosition::WA),
                     Just(FeedPosition::C),
+                    Just(FeedPosition::WD),
+                    Just(FeedPosition::GD),
                 ],
                 any::<bool>()
             )

@@ -7,7 +7,9 @@ phone — no account, no install, works with no signal at the courtside.
 
 Open the app link in your phone's browser, then **Add to Home Screen**. It now
 launches like any app and works fully offline. Everything you record is stored
-on your device.
+in that browser on your device — a different browser (or the home-screen app
+versus the browser tab) has its own separate list. Use **Export** / **Import**
+to move matches between them.
 
 ## 1. Create the match
 
@@ -32,9 +34,11 @@ This is the screen you'll use courtside. To record something a player did:
 
 That's two taps per event. A few extras:
 
-- **Failed ✕** — arm this first for a missed shot or an incomplete feed, then
-  tap the action. It clears after one event.
-- **Flag ⚑** — mark an event to review later.
+- **Failed ✕** — tap straight after the action for a missed shot or an
+  incomplete feed (e.g. GA → Goal / Shot → Failed ✕). Tap again to undo it.
+- **Flag ⚑** — tap straight after an event to mark it for review later.
+
+Failed and Flag always apply to the last event you recorded.
 - **Opposition goal** — one tap adds a goal for the other team to the scoreboard.
 - **Undo** — removes the last thing you recorded.
 - **End Q1 / Q2 / Q3** — marks the end of each quarter (the fourth is full time).

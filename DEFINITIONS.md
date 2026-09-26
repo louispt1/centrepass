@@ -11,7 +11,7 @@ Terminology follows the netball video analysis consensus (NVAC) taxonomy where N
 | Code | Descriptor | NVAC term | Resolution | Definition |
 | --- | --- | --- | --- | --- |
 | `c` | Centre Pass Receive | Centre Pass Receiver | coded | The player of the team in possession who receives the ball from the centre pass within the centre third. Codeable for GA, WA, WD, or GD. |
-| `f` | Feed | Feed into circle | coded | A pass from outside the goal circle to a GA or GS positioned inside it. Codeable for GS, GA, WA, or C. |
+| `f` | Feed | Feed into circle | coded | A pass from outside the goal circle to a GA or GS positioned inside it. Codeable for any position except GK. |
 | `g` | Goal | Goal | coded | A successful shot at goal, from within the goal circle (GS or GA). A shot that misses is the same code with the Failed modifier. |
 | `p` | Gain | General play turnover | coded | Winning possession from the opposition while play continues. Codeable for any position, or TEAM when unattributable. |
 | `e` | Unforced Turnover | Unforced turnover | coded | Losing possession through the active team's own error or infringement. Codeable for any position, or TEAM. |

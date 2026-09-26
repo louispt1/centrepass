@@ -30,24 +30,29 @@ test("codes a realistic multi-possession sequence with modifiers and a Gain sub-
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
 
   // Possession 2: C feed goes astray (Failed), WD intercepts it straight
-  // back, GS misses the shot (Failed), rebounds, and scores.
-  await page.getByTestId("toggle-failed").click();
+  // back, GS misses the shot (Failed), rebounds, and scores. Failed is tapped
+  // after the action it modifies.
   await page.getByTestId("position-C").click();
   await page.getByTestId("action-Feed").click();
+  await page.getByTestId("toggle-failed").click();
+  await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("position-WD").click();
   await page.getByTestId("subtype-Interception").click();
-  await page.getByTestId("toggle-failed").click();
+  // A Gain cannot fail.
+  await expect(page.getByTestId("toggle-failed")).toBeDisabled();
   await page.getByTestId("position-GS").click();
   await page.getByTestId("action-Goal").click();
+  await expect(page.getByTestId("score-team-a")).toHaveText("2");
+  await page.getByTestId("toggle-failed").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
   await page.getByTestId("action-Rebound").click();
   await page.getByTestId("action-Goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("2");
 
   // A GK infringement the coder wants to review later (Flagged).
-  await page.getByTestId("toggle-flagged").click();
   await page.getByTestId("position-GK").click();
   await page.getByTestId("action-Infringement").click();
+  await page.getByTestId("toggle-flagged").click();
 
   // The strip shows the last few events for spot-checking, newest included.
   const strip = page.getByTestId("event-strip");
@@ -120,10 +125,10 @@ test("never offers a position/action combination the core would reject", async (
   await expect(page.getByTestId("action-Goal")).toBeDisabled();
   await expect(page.getByTestId("action-Gain")).toBeDisabled();
 
-  // WD can receive a centre pass and gain, but never shoot, feed, or rebound.
+  // WD can receive a centre pass, feed, and gain, but never shoot or rebound.
   await page.getByTestId("position-WD").click();
   await expect(page.getByTestId("action-Goal")).toBeDisabled();
-  await expect(page.getByTestId("action-Feed")).toBeDisabled();
+  await expect(page.getByTestId("action-Feed")).toBeEnabled();
   await expect(page.getByTestId("action-Rebound")).toBeDisabled();
   await expect(page.getByTestId("action-CentrePassReceive")).toBeEnabled();
   await expect(page.getByTestId("subtype-Deflection")).toBeEnabled();
@@ -137,14 +142,17 @@ test("never offers a position/action combination the core would reject", async (
   await expect(page.getByTestId("action-Goal")).toBeEnabled();
   await expect(page.getByTestId("action-UnforcedTurnover")).toBeEnabled();
 
-  // The Failed modifier only applies where failure is meaningful.
+  // GK is the one position that cannot feed.
   await page.getByTestId("position-GK").click();
-  await expect(page.getByTestId("action-Infringement")).toBeEnabled();
-  await page.getByTestId("toggle-failed").click();
-  await expect(page.getByTestId("action-Infringement")).toBeDisabled();
-  await expect(page.getByTestId("action-Gain")).toBeDisabled();
-  await page.getByTestId("position-GS").click();
-  await expect(page.getByTestId("action-Goal")).toBeEnabled();
+  await expect(page.getByTestId("action-Feed")).toBeDisabled();
+
+  // Failed and Flag act on the last event, so they are off with no events;
+  // Failed stays off for an opposition goal, Flag does not.
+  await expect(page.getByTestId("toggle-failed")).toBeDisabled();
+  await expect(page.getByTestId("toggle-flagged")).toBeDisabled();
+  await page.getByTestId("goal-opposition").click();
+  await expect(page.getByTestId("toggle-failed")).toBeDisabled();
+  await expect(page.getByTestId("toggle-flagged")).toBeEnabled();
 });
 
 test("holds a screen wake lock during coding and releases it after", async ({ page }) => {

@@ -110,7 +110,7 @@ pub fn definitions() -> Vec<Descriptor> {
             "Feed",
             "Feed into circle",
             "A pass from outside the goal circle to a GA or GS positioned inside it. Codeable \
-             for GS, GA, WA, or C.",
+             for any position except GK.",
             Coded,
             None,
         ),

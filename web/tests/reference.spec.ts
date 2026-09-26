@@ -35,12 +35,12 @@ test("the reference opens from live coding and shows core-derived definitions", 
 test("opening and closing the reference does not lose coding state", async ({ page }) => {
   await createMatch(page);
 
-  // Establish coding state: a selected position, the Failed toggle on, and one
-  // event already in the log.
+  // Establish coding state: a selected position and one failed event already
+  // in the log.
   await page.getByTestId("position-GA").click();
   await page.getByTestId("action-CentrePassReceive").click();
-  await page.getByTestId("position-GS").click();
   await page.getByTestId("toggle-failed").click();
+  await page.getByTestId("position-GS").click();
   await expect(page.getByTestId("position-GS")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("event-strip")).toContainText("CPR");
@@ -56,8 +56,8 @@ test("opening and closing the reference does not lose coding state", async ({ pa
   await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("event-strip")).toContainText("CPR");
 
-  // And the still-armed Failed shot records as a miss, proving the toggle was
-  // truly live, not merely re-rendered.
+  // And the still-selected GS scores, proving the selection was truly live,
+  // not merely re-rendered.
   await page.getByTestId("action-Goal").click();
-  await expect(page.getByTestId("score-team-a")).toHaveText("0");
+  await expect(page.getByTestId("score-team-a")).toHaveText("1");
 });

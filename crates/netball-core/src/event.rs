@@ -130,10 +130,11 @@ position_subset!(
 
 position_subset!(
     /// Positions that can pass from outside the goal circle to a shooter
-    /// inside it: those allowed in the attacking goal third. WD, GD, and GK
-    /// may not enter it; TEAM is excluded because a feed is always
+    /// inside it. The ball may not cross a whole third untouched, and the
+    /// circle lies inside the attacking third, so WD and GD can feed from the
+    /// centre third but GK cannot. TEAM is excluded because a feed is always
     /// attributable to the passer.
-    FeedPosition { GS, GA, WA, C }
+    FeedPosition { GS, GA, WA, C, WD, GD }
 );
 
 position_subset!(

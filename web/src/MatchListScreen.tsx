@@ -138,6 +138,35 @@ export default function MatchListScreen({ engineDescription }: { engineDescripti
     <main style={{ fontFamily: "system-ui, sans-serif", padding: "1.5rem", maxWidth: "28rem", margin: "0 auto" }}>
       <h1>CentrePass</h1>
 
+      <details data-testid="how-to" style={{ marginBottom: "1rem" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>How to use this app</summary>
+        <ol style={{ paddingLeft: "1.25rem", lineHeight: 1.5 }}>
+          <li>Create a match below, then enter your roster (a name against each position).</li>
+          <li>
+            To record something, tap the <strong>position</strong> (or TEAM), then the{" "}
+            <strong>action</strong>. That's it — the event is saved.
+          </li>
+          <li>
+            Missed shot or incomplete feed? Tap <strong>Failed ✕</strong> straight after. Want to
+            review an event later? Tap <strong>Flag ⚑</strong>. Both apply to the last event;
+            tap again to undo.
+          </li>
+          <li>
+            <strong>Undo</strong> removes the last event. <strong>End Q1</strong>… marks each
+            quarter; <strong>Roster / Sub</strong> records substitutions.
+          </li>
+          <li>
+            <strong>Stats</strong> shows scores and per-player numbers, and makes a summary image
+            to share.
+          </li>
+        </ol>
+        <p style={{ fontSize: "0.9rem", color: "#555" }}>
+          Your matches are stored in this browser on this device only — Chrome, Firefox, and the
+          home-screen app each keep their own. Use <strong>Export</strong> and{" "}
+          <strong>Import</strong> to move or back up a match.
+        </p>
+      </details>
+
       <h2>New match</h2>
       <form onSubmit={createMatch}>
         <label style={fieldStyle}>

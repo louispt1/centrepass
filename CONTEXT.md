@@ -52,7 +52,7 @@ Receiving the ball from the centre pass within the centre third.
 _Avoid_: CPR (in prose)
 
 **Feed**:
-A pass from outside the goal circle to a shooter inside it.
+A pass from outside the goal circle to a shooter inside it. Any position except GK may feed: WD and GD can pass into the circle from the centre third, but a GK pass would cross the whole centre third.
 _Avoid_: feed into circle (as a distinct term)
 
 **Goal**:

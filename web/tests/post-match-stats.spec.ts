@@ -55,8 +55,8 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await page.getByTestId("position-GD").click();
   await page.getByTestId("subtype-Interception").click();
   await code(page, "GA", "Feed");
-  await page.getByTestId("toggle-failed").click();
   await code(page, "GS", "Goal");
+  await page.getByTestId("toggle-failed").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("1"); // the miss
   await code(page, "GS", "Rebound");
   await code(page, "GS", "Goal");
