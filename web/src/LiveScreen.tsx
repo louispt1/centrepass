@@ -33,7 +33,7 @@ const QUARTERS = 4;
 
 // Row order for the main action grid. Gain is deliberately absent: courtside,
 // the coder always taps a sub-type instead (Pick-up when unsure), so no bare
-// Gain button is offered — the core still accepts one bare, e.g. from
+// Gain button is offered - the core still accepts one bare, e.g. from
 // Shorthand (see GainSubType's doc comment).
 const MAIN_ACTION_GRID: ActionKind[] = [
   "CentrePassReceive",
@@ -82,8 +82,8 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   // undefined = still loading, null = no such match
   const [match, setMatch] = useState<StoredMatch | null | undefined>(undefined);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-  // The quick reference is an overlay, so opening it leaves this screen — and
-  // the selected position — mounted and untouched.
+  // The quick reference is an overlay, so opening it leaves this screen - and
+  // the selected position - mounted and untouched.
   const [showReference, setShowReference] = useState(false);
   // One-shot override of the Team in Possession: applies to the next tap
   // only, then the derivation takes over again (ADR-0004).

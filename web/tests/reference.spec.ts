@@ -24,7 +24,7 @@ test("the reference opens from live coding and shows core-derived definitions", 
   // Positions, actions, and modifiers are all present.
   await expect(page.getByTestId("reference-position-GS")).toContainText("Goal Shooter");
   // Action rows come from the same netball-core definitions that generate
-  // DEFINITIONS.md — e.g. the Centre Pass Receive and its NVAC-derived text.
+  // DEFINITIONS.md - e.g. the Centre Pass Receive and its NVAC-derived text.
   await expect(page.getByTestId("reference-row-Centre Pass Receive")).toContainText("centre pass");
   await expect(page.getByTestId("reference-row-Goal Assist")).toContainText("derived");
   // Modifiers.

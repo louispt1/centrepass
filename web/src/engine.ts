@@ -95,8 +95,8 @@ export function deriveCollectionStats(
 }
 
 /**
- * The team holding the ball after the log — the default team for the next
- * tap — or null before the first centre pass is coded (ADR-0004).
+ * The team holding the ball after the log - the default team for the next
+ * tap - or null before the first centre pass is coded (ADR-0004).
  */
 export function deriveTeamInPossession(log: LogEntry[]): Team | null {
   return (derive_team_in_possession(log) as Team | null | undefined) ?? null;

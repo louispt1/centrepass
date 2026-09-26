@@ -1,6 +1,6 @@
 // Helpers for constructing and displaying events on the TypeScript side.
-// Legality (which positions may do which action) is core-owned data — see
-// actionTaxonomy() in engine.ts — and the live screen only enables legal
+// Legality (which positions may do which action) is core-owned data - see
+// actionTaxonomy() in engine.ts - and the live screen only enables legal
 // combinations; the core re-validates whenever events cross the boundary.
 import type { Action } from "./types/Action";
 import type { ActionKind } from "./types/ActionKind";

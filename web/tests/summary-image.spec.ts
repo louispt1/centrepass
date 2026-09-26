@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 
 // Issue 09: one tap on a finished match renders the Summary Image and shares
 // it, with a plain download as the fallback. Headless Chromium cannot share
-// files, so the button falls back to a download — which is exactly what this
+// files, so the button falls back to a download - which is exactly what this
 // test captures and inspects.
 
 const ROSTER: Record<string, string> = {

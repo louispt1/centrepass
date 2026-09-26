@@ -1,4 +1,4 @@
-# 06 — Android share_target for direct file receiving
+# 06 - Android share_target for direct file receiving
 
 Status: needs-triage
 

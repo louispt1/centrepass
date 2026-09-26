@@ -5,8 +5,8 @@
 //! disagree. Nothing here is stored: it is re-derived from the coded truth
 //! (ADR-0003).
 //!
-//! On-ball actions are trusted as recorded — a Feed coded for B means B had
-//! the ball, whatever was predicted — so one corrected tap re-aligns every
+//! On-ball actions are trusted as recorded - a Feed coded for B means B had
+//! the ball, whatever was predicted - so one corrected tap re-aligns every
 //! later prediction. After a made goal or a quarter break the ball goes to the
 //! team due the next centre pass under Centre Pass Alternation, anchored on
 //! the team actually coded for each Centre Pass Receive.
@@ -26,7 +26,7 @@ pub(crate) struct Possession {
 /// How a possession began.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Origin {
-    /// From a centre pass — coded as a Centre Pass Receive or not: the first
+    /// From a centre pass - coded as a Centre Pass Receive or not: the first
     /// possession after a restart, held by the team that took it.
     CentrePass,
     Gain,
@@ -108,8 +108,8 @@ fn had_ball_before(team: Team, action: &Action) -> Team {
     }
 }
 
-/// The team holding the ball after the whole log — the default team for the
-/// next coded event — or `None` when it cannot yet be known (before the first
+/// The team holding the ball after the whole log - the default team for the
+/// next coded event - or `None` when it cannot yet be known (before the first
 /// centre pass is coded).
 pub fn derive_team_in_possession(log: &[LogEntry]) -> Option<Team> {
     let mut fold = Fold::new();

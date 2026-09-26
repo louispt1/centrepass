@@ -81,8 +81,8 @@ test("create match → record goals for both teams → undo → reload → score
   // The match appears in the list and can be reopened.
   await page.getByRole("link", { name: "← Matches" }).click();
   await expect(page.getByTestId("match-list")).toContainText(
-    "Hornets U13 vs Riverside — 2026-07-10",
+    "Hornets U13 vs Riverside - 2026-07-10",
   );
-  await page.getByRole("link", { name: "Hornets U13 vs Riverside — 2026-07-10" }).click();
+  await page.getByRole("link", { name: "Hornets U13 vs Riverside - 2026-07-10" }).click();
   await expectScore(page, 1, 1);
 });

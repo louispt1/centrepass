@@ -1,6 +1,6 @@
 //! The coded event model: the only stored truth for a match (ADR-0003).
 //!
-//! The model is two-team-native — every event carries a [`Team`] — and both
+//! The model is two-team-native - every event carries a [`Team`] - and both
 //! teams are coded in full (ADR-0004); which team holds the ball is derived
 //! in [`crate::possession`], never stored.
 //!
@@ -102,7 +102,7 @@ macro_rules! position_subset {
 }
 
 position_subset!(
-    /// The seven on-court positions — [`Position`] without TEAM. A roster
+    /// The seven on-court positions - [`Position`] without TEAM. A roster
     /// assignment or substitution always names a real position on court.
     CourtPosition { GS, GA, WA, C, WD, GD, GK }
 );
@@ -150,7 +150,7 @@ position_subset!(
 );
 
 /// Optional detail on how possession was won, coded when time pressure
-/// allows (a deviation from NVAC, which has no bare Gain — see `CONTEXT.md`).
+/// allows (a deviation from NVAC, which has no bare Gain - see `CONTEXT.md`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub enum GainSubType {

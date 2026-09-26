@@ -1,7 +1,7 @@
 //! The Shorthand parser: the power-user import path (`CONTEXT.md`, PRD user
 //! stories 34–35). It turns the predecessor's compact text grammar into the
 //! same [`LogEntry`] log every other entry path produces, so an imported match
-//! flows through the identical derivations — only without timestamps, so
+//! flows through the identical derivations - only without timestamps, so
 //! Playing Time is unavailable while every order-based statistic stays exact.
 //!
 //! # Grammar
@@ -9,18 +9,18 @@
 //! One possession per line. After parenthetical `(comments)` are stripped, a
 //! line is either a marker or a run of whitespace-separated event tokens:
 //!
-//! - **Position** — a single digit `1`–`8` for GS, GA, WA, C, WD, GD, GK, TEAM.
-//! - **Action** — `c` receive, `f` feed, `g` goal, `e` unforced turnover,
+//! - **Position** - a single digit `1`–`8` for GS, GA, WA, C, WD, GD, GK, TEAM.
+//! - **Action** - `c` receive, `f` feed, `g` goal, `e` unforced turnover,
 //!   `p` gain, `pi`/`pd`/`pp` gain by interception/deflection/pick-up,
 //!   `i` infringement, `r` rebound. Sub-types match greedily, so `1pi` is a GS
 //!   gain by interception, never a gain (`p`) followed by an infringement.
-//! - **Modifiers** — a trailing `x` (Failed) and/or `!` (Flagged), in either
+//! - **Modifiers** - a trailing `x` (Failed) and/or `!` (Flagged), in either
 //!   order. `x` is only legal on the actions that can fail (feed, goal).
-//! - **Team** — a leading `a`/`b` on the line picks the possession's team (its
+//! - **Team** - a leading `a`/`b` on the line picks the possession's team (its
 //!   Team in Possession); with no prefix the possession belongs to team A.
 //!   Every event on the line is that team's, except an infringement, which is
 //!   always committed by the team out of possession (ADR-0004).
-//! - **Markers** — a line of just `QT` is a quarter break. `S` (substitution)
+//! - **Markers** - a line of just `QT` is a quarter break. `S` (substitution)
 //!   is reserved but not yet imported.
 //!
 //! A single malformed token fails the whole parse, pinpointing the line and
@@ -77,7 +77,7 @@ pub enum ShorthandErrorKind {
     QuarterBreakNotAlone,
     /// A team prefix (`a`/`b`) with no events after it.
     EmptyPossession { prefix: char },
-    /// A substitution (`S`) marker — reserved, but not imported yet.
+    /// A substitution (`S`) marker - reserved, but not imported yet.
     SubstitutionNotSupported,
     /// A `(` comment that is never closed.
     UnclosedComment,
@@ -355,7 +355,7 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
 }
 
 /// Assemble an [`Action`] from its parts, or `None` if the position is illegal
-/// for the action — the same legality the type system enforces, surfaced as a
+/// for the action - the same legality the type system enforces, surfaced as a
 /// parse error rather than an unrepresentable value.
 fn build_action(
     kind: ActionKind,

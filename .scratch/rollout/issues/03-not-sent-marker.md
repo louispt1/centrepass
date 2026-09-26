@@ -1,4 +1,4 @@
-# 03 — "Not sent" marker on the match list
+# 03 - "Not sent" marker on the match list
 
 Status: ready-for-agent
 

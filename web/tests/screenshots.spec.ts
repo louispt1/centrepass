@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 // Screenshot generator for the volunteer quickstart (docs/img/). This is not
-// part of the CI suite — it only runs when SCREENSHOTS=1 (via `npm run
+// part of the CI suite - it only runs when SCREENSHOTS=1 (via `npm run
 // screenshots`) and writes PNGs into ../docs/img. Regenerate the quickstart
 // images after a UI change; otherwise it is skipped.
 test.skip(!process.env.SCREENSHOTS, "set SCREENSHOTS=1 to regenerate quickstart images");

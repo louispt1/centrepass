@@ -5,7 +5,7 @@
 //! Identity across matches is by name only. Teams bucket by trimmed,
 //! case-insensitive name, whichever A/B slot they were coded in. Players
 //! bucket the same way, then fold through the Collection's Player Aliases,
-//! transitively. Only counts are summed — rates are left to the caller to
+//! transitively. Only counts are summed - rates are left to the caller to
 //! divide once, never averaged as percentages.
 
 use std::collections::HashMap;

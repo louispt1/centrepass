@@ -7,7 +7,7 @@ Recording netball match events courtside and deriving team and player statistics
 ### People and teams
 
 **Coder**:
-The person recording events during or after a match — typically a club volunteer courtside with a phone or tablet.
+The person recording events during or after a match - typically a club volunteer courtside with a phone or tablet.
 _Avoid_: stats-keeper, scorer, user
 
 **Team**:
@@ -29,7 +29,7 @@ A span of the log during which one team is the Team in Possession, from winning 
 _Avoid_: play, phase
 
 **Team in Possession**:
-The team derived to hold the ball after the latest event, and so the default team for the next coded event. The coder may override it; the override is simply the team recorded on the next event. Undetermined before the first event — the first centre pass (decided by the toss) is whichever team the coder codes it for.
+The team derived to hold the ball after the latest event, and so the default team for the next coded event. The coder may override it; the override is simply the team recorded on the next event. Undetermined before the first event - the first centre pass (decided by the toss) is whichever team the coder codes it for.
 _Avoid_: current team, attacking team
 
 **Centre Pass Alternation**:
@@ -64,7 +64,7 @@ A successful shot. A **Shot** with the Failed modifier is an unsuccessful attemp
 _Avoid_: score, basket
 
 **Gain**:
-Winning possession from the opposition while play continues, coded once for the winning team — always the team not previously in possession; the losing team records nothing. Optional sub-types: **Interception**, **Deflection**, **Pick-up**.
+Winning possession from the opposition while play continues, coded once for the winning team - always the team not previously in possession; the losing team records nothing. Optional sub-types: **Interception**, **Deflection**, **Pick-up**.
 _Avoid_: steal, takeaway, general play turnover
 
 **Unforced Turnover**:

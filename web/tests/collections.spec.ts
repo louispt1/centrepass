@@ -51,7 +51,7 @@ test("a collection sums a misspelled player across matches once merged", async (
   // Our team is bucketed across both slots, largest first and open.
   const ours = page.getByTestId("team-bucket-0");
   await expect(ours).toHaveAttribute("open");
-  await expect(ours.locator("summary")).toHaveText("Hornets — 2 matches");
+  await expect(ours.locator("summary")).toHaveText("Hornets - 2 matches");
   await expect(page.getByTestId("stat-Alice-goals")).toHaveText("1/1 (100%)");
   await expect(page.getByTestId("stat-Ali-goals")).toHaveText("2/2 (100%)");
 

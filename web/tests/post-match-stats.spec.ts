@@ -34,7 +34,7 @@ async function code(page: Page, position: string, action: string) {
 test("a coded match shows correct numbers in every stat view", async ({ page }) => {
   await createMatchWithRoster(page);
 
-  // Possession 1 — our centre pass converts: Beth (GA) receives, Wanda (WA)
+  // Possession 1 - our centre pass converts: Beth (GA) receives, Wanda (WA)
   // feeds, Alice (GS) scores. That feed is a feed-with-shot and an assist.
   await page.getByTestId("choose-team-A").click();
   await code(page, "GA", "CentrePassReceive");
@@ -47,11 +47,11 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await code(page, "GA", "Goal");
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
 
-  // Possession 2 — our centre pass is turned over by Cara (C): no goal.
+  // Possession 2 - our centre pass is turned over by Cara (C): no goal.
   await code(page, "WA", "CentrePassReceive");
   await code(page, "C", "UnforcedTurnover");
 
-  // Possession 3 — Gina (GD) intercepts, Beth (GA) feeds, Alice misses,
+  // Possession 3 - Gina (GD) intercepts, Beth (GA) feeds, Alice misses,
   // rebounds her own miss, and scores. The gain converts; the feed produced a
   // shot but the rebound breaks the assist link.
   await page.getByTestId("position-GD").click();

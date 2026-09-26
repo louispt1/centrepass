@@ -1,4 +1,4 @@
-# 05 — Collections and cross-match stats
+# 05 - Collections and cross-match stats
 
 Status: ready-for-agent
 
@@ -25,7 +25,7 @@ interface StoredCollection {
 }
 ```
 
-CRUD: create/rename/delete a Collection; add/remove a matchId. A deleted match's id is simply skipped wherever a Collection is rendered — no eager cleanup on delete.
+CRUD: create/rename/delete a Collection; add/remove a matchId. A deleted match's id is simply skipped wherever a Collection is rendered - no eager cleanup on delete.
 
 ### Membership UI
 
@@ -38,11 +38,11 @@ Editable from both directions:
 
 New function taking the member matches' `log` + `team_a_name`/`team_b_name` (same shape as `MatchFile`). It replays each one through the existing `stats::compute` unchanged, then folds the resulting `PlayerStats` across matches:
 
-- **Bucket by team name**, trimmed + case-insensitive, whichever of A/B slot it was coded in per match — there is no "which side is ours" concept; the same club team may be Team A in one match and Team B in another.
+- **Bucket by team name**, trimmed + case-insensitive, whichever of A/B slot it was coded in per match - there is no "which side is ours" concept; the same club team may be Team A in one match and Team B in another.
 - **Bucket players by name**, trimmed + case-insensitive, then resolve through the Collection's `playerAliases` map, transitively.
-- **Sum** every count-based stat (goals, feeds, gains, etc.) and Playing Time — Playing Time only across matches where it was available for that match (partial, never zeroed, per the existing per-match rule).
-- Track a **games-played** count per player: the number of member matches where they appear in that match's `TeamStats.players` (the existing "occupied a position or was credited an event" definition — no new concept).
-- Rate stats (shooting %, feed completion, etc.) are **never averaged as percentages** — the caller sums numerators and denominators across matches and divides once, same as the existing per-match `Conversions` are computed today.
+- **Sum** every count-based stat (goals, feeds, gains, etc.) and Playing Time - Playing Time only across matches where it was available for that match (partial, never zeroed, per the existing per-match rule).
+- Track a **games-played** count per player: the number of member matches where they appear in that match's `TeamStats.players` (the existing "occupied a position or was credited an event" definition - no new concept).
+- Rate stats (shooting %, feed completion, etc.) are **never averaged as percentages** - the caller sums numerators and denominators across matches and divides once, same as the existing per-match `Conversions` are computed today.
 
 ### Collection stats screen
 
@@ -79,6 +79,6 @@ Generalize `shareOrDownload` (`matchFile.ts`) from a single `File` to `File[]`, 
 
 ## Out of scope
 
-- Season-stats export as its own report/CSV — only the underlying Match Files bundle is exported; revisit if the club wants a spreadsheet-ready format later
-- Android `share_target` for direct "Share to CentrePass" — split into `06-android-share-target.md`
-- A canonical per-team player roster with stable ids at coding time — roster entry stays free text; cross-match identity is handled entirely by the Collection-scoped alias merge
+- Season-stats export as its own report/CSV - only the underlying Match Files bundle is exported; revisit if the club wants a spreadsheet-ready format later
+- Android `share_target` for direct "Share to CentrePass" - split into `06-android-share-target.md`
+- A canonical per-team player roster with stable ids at coding time - roster entry stays free text; cross-match identity is handled entirely by the Collection-scoped alias merge

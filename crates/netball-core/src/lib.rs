@@ -42,7 +42,7 @@ pub const TAXONOMY: &str = "NVAC taxonomy (Mackay et al. 2023)";
 /// version. The walking-skeleton UI renders this to prove the full
 /// Rust-to-browser plumbing works.
 pub fn engine_description() -> String {
-    format!("{TAXONOMY} — netball-core v{}", env!("CARGO_PKG_VERSION"))
+    format!("{TAXONOMY} - netball-core v{}", env!("CARGO_PKG_VERSION"))
 }
 
 #[cfg(test)]

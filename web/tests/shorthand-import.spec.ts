@@ -21,7 +21,7 @@ test("pasting valid Shorthand imports a match that renders in the stat views", a
   await expect(page.getByTestId("conversion-A-centrePass")).toHaveText("1/1 (100%)");
   await expect(page.getByTestId("conversion-A-gain")).toHaveText("1/1 (100%)");
 
-  // An imported match carries no timestamps, so Playing Time is absent — there
+  // An imported match carries no timestamps, so Playing Time is absent - there
   // is no Mins column anywhere, never guessed or zeroed.
   await expect(page.getByRole("columnheader", { name: "Mins" })).toHaveCount(0);
 });

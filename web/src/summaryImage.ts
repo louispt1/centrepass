@@ -3,7 +3,7 @@
 // the phone's share sheet, with a plain download as the fallback.
 //
 // Every figure comes from the netball-core stats report (the same derivation
-// the stat views read) — nothing is recomputed here. This module only draws and
+// the stat views read) - nothing is recomputed here. This module only draws and
 // shares; it holds no domain logic.
 import type { StatsReport } from "./types/StatsReport";
 import type { TeamStats } from "./types/TeamStats";
@@ -57,7 +57,7 @@ export function renderSummaryImageCanvas(
 
   const centre = WIDTH / 2;
 
-  // Wordmark — the image must carry the CentrePass name.
+  // Wordmark - the image must carry the CentrePass name.
   ctx.textAlign = "left";
   ctx.fillStyle = ACCENT;
   ctx.font = `700 44px ${FONT}`;
@@ -101,7 +101,7 @@ export function renderSummaryImageCanvas(
     const shooters = topShooters(team);
     if (shooters.length === 0) {
       ctx.fillStyle = MUTED;
-      ctx.fillText("—", x, y);
+      ctx.fillText("-", x, y);
       y += 42;
     } else {
       for (const player of shooters) {
@@ -145,7 +145,7 @@ export function renderSummaryImageCanvas(
   ctx.textAlign = "center";
   ctx.fillStyle = MUTED;
   ctx.font = `400 26px ${FONT}`;
-  ctx.fillText("Coded with CentrePass — open-source netball match stats", centre, HEIGHT - 48);
+  ctx.fillText("Coded with CentrePass - open-source netball match stats", centre, HEIGHT - 48);
 
   return canvas;
 }

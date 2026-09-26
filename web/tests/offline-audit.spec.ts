@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
-// Issue 10, closing audit: the complete v1 flow — create, roster, code, stats,
-// export, import, Summary Image — executed with the network disabled. After one
+// Issue 10, closing audit: the complete v1 flow - create, roster, code, stats,
+// export, import, Summary Image - executed with the network disabled. After one
 // online visit the service worker has precached the shell and the WASM, so
 // everything below runs offline against IndexedDB and netball-core alone.
 
@@ -65,7 +65,7 @@ test("the full v1 flow works with the network disabled", async ({ page, context 
   await expect(page.getByTestId("final-score")).toHaveText("1–1");
   await expect(page.getByTestId("stat-Alice-goals")).toHaveText("1/1 (100%)");
 
-  // Summary Image — rendered and shared (downloaded) fully client-side.
+  // Summary Image - rendered and shared (downloaded) fully client-side.
   const imagePromise = page.waitForEvent("download");
   await page.getByTestId("share-summary-image").click();
   const image = await imagePromise;
@@ -80,7 +80,7 @@ test("the full v1 flow works with the network disabled", async ({ page, context 
   const exported = await exportPromise;
   const exportedPath = await exported.path();
 
-  // Delete it, then re-import the exported file — the match returns.
+  // Delete it, then re-import the exported file - the match returns.
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page.getByRole("button", { name: "Confirm delete" }).click();
   await expect(page.getByText("No matches yet.")).toBeVisible();

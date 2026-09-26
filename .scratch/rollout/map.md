@@ -15,4 +15,4 @@ Goal: club volunteers use CentrePass themselves, free, with data kept on their d
 
 ## Fog
 
-- Receiving files on the stats-keeper's phone: on iOS, save from the chat to Files, then Import. On Android, a `share_target` in the manifest could let people "Share to CentrePass" directly, but that's manifest plumbing separate from Collections — split into issue 06.
+- Receiving files on the stats-keeper's phone: on iOS, save from the chat to Files, then Import. On Android, a `share_target` in the manifest could let people "Share to CentrePass" directly, but that's manifest plumbing separate from Collections - split into issue 06.

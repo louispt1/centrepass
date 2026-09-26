@@ -4,7 +4,7 @@ import { useEffect } from "react";
  * Hold a screen wake lock while `active`, so the phone doesn't sleep
  * mid-quarter. Re-acquires when the tab becomes visible again (the browser
  * releases the lock on tab switch / screen off) and releases on cleanup.
- * A denied or unsupported wake lock is fine — coding just proceeds without.
+ * A denied or unsupported wake lock is fine - coding just proceeds without.
  */
 export function useScreenWakeLock(active: boolean) {
   useEffect(() => {
@@ -22,7 +22,7 @@ export function useScreenWakeLock(active: boolean) {
           sentinel = acquired;
         }
       } catch {
-        // Denied (e.g. low battery) or unavailable — not fatal.
+        // Denied (e.g. low battery) or unavailable - not fatal.
       }
     }
 

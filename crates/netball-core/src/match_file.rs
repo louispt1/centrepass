@@ -1,5 +1,5 @@
-//! The Match File: the portable, self-contained representation of one match —
-//! its event log plus metadata — and the unit of export, import, backup, and
+//! The Match File: the portable, self-contained representation of one match -
+//! its event log plus metadata - and the unit of export, import, backup, and
 //! migration (ADR-0003, `CONTEXT.md`).
 //!
 //! A Match File is a versioned JSON document (`"version": 3`); older versions
@@ -25,7 +25,7 @@ pub const MATCH_FILE_VERSION: u32 = 3;
 
 /// One match in its portable form: the append-only log that is the only stored
 /// truth (ADR-0003), plus the metadata needed to name and date it. The `version`
-/// envelope is not part of this in-memory value — it is written by
+/// envelope is not part of this in-memory value - it is written by
 /// [`MatchFile::to_json`] and checked by [`MatchFile::from_json`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -63,7 +63,7 @@ struct VersionedMatchFile {
 /// is written for a coder to read, not a developer.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MatchFileError {
-    /// A Match File from a version this engine does not understand — almost
+    /// A Match File from a version this engine does not understand - almost
     /// always a newer app that wrote a format this one predates.
     UnsupportedVersion { found: u32 },
     /// Not a Match File at all, or one whose contents are corrupt: invalid

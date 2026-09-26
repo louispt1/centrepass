@@ -4,7 +4,7 @@
 //! entries over the log (ADR-0003), so it can be reconstructed at any point
 //! in the match. Attribution assigns each coded event to the player occupying
 //! its position at that moment; Playing Time integrates the substitution
-//! timestamps and is unavailable — never zeroed or guessed — when a log has
+//! timestamps and is unavailable - never zeroed or guessed - when a log has
 //! no timestamps (e.g. Shorthand imports).
 
 use serde::{Deserialize, Serialize};
@@ -119,7 +119,7 @@ pub struct PlayingTime {
 /// player who occupies several positions in sequence accumulates across
 /// stints.
 ///
-/// Returns `None` — playing time unavailable, not zero — when any of the
+/// Returns `None` - playing time unavailable, not zero - when any of the
 /// team's substitutions lacks a timestamp (e.g. a Shorthand import).
 pub fn derive_playing_time(log: &[LogEntry], team: Team) -> Option<Vec<PlayingTime>> {
     let substitutions: Vec<_> = log
@@ -129,7 +129,7 @@ pub fn derive_playing_time(log: &[LogEntry], team: Team) -> Option<Vec<PlayingTi
             _ => None,
         })
         .collect();
-    // No roster yet means nobody to time — that is knowledge, not absence
+    // No roster yet means nobody to time - that is knowledge, not absence
     // of it, so it is an empty list rather than None.
     if substitutions.is_empty() {
         return Some(Vec::new());
@@ -416,7 +416,7 @@ mod tests {
     fn playing_time_without_a_roster_is_an_empty_list_not_unavailable() {
         let log = [goal_by(Team::A, GoalPosition::GS, 1_000)];
         assert_eq!(derive_playing_time(&log, Team::A), Some(vec![]));
-        // Even with nothing timestamped — or nothing at all — in the log.
+        // Even with nothing timestamped - or nothing at all - in the log.
         assert_eq!(derive_playing_time(&[], Team::A), Some(vec![]));
         assert_eq!(
             derive_playing_time(&strip_timestamps(&log), Team::A),

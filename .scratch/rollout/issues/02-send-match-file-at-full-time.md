@@ -1,4 +1,4 @@
-# 02 — Send the Match File at full time
+# 02 - Send the Match File at full time
 
 Status: ready-for-agent
 

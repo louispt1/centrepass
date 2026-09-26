@@ -1,4 +1,4 @@
-# 04 — Request persistent storage
+# 04 - Request persistent storage
 
 Status: ready-for-agent
 

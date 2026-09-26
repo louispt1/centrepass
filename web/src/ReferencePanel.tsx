@@ -4,8 +4,8 @@ import { definitionsReference } from "./engine";
 
 // A quick reference for positions, actions, and modifiers, opened from the live
 // coding screen (issue 10). It is an overlay, not a route, so the live screen
-// stays mounted and coding state — the selected position, the Failed/Flag
-// toggles, the in-progress log — is never lost while it is open.
+// stays mounted and coding state - the selected position, the Failed/Flag
+// toggles, the in-progress log - is never lost while it is open.
 //
 // The action and modifier text is core data (definitionsReference), the very
 // same descriptors that generate DEFINITIONS.md: no hand-maintained copy.
@@ -65,7 +65,7 @@ function DescriptorRows({ rows }: { rows: Descriptor[] }) {
     <>
       {rows.map((row) => (
         <tr key={row.label} data-testid={`reference-row-${row.label}`}>
-          <td style={codeCell}>{row.code ?? "—"}</td>
+          <td style={codeCell}>{row.code ?? "-"}</td>
           <td style={{ ...td, fontWeight: 600 }}>
             {row.label}
             {row.parent && <span style={{ color: "#888", fontWeight: 400 }}> · {row.parent}</span>}

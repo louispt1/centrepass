@@ -1,6 +1,6 @@
 //! Thin wasm-bindgen wrapper around `netball-core`.
 //!
-//! Nothing in here may contain domain logic — it only translates between
+//! Nothing in here may contain domain logic - it only translates between
 //! JavaScript values and `netball-core`'s pure API (ADR-0002).
 
 use wasm_bindgen::prelude::wasm_bindgen;

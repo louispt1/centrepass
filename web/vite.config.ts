@@ -15,7 +15,7 @@ export default defineConfig({
       manifest: {
         name: "CentrePass",
         short_name: "CentrePass",
-        description: "Netball match statistics — coded live, courtside, fully offline.",
+        description: "Netball match statistics - coded live, courtside, fully offline.",
         display: "standalone",
         orientation: "portrait",
         background_color: "#0f4c5c",

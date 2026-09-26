@@ -1,16 +1,16 @@
 //! Golden parity suite: the correctness anchor for the whole rewrite (issue 08).
 //!
-//! Each fixture under `tests/golden/` is a real historical match — migrated
-//! from the predecessor app's SQLite database to a version-1 Match File (migrated to the current version on import) — paired
+//! Each fixture under `tests/golden/` is a real historical match - migrated
+//! from the predecessor app's SQLite database to a version-1 Match File (migrated to the current version on import) - paired
 //! with that Python app's derived statistics, captured while the old app still
 //! ran. This suite imports every Match File through the same [`MatchFile`] path
 //! the app uses, re-derives its statistics with [`derive_stats`], and asserts
-//! the result reproduces the Python oracle exactly — save for a small ledger of
+//! the result reproduces the Python oracle exactly - save for a small ledger of
 //! deliberate, documented deviations.
 //!
-//! Where the Rust engine and the Python oracle legitimately disagree — always
+//! Where the Rust engine and the Python oracle legitimately disagree - always
 //! because CentrePass derives possession boundaries from the log (ADR-0003,
-//! ADR-0004) rather than honouring the predecessor's coded `RESET` sentinels —
+//! ADR-0004) rather than honouring the predecessor's coded `RESET` sentinels -
 //! the
 //! difference is recorded in `tests/golden/deviations.json`, with its rationale
 //! in `tests/golden/DEVIATIONS.md`. The ledger is self-checking: an
@@ -308,7 +308,7 @@ fn every_fixture_reproduces_the_python_oracle_modulo_documented_deviations() {
             match matched {
                 Some((i, _)) => used[i] = true,
                 None => failures.push(format!(
-                    "{name}: undocumented parity break at {} — engine {} vs oracle {}. \
+                    "{name}: undocumented parity break at {} - engine {} vs oracle {}. \
                      Fix the engine, or record it in deviations.json + DEVIATIONS.md.",
                     diff.path, diff.engine, diff.oracle
                 )),
@@ -321,7 +321,7 @@ fn every_fixture_reproduces_the_python_oracle_modulo_documented_deviations() {
     for (i, deviation) in deviations.iter().enumerate() {
         if !used[i] && names.contains(&deviation.fixture) {
             failures.push(format!(
-                "stale deviation: {} at {} no longer applies — remove it from deviations.json",
+                "stale deviation: {} at {} no longer applies - remove it from deviations.json",
                 deviation.fixture, deviation.path
             ));
         }

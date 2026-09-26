@@ -1,6 +1,6 @@
 # Shorthand reference
 
-Shorthand is CentrePass's compact text format for describing a match — a
+Shorthand is CentrePass's compact text format for describing a match - a
 power-user fast path and interchange format, not the primary interface. Paste it
 into **Import Shorthand** on the match list and it becomes an ordinary match,
 flowing through the exact same statistics as tap coding. (Shorthand carries no
@@ -20,13 +20,13 @@ tokens, or a single marker. Each event token is:
 [team?] position action [modifiers?]
 ```
 
-- **Position** — one digit:
+- **Position** - one digit:
 
   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
   |---|---|---|---|---|---|---|---|
   | GS | GA | WA | C | WD | GD | GK | TEAM |
 
-- **Action** — one letter (plus optional Gain sub-type):
+- **Action** - one letter (plus optional Gain sub-type):
 
   | Code | Action |
   |------|--------|
@@ -34,14 +34,14 @@ tokens, or a single marker. Each event token is:
   | `f` | Feed |
   | `g` | Goal / shot |
   | `p` | Gain |
-  | `pi` | Gain — interception |
-  | `pd` | Gain — deflection |
-  | `pp` | Gain — pick-up |
+  | `pi` | Gain - interception |
+  | `pd` | Gain - deflection |
+  | `pp` | Gain - pick-up |
   | `e` | Unforced turnover |
   | `i` | Infringement |
   | `r` | Rebound |
 
-- **Modifiers** — a trailing `x` (Failed) and/or `!` (Flagged), in either order.
+- **Modifiers** - a trailing `x` (Failed) and/or `!` (Flagged), in either order.
   `x` is only legal on the actions that can fail: feed and goal. A centre pass
   that goes astray is an unforced turnover (`e`), not a failed receive.
 
@@ -54,14 +54,14 @@ centre-pass receive by WA, `6pi` a gain-by-interception by GD.
 
 ## Teams, quarters, comments
 
-- **Team** — a leading `a` or `b` on a line chooses the possession's team: the
+- **Team** - a leading `a` or `b` on a line chooses the possession's team: the
   team with the ball. With no prefix the line belongs to team `a`. Every event
   on the line is that team's **except an infringement (`i`)**, which is always
-  committed by the team *out of* possession — `a 2c 6i 1g` is B's GD
+  committed by the team *out of* possession - `a 2c 6i 1g` is B's GD
   infringing while A attack. (An attacking infringement loses the ball, so code
   it as an unforced turnover, `e`.)
-- **Quarter break** — a line of just `QT`.
-- **Comments** — anything in `(parentheses)` is ignored, handy for notes.
+- **Quarter break** - a line of just `QT`.
+- **Comments** - anything in `(parentheses)` is ignored, handy for notes.
 - Substitutions are not yet importable from Shorthand.
 
 ## Worked example

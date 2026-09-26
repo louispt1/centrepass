@@ -13,8 +13,8 @@
 //! NVAC deviations recorded in `CONTEXT.md`.
 //!
 //! Count-based statistics stay exact on a timestamp-free log (e.g. a Shorthand
-//! import); only Playing Time needs the clock, so it is reported absent —
-//! never zeroed or guessed — when the timestamps are missing.
+//! import); only Playing Time needs the clock, so it is reported absent -
+//! never zeroed or guessed - when the timestamps are missing.
 
 use serde::{Deserialize, Serialize};
 
@@ -170,7 +170,7 @@ fn tally<'a>(
 }
 
 /// Who each log entry is credited to: the attributed player, or failing that
-/// the event's position (e.g. "GS") when no player has been named for it —
+/// the event's position (e.g. "GS") when no player has been named for it -
 /// an unnamed opposition, typically. TEAM events stay uncredited.
 fn credited_players(log: &[LogEntry]) -> Vec<Option<String>> {
     derive_attributions(log)
@@ -204,7 +204,7 @@ pub fn derive_stats(log: &[LogEntry]) -> StatsReport {
     }
 }
 
-/// The team's players, in order of first appearance in the log — whether that
+/// The team's players, in order of first appearance in the log - whether that
 /// first appearance is a substitution onto court or a credited event.
 fn team_players_in_order(
     log: &[LogEntry],

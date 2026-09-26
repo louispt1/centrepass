@@ -28,7 +28,7 @@ function currentNames(log: LogEntry[], team: Team): Names {
 // The roster is the fold of the log's Substitution entries (ADR-0003), so
 // this one screen is match setup, gap-filling, and the substitution flow:
 // saving appends a Substitution entry for each position whose name changed,
-// effective from that moment. Blank positions are simply left unassigned —
+// effective from that moment. Blank positions are simply left unassigned -
 // an incomplete roster never blocks coding, and an unnamed position's stats
 // report under the position itself (typical for the opposition).
 export default function RosterScreen({ matchId }: { matchId: string }) {
@@ -95,7 +95,7 @@ export default function RosterScreen({ matchId }: { matchId: string }) {
         by position.
       </p>
       <p data-testid="naming-notice" style={{ color: "#666", fontSize: "0.9rem" }}>
-        Spell each player's name the same way every match — season stats add up matches by name.
+        Spell each player's name the same way every match - season stats add up matches by name.
       </p>
       <form onSubmit={save}>
         {TEAMS.map((team) => (

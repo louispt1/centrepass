@@ -212,7 +212,7 @@ export default function MatchListScreen() {
           <li>Create a match below, then enter your roster (a name against each position).</li>
           <li>
             To record something, tap the <strong>position</strong> (or TEAM), then the{" "}
-            <strong>action</strong>. That's it — the event is saved.
+            <strong>action</strong>. That's it - the event is saved.
           </li>
           <li>
             Missed shot or incomplete feed? Tap <strong>Failed ✕</strong> straight after. Want to
@@ -229,7 +229,7 @@ export default function MatchListScreen() {
           </li>
         </ol>
         <p style={{ fontSize: "0.9rem", color: "#555" }}>
-          Your matches are stored in this browser on this device only — Chrome, Firefox, and the
+          Your matches are stored in this browser on this device only - Chrome, Firefox, and the
           home-screen app each keep their own. Use <strong>Export</strong> and{" "}
           <strong>Import</strong> to move or back up a match.
         </p>
@@ -275,7 +275,7 @@ export default function MatchListScreen() {
 
       <h2>Collections</h2>
       <p style={{ margin: "0 0 0.5rem", color: "#666", fontSize: "0.85rem" }}>
-        Group matches — a season, a tournament — for per-player totals across them.
+        Group matches for per-player totals across them.
       </p>
       {collections.length > 0 && (
         <ul data-testid="collection-list" style={{ paddingLeft: "1.25rem" }}>
@@ -323,7 +323,7 @@ export default function MatchListScreen() {
       {pendingReplace && (
         <div data-testid="confirm-replace" role="alert" style={{ marginBottom: "0.75rem", fontSize: "0.9rem" }}>
           <p style={{ margin: "0 0 0.5rem" }}>
-            You already have {pendingReplace.local.teamAName} vs {pendingReplace.local.teamBName} —{" "}
+            You already have {pendingReplace.local.teamAName} vs {pendingReplace.local.teamBName} -{" "}
             {pendingReplace.local.date}. Replace your copy with the one in this file?
           </p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -408,7 +408,7 @@ export default function MatchListScreen() {
               ) : (
                 <>
                   <a href={`#/match/${match.id}`} style={{ fontSize: "1.1rem" }}>
-                    {match.teamAName} vs {match.teamBName} — {match.date}
+                    {match.teamAName} vs {match.teamBName} - {match.date}
                   </a>
                   {notSent(match) && (
                     <span

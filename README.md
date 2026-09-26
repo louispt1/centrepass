@@ -1,12 +1,12 @@
 # CentrePass
 
-Netball match statistics for clubs — coded live, courtside, on the phone in your pocket.
+Netball match statistics for clubs - coded live, courtside, on the phone in your pocket.
 
 CentrePass is a local-first Progressive Web App: open a link, add it to your home screen, and record a match with big tap targets, fully offline. Every statistic is derived from an append-only event log by a pure Rust engine compiled to WebAssembly, following the [NVAC](https://doi.org/10.1136/bjsports-2022-106187) video-analysis taxonomy. No server, no accounts, no install.
 
-**Status: v1 feature-complete.** Create a match, enter a roster, code live with big tap targets (undo, quarters, substitutions), read per-player and team stats, export/import a Match File, and share a Summary Image — all offline. See [docs/ROADMAP.md](docs/ROADMAP.md) for the plan and the plan.
+**Status: v1 feature-complete.** Create a match, enter a roster, code live with big tap targets (undo, quarters, substitutions), read per-player and team stats, export/import a Match File, and share a Summary Image - all offline. See [docs/ROADMAP.md](docs/ROADMAP.md) for the plan and the plan.
 
-- **New here? [Quickstart](docs/quickstart.md)** — code your first match in five minutes.
+- **New here? [Quickstart](docs/quickstart.md)** - code your first match in five minutes.
 - Compact text input: [Shorthand reference](docs/shorthand.md)
 - Action definitions (generated from the core data): [DEFINITIONS.md](DEFINITIONS.md)
 - Contributing and the two test seams: [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -16,9 +16,9 @@ CentrePass is a local-first Progressive Web App: open a link, add it to your hom
 
 ## Layout
 
-- `crates/netball-core` — the pure Rust domain engine: no WASM, browser, or I/O dependencies (ADR-0002). Tested natively with `cargo test`.
-- `crates/netball-wasm` — thin wasm-bindgen wrapper exposing the core to the browser; no domain logic.
-- `web` — the PWA frontend: Vite + **React** + TypeScript (framework choice made when the app was scaffolded, per the PRD), with `vite-plugin-pwa` providing the manifest and service worker.
+- `crates/netball-core` - the pure Rust domain engine: no WASM, browser, or I/O dependencies (ADR-0002). Tested natively with `cargo test`.
+- `crates/netball-wasm` - thin wasm-bindgen wrapper exposing the core to the browser; no domain logic.
+- `web` - the PWA frontend: Vite + **React** + TypeScript (framework choice made when the app was scaffolded, per the PRD), with `vite-plugin-pwa` providing the manifest and service worker.
 
 ## Developing
 

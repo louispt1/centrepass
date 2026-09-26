@@ -35,7 +35,7 @@ impl ActionKind {
         ActionKind::Rebound,
     ];
 
-    /// The positions this action may be coded for — exactly the variants of
+    /// The positions this action may be coded for - exactly the variants of
     /// the corresponding position-subset enum on [`crate::event::Action`].
     /// Gains, turnovers, and infringements can happen to any player (or be
     /// coded TEAM when unattributable); the rationale for each restricted
@@ -61,7 +61,7 @@ impl ActionKind {
         }
     }
 
-    /// Whether the Failed modifier is meaningful for this action — i.e.
+    /// Whether the Failed modifier is meaningful for this action - i.e.
     /// whether the corresponding [`crate::event::Action`] variant carries a
     /// `failed` flag.
     pub fn can_fail(self) -> bool {

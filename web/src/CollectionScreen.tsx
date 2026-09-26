@@ -164,7 +164,7 @@ export default function CollectionScreen({ collectionId }: { collectionId: strin
               checked={collection.matchIds.includes(match.id)}
               onChange={() => toggleMatch(match.id)}
             />{" "}
-            {match.teamAName} vs {match.teamBName} — {match.date}
+            {match.teamAName} vs {match.teamBName} - {match.date}
           </label>
         ))}
       </details>
@@ -177,7 +177,7 @@ export default function CollectionScreen({ collectionId }: { collectionId: strin
           style={{ marginBottom: "0.75rem" }}
         >
           <summary style={{ cursor: "pointer", fontWeight: 700 }}>
-            {team.name || "(unnamed)"} — {team.matches} {team.matches === 1 ? "match" : "matches"}
+            {team.name || "(unnamed)"} - {team.matches} {team.matches === 1 ? "match" : "matches"}
           </summary>
           {team.players.length === 0 ? (
             <p style={{ color: "#666", fontSize: "0.85rem" }}>No player stats.</p>

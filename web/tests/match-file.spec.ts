@@ -78,7 +78,7 @@ test("export a coded match → delete it → re-import → stats are identical",
   expect(download.suggestedFilename()).toBe("Hornets U13 vs Riverside 2026-07-10.centrepass.json");
   const filePath = await download.path();
 
-  // Delete the match — deletion asks for confirmation.
+  // Delete the match - deletion asks for confirmation.
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page.getByRole("button", { name: "Confirm delete" }).click();
   await expect(page.getByText("No matches yet.")).toBeVisible();

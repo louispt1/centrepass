@@ -11,7 +11,7 @@ import { exportMatch } from "./matchFile";
 
 // The payoff screen: after (or during) a match the coach reads per-player and
 // team statistics, all from a single netball-core derivation over the log
-// (issue 05). The screen only formats what the core returns — it holds no
+// (issue 05). The screen only formats what the core returns - it holds no
 // domain logic of its own.
 
 function formatMinutes(milliseconds: number): string {
@@ -323,7 +323,7 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
         </button>
       </div>
       <p style={{ color: "#666", fontSize: "0.85rem", margin: "-0.5rem 0 1rem" }}>
-        Send the match file to your club's chat or shared folder — it's your backup, and how the
+        Send the match file to your club's chat or shared folder - it's your backup, and how the
         club collects every match.
       </p>
 
@@ -352,7 +352,7 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
         if (!hasContent) return null;
         return (
           <section key={team.team} data-testid={`team-section-${team.team}`}>
-            <h2 style={{ fontSize: "1.05rem" }}>Conversion rates — {teamName(team.team)}</h2>
+            <h2 style={{ fontSize: "1.05rem" }}>Conversion rates - {teamName(team.team)}</h2>
             <ConversionTable team={team.team} conversions={team.conversions} />
             {team.players.length > 0 && (
               <>
@@ -364,7 +364,7 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
                   note={
                     team.playingTimeAvailable
                       ? undefined
-                      : "Playing time unavailable — this match has no timestamps."
+                      : "Playing time unavailable - this match has no timestamps."
                   }
                 />
               </>

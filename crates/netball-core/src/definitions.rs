@@ -1,10 +1,10 @@
-//! The NVAC action definitions as data — the single source the in-app quick
+//! The NVAC action definitions as data - the single source the in-app quick
 //! reference and the generated `DEFINITIONS.md` both read (issue 10).
 //!
 //! Terminology follows the netball video analysis consensus (NVAC) taxonomy
-//! (Mackay et al. 2023); where CentrePass deviates — a bare Gain with optional
+//! (Mackay et al. 2023); where CentrePass deviates - a bare Gain with optional
 //! sub-types, position-derived Rebound and Feed descriptors, derived possession
-//! boundaries, and greedy Shorthand sub-type matching — the deviation is stated
+//! boundaries, and greedy Shorthand sub-type matching - the deviation is stated
 //! in [`deviations`] rather than left implicit. Nothing here is hand-copied into
 //! the UI or the docs: [`definitions`] crosses the wasm boundary to the app, and
 //! [`definitions_markdown`] renders the committed document, which a test keeps
@@ -242,7 +242,7 @@ pub fn modifiers() -> Vec<Descriptor> {
             Some("x"),
             "Failed",
             "Unsuccessful attempt",
-            "Marks an unsuccessful attempt at the preceding action — a missed shot, an \
+            "Marks an unsuccessful attempt at the preceding action - a missed shot, an \
              incomplete feed. Applies only to a Feed or Goal.",
             Resolution::Coded,
             None,
@@ -306,7 +306,7 @@ pub fn definitions_markdown() -> String {
     let mut out = String::new();
     out.push_str("# CentrePass action definitions\n\n");
     out.push_str(
-        "This file is generated from `crates/netball-core/src/definitions.rs` — the same data \
+        "This file is generated from `crates/netball-core/src/definitions.rs` - the same data \
          the in-app quick reference reads. Do not edit it by hand; run \
          `cargo test -p netball-core regenerate_definitions_md` (with `REGEN_DEFINITIONS=1`) \
          after changing the definitions.\n\n",
@@ -356,7 +356,7 @@ pub fn definitions_markdown() -> String {
 fn row(d: &Descriptor) -> String {
     let code = match &d.code {
         Some(code) => format!("`{code}`"),
-        None => "—".to_string(),
+        None => "-".to_string(),
     };
     let descriptor = match &d.parent {
         Some(parent) => format!("{} _(← {parent})_", d.label),

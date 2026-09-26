@@ -1,4 +1,4 @@
-# 01 — Match identity across devices
+# 01 - Match identity across devices
 
 Status: ready-for-agent
 

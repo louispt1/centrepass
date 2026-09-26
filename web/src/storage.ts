@@ -1,6 +1,6 @@
 // IndexedDB persistence, owned entirely by TypeScript (ADR-0002). Each match
 // is one document: metadata plus its append-only log, which is the only
-// stored truth — scores, rosters, playing time, and stats are always
+// stored truth - scores, rosters, playing time, and stats are always
 // re-derived by netball-core (ADR-0003).
 import type { LogEntry } from "./types/LogEntry";
 
