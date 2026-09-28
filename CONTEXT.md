@@ -20,6 +20,10 @@ _Avoid_: active team, opposition, home/away team
 A single game, consisting of an ordered log of events plus metadata (teams, name, date).
 _Avoid_: game, session
 
+**Fixture**:
+A scheduled Match that hasn't been coded yet: a Match with an empty log. It is not a separate kind of record. Once coding starts it is simply a Match. A fixture keeps its identity when shared (ADR-0005), so the coded Match File that comes back replaces the empty fixture it was coded from.
+_Avoid_: scheduled match, placeholder, game
+
 **Event**:
 One coded observation: a position, an action, and optional modifiers, attributed to a team. Events are the source of truth; everything else is derived.
 _Avoid_: stat, record, entry
@@ -95,7 +99,7 @@ _Avoid_: starred
 One of the four periods of a match. Quarter boundaries are coded as markers in the event log; the fourth marker is **Full Time**, and a match without it is still in progress.
 
 **Quarter Clock**:
-Derived elapsed time of a Quarter: from its first timestamped entry (normally the first Centre Pass) to its Quarter Break marker, or to now while the quarter is in progress. Wall-clock based, so it includes stoppages and need not match the official 15 minutes. Unavailable for untimed logs (e.g. Shorthand imports). There is no coded quarter-start marker; the first centre pass is the start.
+Derived elapsed time of a Quarter: from its first timestamped Event (normally the first Centre Pass; a Substitution never starts one) to its Quarter Break marker, or to now while the quarter is in progress. Wall-clock based, so it includes stoppages and need not match the official 15 minutes. Unavailable for untimed logs (e.g. Shorthand imports). There is no coded quarter-start marker; the first centre pass is the start.
 _Avoid_: game clock, match clock, timer
 
 **Interval**:

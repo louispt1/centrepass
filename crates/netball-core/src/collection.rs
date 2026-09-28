@@ -314,6 +314,7 @@ mod tests {
             "Riverside",
             vec![
                 sub(Team::A, CourtPosition::GS, "Alice", Some(0)),
+                goal(Team::A, GoalPosition::GS, Some(0)),
                 goal(Team::A, GoalPosition::GS, Some(60_000)),
             ],
         );
@@ -331,7 +332,7 @@ mod tests {
         assert_eq!(hornets.untimed_matches, 1);
         let alice = player(hornets, "Alice");
         assert_eq!(alice.stats.playing_time_ms, Some(120_000));
-        assert_eq!(alice.stats.goals, 3);
+        assert_eq!(alice.stats.goals, 5);
         assert_eq!(alice.games_played, 3);
     }
 }

@@ -9,6 +9,7 @@ import {
   derive_collection_stats,
   derive_playing_time,
   derive_quarter_scores,
+  derive_quarter_spans,
   derive_roster,
   derive_stats,
   derive_team_in_possession,
@@ -24,6 +25,7 @@ import type { MatchFile } from "./types/MatchFile";
 import type { LogEntry } from "./types/LogEntry";
 import type { PlayingTime } from "./types/PlayingTime";
 import type { Roster } from "./types/Roster";
+import type { QuarterSpan } from "./types/QuarterSpan";
 import type { Score } from "./types/Score";
 import type { StatsReport } from "./types/StatsReport";
 import type { Team } from "./types/Team";
@@ -47,6 +49,11 @@ export function wasmCall<T>(call: () => T, fallback: string): T {
  */
 export function deriveQuarterScores(log: LogEntry[]): Score[] {
   return derive_quarter_scores(log) as Score[];
+}
+
+/** Each quarter's Quarter Clock span, parallel to the quarter scores. */
+export function deriveQuarterSpans(log: LogEntry[]): QuarterSpan[] {
+  return derive_quarter_spans(log) as QuarterSpan[];
 }
 
 /** One team's roster after replaying the whole log. */

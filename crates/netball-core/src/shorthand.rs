@@ -585,7 +585,9 @@ mod tests {
     fn a_deflection_is_the_other_teams_and_pd_still_parses() {
         let log = parse_shorthand("a 2c 6d 6pd").unwrap();
         for entry in &log[1..] {
-            let LogEntry::Event(event) = entry else { panic!() };
+            let LogEntry::Event(event) = entry else {
+                panic!()
+            };
             assert_eq!(event.team, Team::B);
             assert_eq!(
                 event.action,

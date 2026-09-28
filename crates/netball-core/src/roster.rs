@@ -9,6 +9,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::clock::derive_quarter_spans;
 use crate::event::{CourtPosition, LogEntry, Team};
 
 /// Which player occupies each position for one team at some point in a
@@ -117,7 +118,8 @@ pub struct PlayingTime {
 /// that placed them until another substitution replaces them in that
 /// position, or until the last timestamped moment the log knows about; a
 /// player who occupies several positions in sequence accumulates across
-/// stints.
+/// stints. Only Quarter Clock time counts: a stint is clipped to the quarter
+/// spans, so Intervals (and the wait before the first centre pass) never do.
 ///
 /// Returns `None` - playing time unavailable, not zero - when any of the
 /// team's substitutions lacks a timestamp (e.g. a Shorthand import).
@@ -138,11 +140,31 @@ pub fn derive_playing_time(log: &[LogEntry], team: Team) -> Option<Vec<PlayingTi
         return None;
     }
 
-    let end_ms = log.iter().filter_map(LogEntry::timestamp_ms).max();
+    let end_ms = log
+        .iter()
+        .filter_map(LogEntry::timestamp_ms)
+        .max()
+        .expect("a timestamped substitution implies a max timestamp");
+    // The quarter in progress runs to the last moment the log knows about.
+    let spans = derive_quarter_spans(log);
+    let last = spans.len() - 1;
+    let quarters: Vec<(i64, i64)> = spans
+        .iter()
+        .enumerate()
+        .filter_map(|(i, span)| {
+            Some((
+                span.start_ms?,
+                span.end_ms.or((i == last).then_some(end_ms))?,
+            ))
+        })
+        .collect();
     let mut totals: Vec<PlayingTime> = Vec::new();
     let mut credit = |player: &str, on_ms: i64, off_ms: i64| {
         // Saturate rather than trust a clock that ran backwards.
-        let stint = (off_ms - on_ms).max(0);
+        let stint: i64 = quarters
+            .iter()
+            .map(|&(start, end)| (off_ms.min(end) - on_ms.max(start)).max(0))
+            .sum();
         match totals.iter_mut().find(|total| total.player == player) {
             Some(total) => total.milliseconds += stint,
             None => totals.push(PlayingTime {
@@ -166,7 +188,6 @@ pub fn derive_playing_time(log: &[LogEntry], team: Team) -> Option<Vec<PlayingTi
             on_court.push((substitution.position, &substitution.player, now_ms));
         }
     }
-    let end_ms = end_ms.expect("a timestamped substitution implies a max timestamp");
     for (_, player, on_ms) in on_court {
         credit(player, on_ms, end_ms);
     }
@@ -332,6 +353,7 @@ mod tests {
     fn playing_time_runs_from_going_on_to_being_replaced_or_the_end() {
         let log = [
             substitution(Team::A, CourtPosition::GA, "Beth", 0),
+            goal_by(Team::A, GoalPosition::GA, 0),
             substitution(Team::A, CourtPosition::GA, "Dana", 600_000),
             goal_by(Team::A, GoalPosition::GA, 900_000),
         ];
@@ -354,8 +376,10 @@ mod tests {
     fn a_substitution_at_a_quarter_break_splits_time_at_the_break() {
         let log = [
             substitution(Team::A, CourtPosition::GA, "Beth", 0),
+            goal_by(Team::A, GoalPosition::GA, 0),
             quarter_break(600_000),
             substitution(Team::A, CourtPosition::GA, "Dana", 600_000),
+            goal_by(Team::A, GoalPosition::GA, 600_000),
             goal_by(Team::A, GoalPosition::GA, 1_000_000),
         ];
         let times = derive_playing_time(&log, Team::A).unwrap();
@@ -364,11 +388,29 @@ mod tests {
     }
 
     #[test]
+    fn intervals_and_the_wait_for_the_first_centre_pass_are_not_playing_time() {
+        // Roster set at 0, Q1 plays 60s..660s, a 300s Interval, Q2 plays
+        // 960s..1_560s; Dana comes on mid-Interval at 800s.
+        let log = [
+            substitution(Team::A, CourtPosition::GA, "Beth", 0),
+            goal_by(Team::A, GoalPosition::GA, 60_000),
+            quarter_break(660_000),
+            substitution(Team::A, CourtPosition::GA, "Dana", 800_000),
+            goal_by(Team::A, GoalPosition::GA, 960_000),
+            goal_by(Team::A, GoalPosition::GA, 1_560_000),
+        ];
+        let times = derive_playing_time(&log, Team::A).unwrap();
+        assert_eq!(times[0].milliseconds, 600_000); // Beth: Q1 only
+        assert_eq!(times[1].milliseconds, 600_000); // Dana: Q2 only
+    }
+
+    #[test]
     fn a_player_in_two_positions_in_sequence_accumulates_across_stints() {
         // Alice starts GS, moves to GA when Eve takes GS; Alice's total spans
         // both stints.
         let log = [
             substitution(Team::A, CourtPosition::GS, "Alice", 0),
+            goal_by(Team::A, GoalPosition::GS, 0),
             substitution(Team::A, CourtPosition::GS, "Eve", 400_000),
             substitution(Team::A, CourtPosition::GA, "Alice", 400_000),
             goal_by(Team::A, GoalPosition::GA, 1_000_000),

@@ -10,6 +10,7 @@ import {
   deriveAttributions,
   derivePlayingTime,
   deriveQuarterScores,
+  deriveQuarterSpans,
   deriveTeamInPossession,
   resolveTeam,
 } from "./engine";
@@ -30,6 +31,10 @@ const POSITION_GRID: Position[] = ["GS", "GA", "WA", "C", "WD", "GD", "GK", "TEA
 
 // A netball match has four quarters, so the fourth break is full time.
 const QUARTERS = 4;
+
+// Past this, the Quarter Clock turns amber - a nudge to tap End Qn. The clock
+// is wall-clock time, so stoppages push a real quarter past it (ADR-0006).
+const QUARTER_MS = 15 * 60_000;
 
 // Row order for the main action grid. Gain is deliberately absent: courtside,
 // the coder always taps a sub-type instead (Pick-up when unsure), so no bare
@@ -92,6 +97,13 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   // Keep the phone awake while a match is open for coding.
   useScreenWakeLock(match != null);
 
+  // Re-render every second so the Quarter Clock ticks; it reads Date.now().
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((tick) => tick + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     void getMatch(matchId).then((loaded) => {
@@ -110,6 +122,7 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
       match
         ? {
             quarterScores: deriveQuarterScores(match.log),
+            quarterSpans: deriveQuarterSpans(match.log),
             attributions: deriveAttributions(match.log),
             playingTime: (["A", "B"] as const).map((team) => ({
               team,
@@ -132,7 +145,7 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
       </main>
     );
   }
-  const { quarterScores, attributions, playingTime } = derived;
+  const { quarterScores, quarterSpans, attributions, playingTime } = derived;
   const score = quarterScores.reduce((sum, q) => ({
     teamA: sum.teamA + q.teamA,
     teamB: sum.teamB + q.teamB,
@@ -144,6 +157,31 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   // Quarter breaks recorded so far = quarter segments − 1.
   const quarterBreaks = quarterScores.length - 1;
   const fullTime = quarterBreaks >= QUARTERS;
+
+  // Quarter Clock: closed quarters run start to break; the current one to now.
+  const now = Date.now();
+  const quarterMs = (index: number): number | null => {
+    const { startMs, endMs } = quarterSpans[index];
+    if (startMs == null) return null;
+    if (endMs != null) return Math.max(0, endMs - startMs);
+    return index === quarterBreaks && !fullTime ? Math.max(0, now - startMs) : null;
+  };
+  const quarterLabel = (index: number) => {
+    const ms = quarterMs(index);
+    return ms == null ? "–" : formatMinutes(ms);
+  };
+  const currentMs = fullTime ? null : quarterMs(quarterBreaks);
+  const lastBreakMs = quarterBreaks > 0 ? quarterSpans[quarterBreaks - 1].endMs : null;
+  // A log with entries but no timestamps (a Shorthand import) has no clock.
+  const timed = match.log.length === 0 || match.log.some((entry) => entry.timestampMs != null);
+  const clock = !timed
+    ? `${match.log.length} event${match.log.length === 1 ? "" : "s"} · ${match.date}`
+    : fullTime
+      ? formatMinutes(quarterSpans.reduce((sum, _, index) => sum + (quarterMs(index) ?? 0), 0))
+      : currentMs == null && lastBreakMs != null
+        ? `Break ${formatMinutes(Math.max(0, now - lastBreakMs))}`
+        : formatMinutes(currentMs ?? 0);
+  const overtime = currentMs != null && currentMs > QUARTER_MS;
 
   async function replaceLog(log: LogEntry[]) {
     const updated = { ...match!, log };
@@ -217,27 +255,35 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
         margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* Equal outer columns keep the clock centred over the scoreboard. */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
         <a href="#/">← Matches</a>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <span style={{ color: "#666", fontSize: "0.8rem" }}>
-            {match.log.length} event{match.log.length === 1 ? "" : "s"} · {match.date}
-          </span>
-          <button
-            data-testid="open-reference"
-            onClick={() => setShowReference(true)}
-            style={{
-              minHeight: "36px",
-              padding: "0 0.6rem",
-              fontSize: "0.85rem",
-              border: "1px solid #999",
-              borderRadius: "8px",
-              background: "#fff",
-            }}
-          >
-            Reference
-          </button>
-        </div>
+        <span
+          data-testid="quarter-clock"
+          style={{
+            color: overtime ? "#B45309" : "#444",
+            fontSize: "1.1rem",
+            fontWeight: overtime ? 700 : 600,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {clock}
+        </span>
+        <button
+          data-testid="open-reference"
+          onClick={() => setShowReference(true)}
+          style={{
+            justifySelf: "end",
+            minHeight: "36px",
+            padding: "0 0.6rem",
+            fontSize: "0.85rem",
+            border: "1px solid #999",
+            borderRadius: "8px",
+            background: "#fff",
+          }}
+        >
+          Reference
+        </button>
       </div>
 
       {showReference && <ReferencePanel onClose={() => setShowReference(false)} />}
@@ -481,6 +527,9 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
                 <td style={{ fontWeight: 600 }}>Q{index + 1}</td>
                 <td>
                   {quarter.teamA}–{quarter.teamB}
+                </td>
+                <td style={{ color: "#666", fontVariantNumeric: "tabular-nums" }}>
+                  {quarterLabel(index)}
                 </td>
               </tr>
             ))}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Conversions } from "./types/Conversions";
 import type { PlayerStats } from "./types/PlayerStats";
+import type { QuarterSpan } from "./types/QuarterSpan";
 import type { TeamStats } from "./types/TeamStats";
 import type { TeamTotals } from "./types/TeamTotals";
 import { deriveStats } from "./engine";
@@ -18,6 +19,11 @@ function formatMinutes(milliseconds: number): string {
   const totalSeconds = Math.floor(milliseconds / 1000);
   const seconds = totalSeconds % 60;
   return `${Math.floor(totalSeconds / 60)}:${String(seconds).padStart(2, "0")}`;
+}
+
+/** A closed quarter's Quarter Clock duration, or a dash when unknown. */
+function quarterDuration({ startMs, endMs }: QuarterSpan): string {
+  return startMs == null || endMs == null ? "–" : formatMinutes(Math.max(0, endMs - startMs));
 }
 
 const cell = { padding: "0.35rem 0.5rem", textAlign: "right", whiteSpace: "nowrap" } as const;
@@ -344,6 +350,9 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
               <td style={{ ...rowCell, textAlign: "left", fontWeight: 600 }}>Q{index + 1}</td>
               <td style={rowCell}>
                 {quarter.teamA}–{quarter.teamB}
+              </td>
+              <td style={{ ...rowCell, color: "#666" }}>
+                {quarterDuration(report.quarterSpans[index])}
               </td>
             </tr>
           ))}

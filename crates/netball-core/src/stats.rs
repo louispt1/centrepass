@@ -18,19 +18,22 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::clock::{derive_quarter_spans, QuarterSpan};
 use crate::event::{Action, GainSubType, LogEntry, Position, Team};
 use crate::possession::{segment_possessions, Origin, Possession};
 use crate::roster::{derive_attributions, derive_playing_time};
 use crate::score::{derive_quarter_scores, derive_score, Score};
 
 /// The full statistics report for a match: the score, its quarter-by-quarter
-/// breakdown, and one [`TeamStats`] per team.
+/// breakdown and Quarter Clock spans, and one [`TeamStats`] per team.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub struct StatsReport {
     pub score: Score,
     pub quarter_scores: Vec<Score>,
+    /// Parallel to `quarter_scores`.
+    pub quarter_spans: Vec<QuarterSpan>,
     /// One entry per team, in `[Team::A, Team::B]` order.
     pub teams: Vec<TeamStats>,
 }
@@ -201,6 +204,7 @@ pub fn derive_stats(log: &[LogEntry]) -> StatsReport {
     StatsReport {
         score: derive_score(log),
         quarter_scores: derive_quarter_scores(log),
+        quarter_spans: derive_quarter_spans(log),
         teams,
     }
 }

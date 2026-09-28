@@ -20,6 +20,14 @@ fn parse_team(team: JsValue) -> Result<netball_core::Team, JsValue> {
     serde_wasm_bindgen::from_value(team).map_err(JsValue::from)
 }
 
+/// Derive each quarter's Quarter Clock span (`QuarterSpan[]`, parallel to
+/// the quarter scores) from a log (`LogEntry[]`).
+#[wasm_bindgen]
+pub fn derive_quarter_spans(log: JsValue) -> Result<JsValue, JsValue> {
+    let spans = netball_core::derive_quarter_spans(&parse_log(log)?);
+    serde_wasm_bindgen::to_value(&spans).map_err(JsValue::from)
+}
+
 /// Derive per-quarter scores (`Score[]`, one per quarter so far) from a log
 /// (`LogEntry[]`), per the TypeScript types generated from the `netball-core`
 /// types (`web/src/types/`); the typed wrappers live in `web/src/engine.ts`.

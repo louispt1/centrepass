@@ -102,7 +102,10 @@ impl Fold {
 /// was: an infringement, or a deflection (a touch without winning the ball -
 /// a Pick-up codes the gain if one follows).
 fn keeps_possession(action: &Action) -> bool {
-    matches!(action, Action::Infringement { .. } | Action::Deflection { .. })
+    matches!(
+        action,
+        Action::Infringement { .. } | Action::Deflection { .. }
+    )
 }
 
 /// The team that held the ball just before an action coded for `team`: the

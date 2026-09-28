@@ -149,3 +149,30 @@ test("the fourth quarter break is full time and stops the quarter clock", async 
   await expect(page.getByTestId("current-quarter")).toHaveText("Q4");
   await expect(page.getByTestId("quarter-break")).toBeEnabled();
 });
+
+test("the Quarter Clock runs from the first centre pass, goes amber past 15:00, and shows the Interval", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-07-10T10:00:00") });
+  await createMatch(page);
+  await page.getByTestId("save-roster").click();
+  const clock = page.getByTestId("quarter-clock");
+  await expect(clock).toHaveText("0:00");
+
+  // Waiting for the whistle is not quarter time: the first centre pass starts it.
+  await page.clock.fastForward("02:00");
+  await page.getByTestId("choose-team-A").click();
+  await page.getByTestId("position-WA").click();
+  await page.getByTestId("action-CentrePassReceive").click();
+  await page.clock.fastForward("14:59");
+  await expect(clock).toHaveText("14:59");
+  await expect(clock).toHaveCSS("color", "rgb(68, 68, 68)");
+  await page.clock.fastForward("00:02");
+  await expect(clock).toHaveText("15:01");
+  await expect(clock).toHaveCSS("color", "rgb(180, 83, 9)");
+
+  await page.getByTestId("quarter-break").click();
+  await page.clock.fastForward("03:00");
+  await expect(clock).toHaveText("Break 3:00");
+  await expect(page.getByTestId("quarter-score-1")).toContainText("15:01");
+});
