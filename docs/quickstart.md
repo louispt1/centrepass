@@ -1,97 +1,105 @@
 # CentrePass quickstart
 
-A five-minute guide to coding your first match. CentrePass runs entirely on your
-phone - no account, no install, works with no signal at the courtside.
+This is a five-minute guide to coding your first match.
 
-## Open it and keep it
+## Put it on your home screen
 
-Open the app link in your phone's browser, then **Add to Home Screen**. It now
-launches like any app and works fully offline. Everything you record is stored
-in that browser on your device - a different browser (or the home-screen app
-versus the browser tab) has its own separate list. Use **Export** / **Import**
-to move matches between them.
+Open https://louispt1.github.io/centrepass/ in Safari (iPhone) or Chrome
+(Android), then **Share → Add to Home Screen** (Chrome: **⋮ → Add to Home
+screen**). It then opens like any other app and works fully offline.
+
+Note: your matches live only in that browser on that phone.
+Back up your match files somewhere safe (see [Share it](#5-share-it))
+so a cleared browser doesn't mean you lose all your data.
 
 ## 1. Create the match
 
-Tap **New match**, enter both teams' names and the date.
+Under **New match**, enter both team names and the date, then tap **Create match**.
+Entering names consistently will let you aggregate stats under that team.
 
 ![Creating a match](img/01-create-match.png)
 
 ## 2. Enter your roster
 
-Put a player's name (or number) against each position. The other team's roster
-is optional - any position left blank reports its stats under the position
-(GS, GA, …). You can substitute players later from the **Roster / Sub** button during the match; playing time is
-worked out from when each change happens.
+Put a name under each position. It's optional, but it's what lets
+a [collection](#6-collections-season-stats) add up each player's stats across
+matches, so spell names the same way every week. Subs happen mid-match from
+**Roster / Sub**, and playing time is worked based on when you enter the sub.
 
 ![Entering the roster](img/02-roster.png)
 
 ## 3. Code the match
 
-This is the screen you'll use courtside. You code **both teams**, and the app
-keeps track of who has the ball: the banner under the score says which team is
-in possession, and every action button names (and is outlined in the colour of)
-the team a tap will be recorded for.
+You code **both teams**, and the app keeps track of who has the ball. The
+banner under the score shows who's in possession, and each action button is
+labelled (and outlined) with the team an input will count for.
 
-At the first centre pass the banner asks **who has the centre pass** - pick the
-team that won the toss. After that, possession follows the play: a turnover
-hands the ball over, a **Gain** or an **Infringement** is always by the team
-*without* the ball, a GD/GK **Rebound** belongs to the defenders, and after each
-goal (and each quarter) the centre pass alternates. If the app ever has it
-wrong, tap **Flip ⇄** - it swaps the team for your next tap only.
+At the first centre pass, pick the team that won the toss. From there
+possession follows the play: turnovers hand the ball over, centre passes
+alternate after goals and quarters, and so on. If it ever gets it wrong, tap
+**Flip ⇄**, which swaps the team for your next tap only.
 
-To record something a player did:
+Every event is two taps:
 
-1. Tap the **position** (GS, GA, … or TEAM if you can't attribute it).
-2. Tap the **action** (Goal / Shot, Feed, Gain, …).
+1. The **position** (GS, GA, … or TEAM if you're not sure).
+2. The **action** (Goal / Shot, Feed, Intercept, …).
 
-That's two taps per event. A few extras:
+Then, if needed, straight after:
 
-- **Failed ✕** - tap straight after the action for a missed shot or an
-  incomplete feed (e.g. GA → Goal / Shot → Failed ✕). Tap again to undo it.
-- **Flag ⚑** - tap straight after an event to mark it for review later.
+- **Failed ✕** for a missed shot or a feed that didn't land. Tap again to undo.
+- **Flag ⚑** to mark the event to check later.
+- **Undo** removes the last thing you recorded.
+- **End Q1 / Q2 / Q3** marks the end of each quarter.
 
-Failed and Flag always apply to the last event you recorded.
-- **Undo** - removes the last thing you recorded.
-- **End Q1 / Q2 / Q3** - marks the end of each quarter (the fourth is full time).
-- **Reference** - a reminder of every position, action, and modifier, without
-  losing your place.
-
-The strip under the score shows your last few events, each in its team's
-colour, so you can spot-check.
+The strip under the score shows your last few events in team colours, so you
+can spot a mistake and undo.
 
 ![Live coding](img/03-live-coding.png)
 
-Not sure what a code means? Tap **Reference** any time - it opens over the
-coding screen and closes straight back to it, exactly where you were.
+**Reference** opens over the coding screen and closes straight back to it, outlining
+the definitions of each action.
 
 ![The in-app reference](img/04-reference.png)
 
 ## 4. Read the stats
 
-Tap **Stats** for the full picture: a head-to-head of both teams (shooting,
-possessions converted, gains, turnovers, penalties), the final score and
-per-quarter scores, each player's goals, feeds, assists, rebounds, turnovers and gains, and the
-team's centre-pass and gain conversion rates. Everything is derived from what
-you coded - nothing is entered twice.
+Tap **Stats** for the full picture: head-to-head, score by quarter, conversion
+rates, and a line for every player. It's all worked out from what you coded.
 
 ![Post-match stats](img/05-stats.png)
 
 ## 5. Share it
 
-- **Share summary image** on the stats screen makes a picture of the headline
-  numbers, ready to drop into the club chat.
-- **Send match file** (on the stats screen, where tapping **Full time** takes
-  you) sends the whole match as a file. Send it to your club's chat or shared
-  folder. It's your backup, and it's how the club collects every match.
-  **Export** on the match list does the same. A match marked **Not sent** on
-  the list has changes the club hasn't had yet.
-- **Import** brings a match file back in exactly. If you already have that
-  match (say, a corrected copy was re-sent), you're asked before your copy is
-  replaced.
+- **Share summary image** makes a picture of the headline numbers.
+- **Send match file** sends the whole match. It's your backup, and how you can centralise matches coded by different people.
+  **Export** on the match list does the same, and a match marked **Not sent**
+  has changes that aren't backed up yet.
+- **Import** brings a match file back in. If you already have that match
+  (say, someone sent a corrected copy), you're asked before yours is replaced.
+
+## 6. Collections (season stats)
+
+A collection groups matches, like a season or a tournament, and adds up each
+player's stats across them, with games played.
+
+On the home screen, type a name under **Collections** and tap **Create**. Open
+it, tap **Name and matches**, and tick the matches to include. You can also add
+a match from the match list via its **Collections** button.
+
+If a player's name was spelled two ways ("Ali" and "Alice"), tap the name in
+the table and merge it into the right one. Only the collection's totals change;
+the matches themselves stay as coded.
+
+![A collection](img/06-collection.png)
+
+Collections live on your phone only. To share a season, **Send match files**
+sends every match in the collection; whoever receives them imports the matches and builds
+their own collection.
 
 ## Faster input: Shorthand
 
-If you're a quick typist you can paste a whole match as compact text instead of
-tapping. See the [Shorthand reference](shorthand.md). Tap coding and Shorthand
-produce the very same event log.
+Quick typist? You can paste a whole match as compact text instead of tapping.
+See the [Shorthand reference](shorthand.md); it produces exactly the same match
+as tap coding.
+
+Found a bug or got an idea? I'd love to hear it.

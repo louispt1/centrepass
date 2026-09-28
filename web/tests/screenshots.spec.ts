@@ -10,12 +10,12 @@ const IMG = "../docs/img";
 
 const ROSTER: Record<string, string> = {
   GS: "Alice",
-  GA: "Beth",
-  WA: "Wanda",
-  C: "Cara",
-  WD: "Winnie",
-  GD: "Gina",
-  GK: "Kira",
+  GA: "Bob",
+  WA: "Cara",
+  C: "Dani",
+  WD: "Elisa",
+  GD: "Fred",
+  GK: "Georgia",
 };
 
 async function code(page: Page, position: string, action: string) {
@@ -25,8 +25,8 @@ async function code(page: Page, position: string, action: string) {
 
 test("capture the quickstart screens", async ({ page }) => {
   await page.goto("/centrepass/");
-  await page.getByLabel("Your team").fill("Hornets U13");
-  await page.getByLabel("Opposition").fill("Riverside");
+  await page.getByLabel("Your team").fill("ANC1");
+  await page.getByLabel("Opposition").fill("UNC");
   await page.getByLabel("Date").fill("2026-07-10");
   await page.screenshot({ path: `${IMG}/01-create-match.png` });
 
@@ -61,4 +61,13 @@ test("capture the quickstart screens", async ({ page }) => {
   await page.getByTestId("open-stats").click();
   await expect(page.getByTestId("final-score")).toHaveText("2–1");
   await page.screenshot({ path: `${IMG}/05-stats.png`, fullPage: true });
+
+  await page.goto("/centrepass/#/");
+  await page.getByTestId("new-collection-name").fill("Autumn 2026");
+  await page.getByTestId("create-collection").click();
+  await page.getByRole("link", { name: "Autumn 2026" }).click();
+  await page.getByText("Name and matches").click();
+  await page.locator('[data-testid^="pick-match-"]').first().click();
+  await expect(page.getByTestId("collection-table-0")).toBeVisible();
+  await page.screenshot({ path: `${IMG}/06-collection.png`, fullPage: true });
 });
