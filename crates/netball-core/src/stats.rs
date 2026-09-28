@@ -18,7 +18,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::event::{Action, LogEntry, Position, Team};
+use crate::event::{Action, GainSubType, LogEntry, Position, Team};
 use crate::possession::{segment_possessions, Origin, Possession};
 use crate::roster::{derive_attributions, derive_playing_time};
 use crate::score::{derive_quarter_scores, derive_score, Score};
@@ -84,8 +84,8 @@ pub struct PlayerStats {
     /// All gains, whatever the sub-type (or none).
     pub gains: u32,
     pub gain_interceptions: u32,
-    pub gain_deflections: u32,
     pub gain_pick_ups: u32,
+    pub deflections: u32,
     /// Milliseconds on court, or null when Playing Time is unavailable for the
     /// team (a timestamp-free log).
     #[cfg_attr(feature = "ts-bindings", ts(type = "number | null"))]
@@ -108,8 +108,8 @@ impl PlayerStats {
             infringements: 0,
             gains: 0,
             gain_interceptions: 0,
-            gain_deflections: 0,
             gain_pick_ups: 0,
+            deflections: 0,
             playing_time_ms: None,
         }
     }
@@ -124,6 +124,7 @@ pub struct TeamTotals {
     pub goals: u32,
     pub shots: u32,
     pub gains: u32,
+    pub deflections: u32,
     pub unforced_turnovers: u32,
     /// Penalties conceded.
     pub infringements: u32,
@@ -259,6 +260,7 @@ fn build_team_stats(
                 totals.goals += u32::from(!failed);
             }
             Action::Gain { .. } => totals.gains += 1,
+            Action::Deflection { .. } => totals.deflections += 1,
             Action::UnforcedTurnover { .. } => totals.unforced_turnovers += 1,
             Action::Infringement { .. } => totals.infringements += 1,
             _ => {}
@@ -288,12 +290,12 @@ fn build_team_stats(
             Action::Gain { sub_type, .. } => {
                 stats.gains += 1;
                 match sub_type {
-                    Some(crate::event::GainSubType::Interception) => stats.gain_interceptions += 1,
-                    Some(crate::event::GainSubType::Deflection) => stats.gain_deflections += 1,
-                    Some(crate::event::GainSubType::PickUp) => stats.gain_pick_ups += 1,
+                    Some(GainSubType::Interception) => stats.gain_interceptions += 1,
+                    Some(GainSubType::PickUp) => stats.gain_pick_ups += 1,
                     None => {}
                 }
             }
+            Action::Deflection { .. } => stats.deflections += 1,
             Action::CentrePassReceive { .. } => {}
         }
     }
@@ -525,25 +527,32 @@ mod tests {
     }
 
     #[test]
-    fn gains_total_and_break_down_by_sub_type() {
+    fn gains_total_and_break_down_by_sub_type_deflections_apart() {
         let log = [
             sub(Team::A, CourtPosition::GD, "Gina", 0),
             gain(Team::A, Position::GD, Some(GainSubType::Interception)),
-            gain(Team::A, Position::GD, Some(GainSubType::Deflection)),
+            LogEntry::Event(Event {
+                team: Team::A,
+                action: Action::Deflection {
+                    position: Position::GD,
+                },
+                flagged: false,
+                timestamp_ms: None,
+            }),
             gain(Team::A, Position::GD, Some(GainSubType::PickUp)),
             gain(Team::A, Position::GD, None),
         ];
         let report = derive_stats(&log);
         let gina = player(&report, "Gina");
-        assert_eq!(gina.gains, 4);
+        assert_eq!(gina.gains, 3);
         assert_eq!(gina.gain_interceptions, 1);
-        assert_eq!(gina.gain_deflections, 1);
         assert_eq!(gina.gain_pick_ups, 1);
         // The bare gain is in the total but no sub-type bucket.
-        assert_eq!(
-            gina.gains,
-            gina.gain_interceptions + gina.gain_deflections + gina.gain_pick_ups + 1
-        );
+        assert_eq!(gina.gains, gina.gain_interceptions + gina.gain_pick_ups + 1);
+        // A deflection is not a gain.
+        assert_eq!(gina.deflections, 1);
+        let team = &report.teams[0].totals;
+        assert_eq!((team.gains, team.deflections), (3, 1));
     }
 
     // --- Derived feed descriptors -------------------------------------------
@@ -847,6 +856,7 @@ mod tests {
                 goals: 1,
                 shots: 2,
                 gains: 1,
+                deflections: 0,
                 unforced_turnovers: 0,
                 infringements: 0,
                 possessions: 2,

@@ -85,8 +85,8 @@ fn add(total: &mut PlayerStats, line: &PlayerStats) {
     total.infringements += line.infringements;
     total.gains += line.gains;
     total.gain_interceptions += line.gain_interceptions;
-    total.gain_deflections += line.gain_deflections;
     total.gain_pick_ups += line.gain_pick_ups;
+    total.deflections += line.deflections;
     if let Some(ms) = line.playing_time_ms {
         total.playing_time_ms = Some(total.playing_time_ms.unwrap_or(0) + ms);
     }

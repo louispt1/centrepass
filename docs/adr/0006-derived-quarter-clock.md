@@ -1,0 +1,5 @@
+# Quarter Clock derived from wall-clock timestamps; no coded quarter start
+
+The Quarter Clock is derived from the log's existing wall-clock timestamps: a quarter runs from its first timestamped entry (normally the first Centre Pass) to its Quarter Break marker. There is no coded "quarter start" entry and no start/pause game clock. Intervals (Quarter Break to the next quarter's first entry) are excluded from quarter time and from Playing Time, so the two always reconcile.
+
+Why: a coded start marker would buy only the 1–3 s between the whistle and the coder's first tap, at the cost of a new log entry kind across the core, Match File, and Shorthand - and a tap coders would forget, falling back to the first centre pass anyway. A timekeeper-style clock (paused for stoppages) would be the most accurate but asks the coder to manage a clock on top of coding. Accepted consequence: quarter durations include stoppages and exceed the official 15 minutes; the UI treats 15:00 as a nudge to end the quarter, not a rule. Rejected: counting from the previous Quarter Break (would count the Interval as play).

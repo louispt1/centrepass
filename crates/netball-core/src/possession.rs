@@ -54,11 +54,13 @@ impl Fold {
     }
 
     /// The team whose possession this event belongs to: its own team, except
-    /// an infringement, which is committed against the team in possession.
+    /// an infringement or deflection, which happens against the team in
+    /// possession.
     fn owner(&self, team: Team, action: &Action) -> Team {
-        match action {
-            Action::Infringement { .. } => self.team_in_possession.unwrap_or(team.other()),
-            _ => team,
+        if keeps_possession(action) {
+            self.team_in_possession.unwrap_or(team.other())
+        } else {
+            team
         }
     }
 
@@ -88,7 +90,7 @@ impl Fold {
         match action {
             Action::Goal { failed: false, .. } => self.restart(),
             Action::UnforcedTurnover { .. } => self.team_in_possession = Some(team.other()),
-            Action::Infringement { .. } => {
+            _ if keeps_possession(action) => {
                 self.team_in_possession.get_or_insert(team.other());
             }
             _ => self.team_in_possession = Some(team),
@@ -96,11 +98,20 @@ impl Fold {
     }
 }
 
+/// An action by the team out of possession that leaves the ball where it
+/// was: an infringement, or a deflection (a touch without winning the ball -
+/// a Pick-up codes the gain if one follows).
+fn keeps_possession(action: &Action) -> bool {
+    matches!(action, Action::Infringement { .. } | Action::Deflection { .. })
+}
+
 /// The team that held the ball just before an action coded for `team`: the
 /// inverse of [`resolve_team`].
 fn had_ball_before(team: Team, action: &Action) -> Team {
     match *action {
-        Action::Gain { .. } | Action::Infringement { .. } => team.other(),
+        Action::Gain { .. } | Action::Deflection { .. } | Action::Infringement { .. } => {
+            team.other()
+        }
         Action::Rebound { position } if matches!(position.into(), Position::GD | Position::GK) => {
             team.other()
         }
@@ -124,7 +135,8 @@ pub fn derive_team_in_possession(log: &[LogEntry]) -> Option<Team> {
 }
 
 /// The team an action at `position` is coded for, given who holds the ball.
-/// Gains and infringements are always by the team out of possession; a
+/// Gains, deflections, and infringements are always by the team out of
+/// possession; a
 /// Rebound belongs to the shooting team (GS/GA) or the defending team
 /// (GD/GK); everything else is by the team in possession.
 pub fn resolve_team(
@@ -134,7 +146,7 @@ pub fn resolve_team(
 ) -> Option<Team> {
     let other = team_in_possession.map(Team::other);
     match (kind, position) {
-        (ActionKind::Gain | ActionKind::Infringement, _) => other,
+        (ActionKind::Gain | ActionKind::Deflection | ActionKind::Infringement, _) => other,
         (ActionKind::Rebound, Position::GD | Position::GK) => other,
         _ => team_in_possession,
     }
@@ -382,6 +394,20 @@ mod tests {
     fn an_opposition_infringement_falls_inside_the_possession() {
         let log = [cpr(A), infringement(B), feed(A, false), shot(A, false)];
         assert_eq!(spans(&log), [(A, vec![0, 1, 2, 3])]);
+    }
+
+    #[test]
+    fn a_deflection_leaves_possession_and_the_possession_unchanged() {
+        let deflection = event(
+            B,
+            Action::Deflection {
+                position: Position::GK,
+            },
+        );
+        let log = [cpr(A), deflection.clone(), feed(A, false), shot(A, false)];
+        assert_eq!(tip(&[cpr(A), deflection]), Some(A));
+        assert_eq!(spans(&log), [(A, vec![0, 1, 2, 3])]);
+        assert_eq!(origins(&log), [Origin::CentrePass]);
     }
 
     #[test]

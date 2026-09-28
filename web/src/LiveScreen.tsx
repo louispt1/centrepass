@@ -393,6 +393,13 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             onClick={() => record("Gain", subType)}
           />
         ))}
+        <ActionButton
+          testId="action-Deflection"
+          label={ACTION_LABELS.Deflection}
+          team={canRecord(actionByKind("Deflection")) ? teamFor("Deflection") : null}
+          teamName={teamName}
+          onClick={() => record("Deflection")}
+        />
       </div>
 
       <div style={gridStyle(2)}>

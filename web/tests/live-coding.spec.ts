@@ -163,7 +163,7 @@ test("never offers a position/action combination the core would reject", async (
   await expect(page.getByTestId("action-Feed")).toBeEnabled();
   await expect(page.getByTestId("action-Rebound")).toBeDisabled();
   await expect(page.getByTestId("action-CentrePassReceive")).toBeEnabled();
-  await expect(page.getByTestId("subtype-Deflection")).toBeEnabled();
+  await expect(page.getByTestId("action-Deflection")).toBeEnabled();
 
   // TEAM events exist only where the action isn't inherently individual -
   // plus Goal, which covers a goal whose shooter isn't coded.

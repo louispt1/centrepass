@@ -3,6 +3,7 @@
 // stored truth - scores, rosters, playing time, and stats are always
 // re-derived by netball-core (ADR-0003).
 import type { LogEntry } from "./types/LogEntry";
+import type { Position } from "./types/Position";
 
 export interface StoredMatch {
   id: string;
@@ -36,7 +37,7 @@ export interface StoredCollection {
 }
 
 const DB_NAME = "centrepass";
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const MATCH_STORE = "matches";
 const COLLECTION_STORE = "collections";
 
@@ -48,7 +49,7 @@ function openDb(): Promise<IDBDatabase> {
     request.onupgradeneeded = (upgrade) => {
       if (upgrade.oldVersion < 1) {
         request.result.createObjectStore(MATCH_STORE, { keyPath: "id" });
-      } else if (upgrade.oldVersion < 4) {
+      } else if (upgrade.oldVersion < 6) {
         migrateMatches(request.transaction!.objectStore(MATCH_STORE), upgrade.oldVersion);
       }
       if (upgrade.oldVersion < 5) {
@@ -70,9 +71,23 @@ function migrateMatches(store: IDBObjectStore, oldVersion: number) {
     let match = cursor.value;
     if (oldVersion < 3) match = migrateToV3Log(match);
     if (oldVersion < 4) match = migrateToV4Log(match);
+    if (oldVersion < 6) match = migrateToV6Log(match);
     cursor.update(match);
     cursor.continue();
   };
+}
+
+// v6 (Match File v4): a Deflection is its own action, no longer a Gain
+// sub-type, since it does not change possession. Mirrors the core's Match
+// File migration.
+function migrateToV6Log(match: StoredMatch): StoredMatch {
+  const log = match.log.map((entry) => {
+    if (entry.kind !== "Event") return entry;
+    const action = entry.action as { type: string; position: Position; subType?: string };
+    if (action.type !== "Gain" || action.subType !== "Deflection") return entry;
+    return { ...entry, action: { type: "Deflection" as const, position: action.position } };
+  });
+  return { ...match, log };
 }
 
 // v4 (Match File v2, ADR-0004): a Centre Pass Receive can no longer fail. A

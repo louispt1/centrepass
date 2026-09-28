@@ -2,7 +2,7 @@
 //! its event log plus metadata - and the unit of export, import, backup, and
 //! migration (ADR-0003, `CONTEXT.md`).
 //!
-//! A Match File is a versioned JSON document (`"version": 3`); older versions
+//! A Match File is a versioned JSON document (`"version": 4`); older versions
 //! are migrated on read. It carries the match's stable id, so a match keeps its
 //! identity across devices and re-importing it replaces rather than duplicates
 //! (ADR-0005). (De)serialization
@@ -21,7 +21,7 @@ use crate::event::LogEntry;
 /// The Match File format version this engine writes. Bump this only alongside
 /// a migration; [`MatchFile::from_json`] migrates older versions and rejects
 /// newer ones.
-pub const MATCH_FILE_VERSION: u32 = 3;
+pub const MATCH_FILE_VERSION: u32 = 4;
 
 /// One match in its portable form: the append-only log that is the only stored
 /// truth (ADR-0003), plus the metadata needed to name and date it. The `version`
@@ -123,8 +123,12 @@ impl MatchFile {
         match peek.version {
             None | Some(0) => return Err(MatchFileError::Malformed),
             // Versions 1 and 2 predate the id; it simply reads as absent.
-            Some(1) => migrate_v1_log(&mut value["log"]),
-            Some(2 | MATCH_FILE_VERSION) => {}
+            Some(1) => {
+                migrate_v1_log(&mut value["log"]);
+                migrate_v3_log(&mut value["log"]);
+            }
+            Some(2 | 3) => migrate_v3_log(&mut value["log"]),
+            Some(MATCH_FILE_VERSION) => {}
             Some(version) => return Err(MatchFileError::UnsupportedVersion { found: version }),
         }
 
@@ -164,6 +168,25 @@ fn migrate_v1_log(log: &mut serde_json::Value) {
         }
         if action.remove("failed") == Some(true.into()) {
             action.insert("type".into(), "UnforcedTurnover".into());
+        }
+    }
+}
+
+/// Version 3 → 4: a Deflection is its own action, no longer a Gain sub-type,
+/// since it does not change possession.
+fn migrate_v3_log(log: &mut serde_json::Value) {
+    let Some(entries) = log.as_array_mut() else {
+        return;
+    };
+    for entry in entries {
+        let Some(action) = entry.get_mut("action").and_then(|a| a.as_object_mut()) else {
+            continue;
+        };
+        if action.get("type").and_then(|t| t.as_str()) == Some("Gain")
+            && action.get("subType").and_then(|s| s.as_str()) == Some("Deflection")
+        {
+            action.remove("subType");
+            action.insert("type".into(), "Deflection".into());
         }
     }
 }
@@ -210,8 +233,8 @@ mod tests {
     fn to_json_tags_the_current_version() {
         let json = sample_match().to_json();
         assert!(
-            json.starts_with(r#"{"version":3,"#),
-            "expected a version-3 envelope, got {json}"
+            json.starts_with(r#"{"version":4,"#),
+            "expected a version-4 envelope, got {json}"
         );
     }
 
@@ -224,14 +247,14 @@ mod tests {
 
     #[test]
     fn an_unrecognised_version_is_rejected_with_its_number() {
-        let json = r#"{"version":4,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
+        let json = r#"{"version":5,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
         assert_eq!(
             MatchFile::from_json(json),
-            Err(MatchFileError::UnsupportedVersion { found: 4 })
+            Err(MatchFileError::UnsupportedVersion { found: 5 })
         );
         // The message names the offending version and points at the fix.
-        let message = MatchFileError::UnsupportedVersion { found: 4 }.to_string();
-        assert!(message.contains('4'));
+        let message = MatchFileError::UnsupportedVersion { found: 5 }.to_string();
+        assert!(message.contains('5'));
         assert!(message.contains("Update CentrePass"));
     }
 
@@ -269,6 +292,33 @@ mod tests {
     }
 
     #[test]
+    fn a_version_3_file_migrates_gain_deflections_to_deflections() {
+        let json = concat!(
+            r#"{"version":3,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":["#,
+            r#"{"kind":"Event","team":"B","action":{"type":"Gain","position":"GK","subType":"Deflection"},"flagged":false,"timestampMs":1},"#,
+            r#"{"kind":"Event","team":"B","action":{"type":"Gain","position":"GK","subType":"PickUp"},"flagged":false,"timestampMs":2}]}"#
+        );
+        let log = MatchFile::from_json(json).unwrap().log;
+        let action = |entry: &LogEntry| match entry {
+            LogEntry::Event(event) => event.action,
+            other => panic!("expected an event, got {other:?}"),
+        };
+        assert_eq!(
+            action(&log[0]),
+            Action::Deflection {
+                position: Position::GK
+            }
+        );
+        assert_eq!(
+            action(&log[1]),
+            Action::Gain {
+                position: Position::GK,
+                sub_type: Some(GainSubType::PickUp)
+            }
+        );
+    }
+
+    #[test]
     fn a_version_2_file_reads_without_an_id() {
         let json = r#"{"version":2,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
         assert_eq!(MatchFile::from_json(json).unwrap().id, None);
@@ -278,7 +328,7 @@ mod tests {
     fn an_id_that_is_not_a_plain_token_is_malformed() {
         for id in ["", "a/b", "../x", "has space", &"x".repeat(65)] {
             let json = format!(
-                r#"{{"version":3,"id":{},"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}}"#,
+                r#"{{"version":4,"id":{},"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}}"#,
                 serde_json::to_string(id).unwrap()
             );
             assert_eq!(
@@ -322,7 +372,6 @@ mod tests {
         prop_oneof![
             Just(None),
             Just(Some(GainSubType::Interception)),
-            Just(Some(GainSubType::Deflection)),
             Just(Some(GainSubType::PickUp)),
         ]
     }
@@ -384,6 +433,7 @@ mod tests {
                 .prop_map(|(position, failed)| Action::Goal { position, failed }),
             (arb_position(), arb_gain_sub_type())
                 .prop_map(|(position, sub_type)| Action::Gain { position, sub_type }),
+            arb_position().prop_map(|position| Action::Deflection { position }),
             arb_position().prop_map(|position| Action::UnforcedTurnover { position }),
             arb_position().prop_map(|position| Action::Infringement { position }),
             prop_oneof![

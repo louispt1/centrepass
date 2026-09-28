@@ -29,7 +29,6 @@ const rowCell = { ...cell, borderBottom: "1px solid #eee" } as const;
 function gainsLabel(player: PlayerStats): string {
   const parts = [];
   if (player.gainInterceptions > 0) parts.push(`${player.gainInterceptions}i`);
-  if (player.gainDeflections > 0) parts.push(`${player.gainDeflections}d`);
   if (player.gainPickUps > 0) parts.push(`${player.gainPickUps}p`);
   return parts.length > 0 ? `${player.gains} (${parts.join(" ")})` : `${player.gains}`;
 }
@@ -91,6 +90,9 @@ export function PlayerTable({
               Inf
             </th>
             <th style={headCell}>Gains</th>
+            <th style={headCell} title="Deflections">
+              Defl
+            </th>
             {showTime && <th style={headCell}>Mins</th>}
           </tr>
         </thead>
@@ -142,6 +144,9 @@ export function PlayerTable({
               <td style={rowCell} data-testid={`stat-${player.player}-gains`}>
                 {gainsLabel(player)}
               </td>
+              <td style={rowCell} data-testid={`stat-${player.player}-deflections`}>
+                {player.deflections}
+              </td>
               {showTime && (
                 <td style={rowCell} data-testid={`stat-${player.player}-mins`}>
                   {player.playingTimeMs == null ? "–" : formatMinutes(player.playingTimeMs)}
@@ -161,6 +166,7 @@ const HEAD_TO_HEAD: [label: string, key: string, show: (t: TeamTotals) => string
   ["Goals", "goals", (t) => ratio(t.goals, t.shots)],
   ["Possessions → goal", "possessions", (t) => ratio(t.possessionGoals, t.possessions)],
   ["Gains", "gains", (t) => `${t.gains}`],
+  ["Deflections", "deflections", (t) => `${t.deflections}`],
   ["Unforced turnovers", "turnovers", (t) => `${t.unforcedTurnovers}`],
   ["Penalties conceded", "infringements", (t) => `${t.infringements}`],
 ];

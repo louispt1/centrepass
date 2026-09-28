@@ -35,8 +35,8 @@ tokens, or a single marker. Each event token is:
   | `g` | Goal / shot |
   | `p` | Gain |
   | `pi` | Gain - interception |
-  | `pd` | Gain - deflection |
   | `pp` | Gain - pick-up |
+  | `d` | Deflection (not a gain: possession is unchanged; `pd` also accepted) |
   | `e` | Unforced turnover |
   | `i` | Infringement |
   | `r` | Rebound |
@@ -48,7 +48,7 @@ tokens, or a single marker. Each event token is:
 Positions and actions are joined with no space: `1g` is a goal by GS, `3c` a
 centre-pass receive by WA, `6pi` a gain-by-interception by GD.
 
-> **Greedy sub-types.** `pi`, `pd`, `pp` are matched before a bare `p`, so `1pi`
+> **Greedy sub-types.** `pi`, `pp` are matched before a bare `p`, so `1pi`
 > is *interception at GS*, never *gain (`p`) then infringement (`i`)*. Put a
 > space between them if you really mean two events.
 
@@ -56,8 +56,8 @@ centre-pass receive by WA, `6pi` a gain-by-interception by GD.
 
 - **Team** - a leading `a` or `b` on a line chooses the possession's team: the
   team with the ball. With no prefix the line belongs to team `a`. Every event
-  on the line is that team's **except an infringement (`i`)**, which is always
-  committed by the team *out of* possession - `a 2c 6i 1g` is B's GD
+  on the line is that team's **except an infringement (`i`) or a deflection
+  (`d`)**, which is always by the team *out of* possession - `a 2c 6i 1g` is B's GD
   infringing while A attack. (An attacking infringement loses the ball, so code
   it as an unforced turnover, `e`.)
 - **Quarter break** - a line of just `QT`.

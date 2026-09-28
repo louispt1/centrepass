@@ -69,9 +69,9 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await expect(page.getByTestId("current-quarter")).toHaveText("Q2");
 
   // Q2 opens with their centre pass: Kira (GK) infringes defending it, then
-  // deflects a gain; we turn it over (TEAM) with no goal.
+  // picks up a gain; we turn it over (TEAM) with no goal.
   await code(page, "GK", "Infringement");
-  await page.getByTestId("subtype-Deflection").click();
+  await page.getByTestId("subtype-PickUp").click();
   await code(page, "TEAM", "UnforcedTurnover");
 
   // Their GS misses and Kira takes the defensive rebound.
@@ -119,7 +119,7 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   // Discipline and defensive work.
   await expect(page.getByTestId("stat-Cara-turnovers")).toHaveText("1");
   await expect(page.getByTestId("stat-Gina-gains")).toHaveText("1 (1i)");
-  await expect(page.getByTestId("stat-Kira-gains")).toHaveText("1 (1d)");
+  await expect(page.getByTestId("stat-Kira-gains")).toHaveText("1 (1p)");
   await expect(page.getByTestId("stat-Kira-infringements")).toHaveText("1");
   await expect(page.getByTestId("stat-Kira-reboundsDefensive")).toHaveText("1");
 

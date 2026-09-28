@@ -38,6 +38,8 @@ export function buildAction(
       return { type: "Goal", position: position as GoalPosition, failed };
     case "Gain":
       return { type: "Gain", position, subType };
+    case "Deflection":
+      return { type: "Deflection", position };
     case "UnforcedTurnover":
       return { type: "UnforcedTurnover", position };
     case "Infringement":
@@ -53,6 +55,7 @@ export const ACTION_LABELS: Record<ActionKind, string> = {
   Feed: "Feed",
   Goal: "Goal / Shot",
   Gain: "Gain",
+  Deflection: "Deflect",
   UnforcedTurnover: "Turnover",
   Infringement: "Infringe",
   Rebound: "Rebound",
@@ -64,6 +67,7 @@ const STRIP_LABELS: Record<ActionKind, string> = {
   Feed: "Feed",
   Goal: "Goal",
   Gain: "Gain",
+  Deflection: "Deflect",
   UnforcedTurnover: "TO",
   Infringement: "Inf",
   Rebound: "Reb",
@@ -71,7 +75,6 @@ const STRIP_LABELS: Record<ActionKind, string> = {
 
 export const SUB_TYPE_LABELS: Record<GainSubType, string> = {
   Interception: "Intercept",
-  Deflection: "Deflect",
   PickUp: "Pick-up",
 };
 

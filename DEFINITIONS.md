@@ -14,11 +14,11 @@ Terminology follows the netball video analysis consensus (NVAC) taxonomy where N
 | `f` | Feed | Feed into circle | coded | A pass from outside the goal circle to a GA or GS positioned inside it. Codeable for any position except GK. |
 | `g` | Goal | Goal | coded | A successful shot at goal, from within the goal circle (GS or GA). A shot that misses is the same code with the Failed modifier. |
 | `p` | Gain | General play turnover | coded | Winning possession from the opposition while play continues, coded once for the team that wins it (always the team out of possession). Codeable for any position, or TEAM when unattributable. |
+| `d` | Deflection | Deflection | coded | A touch by the team out of possession that changes the ball's course, motion, or speed without winning it. Not a Gain: possession stays where it was. If the deflecting team then secures the ball, code a Pick-up. Codeable for any position, or TEAM. |
 | `e` | Unforced Turnover | Unforced turnover | coded | Losing possession through the team's own error or infringement. Codeable for any position, or TEAM. |
 | `i` | Infringement | Infringement | coded | An action contrary to the rules, penalised by the umpire, committed by the team out of possession; it does not change possession (an infringement by the team in possession is an Unforced Turnover). Codeable for any position, or TEAM. |
 | `r` | Rebound | Rebound | coded | Regathering the ball after an unsuccessful shot. Codeable for GS, GA, GD, or GK; attacking or defensive is derived from the position, and so is the team: the shooting team for GS/GA, the defending team for GD/GK. |
 | `pi` | Interception _(← Gain)_ | Interception | optional | A Gain by taking possession directly from an opposition pass, via a catch or a deflection and pick-up. |
-| `pd` | Deflection _(← Gain)_ | Deflection | optional | A Gain in which a player touches the ball and changes its course, motion, or speed without retaining possession. |
 | `pp` | Pick-up _(← Gain)_ | Pick-up | optional | A Gain by securing a loose ball that was not directly passed. |
 | - | Shot _(← Goal)_ | Shot | derived | Any attempt at goal, successful or not: the count of Goal events regardless of the Failed modifier. |
 | - | Feed with Shot _(← Feed)_ | Feed into circle with shot | derived | A Feed followed by a shot before the possession ends. Derived from possession context. |
@@ -35,11 +35,15 @@ Terminology follows the netball video analysis consensus (NVAC) taxonomy where N
 
 ## Deviations from NVAC
 
-CentrePass departs from a literal reading of NVAC in four deliberate ways, each to fit courtside coding or the derived-truth model.
+CentrePass departs from a literal reading of NVAC in five deliberate ways, each to fit courtside coding or the derived-truth model.
 
 ### Optional Gain sub-types
 
-NVAC has no bare "Gain": every general-play turnover is an Interception, Deflection, or Pick-up. Courtside a coder rarely has time to classify one, so CentrePass records a bare Gain (`p`) and treats the three sub-types (`pi`, `pd`, `pp`) as optional refinements.
+NVAC has no bare "Gain": every general-play turnover is an Interception, Deflection, or Pick-up. Courtside a coder rarely has time to classify one, so CentrePass records a bare Gain (`p`) and treats the sub-types (`pi`, `pp`) as optional refinements.
+
+### A Deflection is not a turnover
+
+NVAC lists Deflection as a kind of Gain. A deflection often does not win the ball, so CentrePass codes it as its own action (`d`): the Team in Possession is unchanged (like an Infringement) and it is counted apart from Gains. When the deflecting team does secure the ball, the coder follows it with a Pick-up, which is the turnover.
 
 ### Position-derived Rebound classification
 
@@ -47,7 +51,7 @@ NVAC names Attacking and Defensive Rebounds as distinct descriptors. CentrePass 
 
 ### Derived team gains and possession boundaries
 
-Possession boundaries are derived from the log, not coded (ADR-0003, ADR-0004): a possession begins at a centre pass (coded or not: the first possession after a goal or quarter break, held by the team due the centre pass, counts as one) or a gain and ends at a made goal, an unforced turnover, a quarter break, or the opposition taking the ball; an opposition infringement falls inside it. A possession that begins from neither a centre pass nor a coded player gain is understood as an unattributed team gain, derived rather than recorded.
+Possession boundaries are derived from the log, not coded (ADR-0003, ADR-0004): a possession begins at a centre pass (coded or not: the first possession after a goal or quarter break, held by the team due the centre pass, counts as one) or a gain and ends at a made goal, an unforced turnover, a quarter break, or the opposition taking the ball; an opposition infringement or deflection falls inside it. A possession that begins from neither a centre pass nor a coded player gain is understood as an unattributed team gain, derived rather than recorded.
 
 ### Greedy Shorthand sub-type matching
 

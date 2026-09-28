@@ -135,6 +135,17 @@ pub fn definitions() -> Vec<Descriptor> {
             None,
         ),
         descriptor(
+            Some("d"),
+            "Deflection",
+            "Deflection",
+            "A touch by the team out of possession that changes the ball's course, motion, or \
+             speed without winning it. Not a Gain: possession stays where it was. If the \
+             deflecting team then secures the ball, code a Pick-up. Codeable for any position, \
+             or TEAM.",
+            Coded,
+            None,
+        ),
+        descriptor(
             Some("e"),
             "Unforced Turnover",
             "Unforced turnover",
@@ -169,15 +180,6 @@ pub fn definitions() -> Vec<Descriptor> {
             "Interception",
             "A Gain by taking possession directly from an opposition pass, via a catch or a \
              deflection and pick-up.",
-            Optional,
-            Some("Gain"),
-        ),
-        descriptor(
-            Some("pd"),
-            "Deflection",
-            "Deflection",
-            "A Gain in which a player touches the ball and changes its course, motion, or speed \
-             without retaining possession.",
             Optional,
             Some("Gain"),
         ),
@@ -270,8 +272,15 @@ pub fn deviations() -> Vec<Deviation> {
             "Optional Gain sub-types",
             "NVAC has no bare \"Gain\": every general-play turnover is an Interception, \
              Deflection, or Pick-up. Courtside a coder rarely has time to classify one, so \
-             CentrePass records a bare Gain (`p`) and treats the three sub-types (`pi`, `pd`, \
-             `pp`) as optional refinements.",
+             CentrePass records a bare Gain (`p`) and treats the sub-types (`pi`, `pp`) as \
+             optional refinements.",
+        ),
+        deviation(
+            "A Deflection is not a turnover",
+            "NVAC lists Deflection as a kind of Gain. A deflection often does not win the ball, \
+             so CentrePass codes it as its own action (`d`): the Team in Possession is unchanged \
+             (like an Infringement) and it is counted apart from Gains. When the deflecting team \
+             does secure the ball, the coder follows it with a Pick-up, which is the turnover.",
         ),
         deviation(
             "Position-derived Rebound classification",
@@ -285,7 +294,7 @@ pub fn deviations() -> Vec<Deviation> {
              possession begins at a centre pass (coded or not: the first possession after a goal \
              or quarter break, held by the team due the centre pass, counts as one) or a gain and ends at a made goal, an unforced \
              turnover, a quarter break, or the opposition taking the ball; an opposition \
-             infringement falls inside it. A possession that begins from neither a centre pass nor \
+             infringement or deflection falls inside it. A possession that begins from neither a centre pass nor \
              a coded player gain is understood as an unattributed team gain, derived rather than \
              recorded.",
         ),
@@ -341,7 +350,7 @@ pub fn definitions_markdown() -> String {
 
     out.push_str("## Deviations from NVAC\n\n");
     out.push_str(
-        "CentrePass departs from a literal reading of NVAC in four deliberate ways, each to fit \
+        "CentrePass departs from a literal reading of NVAC in five deliberate ways, each to fit \
          courtside coding or the derived-truth model.\n\n",
     );
     for deviation in deviations() {
@@ -414,7 +423,7 @@ mod tests {
     fn every_coded_action_kind_has_a_definition() {
         // Each Shorthand action code the parser accepts must be documented.
         let codes: Vec<String> = definitions().into_iter().filter_map(|d| d.code).collect();
-        for code in ["c", "f", "g", "p", "e", "i", "r", "pi", "pd", "pp"] {
+        for code in ["c", "f", "g", "p", "d", "e", "i", "r", "pi", "pp"] {
             assert!(
                 codes.contains(&code.to_string()),
                 "missing definition for `{code}`"
@@ -423,8 +432,8 @@ mod tests {
     }
 
     #[test]
-    fn there_are_four_documented_deviations() {
-        // The four deviations issue 10 calls for, kept explicit.
-        assert_eq!(deviations().len(), 4);
+    fn there_are_five_documented_deviations() {
+        // The four deviations issue 10 calls for, plus Deflection, kept explicit.
+        assert_eq!(deviations().len(), 5);
     }
 }

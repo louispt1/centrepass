@@ -11,15 +11,16 @@
 //!
 //! - **Position** - a single digit `1`–`8` for GS, GA, WA, C, WD, GD, GK, TEAM.
 //! - **Action** - `c` receive, `f` feed, `g` goal, `e` unforced turnover,
-//!   `p` gain, `pi`/`pd`/`pp` gain by interception/deflection/pick-up,
-//!   `i` infringement, `r` rebound. Sub-types match greedily, so `1pi` is a GS
-//!   gain by interception, never a gain (`p`) followed by an infringement.
+//!   `p` gain, `pi`/`pp` gain by interception/pick-up, `d` deflection (`pd`
+//!   also accepted), `i` infringement, `r` rebound. Sub-types match greedily,
+//!   so `1pi` is a GS gain by interception, never a gain (`p`) followed by an
+//!   infringement.
 //! - **Modifiers** - a trailing `x` (Failed) and/or `!` (Flagged), in either
 //!   order. `x` is only legal on the actions that can fail (feed, goal).
 //! - **Team** - a leading `a`/`b` on the line picks the possession's team (its
 //!   Team in Possession); with no prefix the possession belongs to team A.
-//!   Every event on the line is that team's, except an infringement, which is
-//!   always committed by the team out of possession (ADR-0004).
+//!   Every event on the line is that team's, except an infringement or a
+//!   deflection, which is always by the team out of possession (ADR-0004).
 //! - **Markers** - a line of just `QT` is a quarter break. `S` (substitution)
 //!   is reserved but not yet imported.
 //!
@@ -97,7 +98,7 @@ impl fmt::Display for ShorthandError {
 
 impl fmt::Display for ShorthandErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        const ACTIONS: &str = "c f g e p pi pd pp i r";
+        const ACTIONS: &str = "c f g e p pi pp d i r";
         match self {
             ShorthandErrorKind::MissingPosition => {
                 write!(f, "expected a position digit 1–8 to start the event")
@@ -254,7 +255,7 @@ fn parse_line(
                 kind,
             })?;
         let team = match action {
-            Action::Infringement { .. } => team.other(),
+            Action::Infringement { .. } | Action::Deflection { .. } => team.other(),
             _ => team,
         };
         log.push(LogEntry::Event(Event {
@@ -281,7 +282,8 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
         _ => return Err((0, ShorthandErrorKind::MissingPosition)),
     };
 
-    // Action, matched greedily so `pi`/`pd`/`pp` win over a bare `p`.
+    // Action, matched greedily so `pi`/`pp` win over a bare `p`. `pd` is the
+    // old Deflection code, from when it was a Gain sub-type; still accepted.
     let mut index = 1;
     if index >= token.len() {
         return Err((index, ShorthandErrorKind::MissingAction));
@@ -293,10 +295,14 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
         'e' => (ActionKind::UnforcedTurnover, None),
         'i' => (ActionKind::Infringement, None),
         'r' => (ActionKind::Rebound, None),
+        'd' => (ActionKind::Deflection, None),
+        'p' if token.get(index + 1) == Some(&'d') => {
+            index += 1;
+            (ActionKind::Deflection, None)
+        }
         'p' => {
             let sub = match token.get(index + 1) {
                 Some('i') => Some(GainSubType::Interception),
-                Some('d') => Some(GainSubType::Deflection),
                 Some('p') => Some(GainSubType::PickUp),
                 _ => None,
             };
@@ -376,6 +382,7 @@ fn build_action(
             failed,
         },
         ActionKind::Gain => Action::Gain { position, sub_type },
+        ActionKind::Deflection => Action::Deflection { position },
         ActionKind::UnforcedTurnover => Action::UnforcedTurnover { position },
         ActionKind::Infringement => Action::Infringement { position },
         ActionKind::Rebound => Action::Rebound {
@@ -483,6 +490,7 @@ fn action_name(kind: ActionKind) -> &'static str {
         ActionKind::Feed => "a feed",
         ActionKind::Goal => "a goal",
         ActionKind::Gain => "a gain",
+        ActionKind::Deflection => "a deflection",
         ActionKind::UnforcedTurnover => "an unforced turnover",
         ActionKind::Infringement => "an infringement",
         ActionKind::Rebound => "a rebound",
@@ -574,6 +582,21 @@ mod tests {
     }
 
     #[test]
+    fn a_deflection_is_the_other_teams_and_pd_still_parses() {
+        let log = parse_shorthand("a 2c 6d 6pd").unwrap();
+        for entry in &log[1..] {
+            let LogEntry::Event(event) = entry else { panic!() };
+            assert_eq!(event.team, Team::B);
+            assert_eq!(
+                event.action,
+                Action::Deflection {
+                    position: Position::GD
+                }
+            );
+        }
+    }
+
+    #[test]
     fn gain_sub_types_parse_and_match_greedily() {
         // The headline example: `1pi` is a GS gain by interception, never a
         // gain (p) followed by an infringement (i).
@@ -582,13 +605,6 @@ mod tests {
             Action::Gain {
                 position: Position::GS,
                 sub_type: Some(GainSubType::Interception)
-            }
-        );
-        assert_eq!(
-            only_event("6pd").action,
-            Action::Gain {
-                position: Position::GD,
-                sub_type: Some(GainSubType::Deflection)
             }
         );
         assert_eq!(

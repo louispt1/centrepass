@@ -155,7 +155,6 @@ position_subset!(
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub enum GainSubType {
     Interception,
-    Deflection,
     PickUp,
 }
 
@@ -187,6 +186,11 @@ pub enum Action {
         #[serde(default, rename = "subType")]
         sub_type: Option<GainSubType>,
     },
+    /// A touch by the team out of possession that does not win the ball, so
+    /// possession is unchanged. Not a Gain (a deviation from NVAC).
+    Deflection {
+        position: Position,
+    },
     UnforcedTurnover {
         position: Position,
     },
@@ -207,6 +211,7 @@ impl Action {
             Action::Feed { .. } => ActionKind::Feed,
             Action::Goal { .. } => ActionKind::Goal,
             Action::Gain { .. } => ActionKind::Gain,
+            Action::Deflection { .. } => ActionKind::Deflection,
             Action::UnforcedTurnover { .. } => ActionKind::UnforcedTurnover,
             Action::Infringement { .. } => ActionKind::Infringement,
             Action::Rebound { .. } => ActionKind::Rebound,
@@ -220,6 +225,7 @@ impl Action {
             Action::Feed { position, .. } => position.into(),
             Action::Goal { position, .. } => position.into(),
             Action::Gain { position, .. } => position,
+            Action::Deflection { position } => position,
             Action::UnforcedTurnover { position } => position,
             Action::Infringement { position } => position,
             Action::Rebound { position } => position.into(),

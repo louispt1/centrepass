@@ -136,7 +136,7 @@ test("the fourth quarter break is full time and stops the quarter clock", async 
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("send-match-file").click();
   const sent = JSON.parse(await readFile(await (await downloadPromise).path(), "utf8"));
-  expect(sent.version).toBe(3);
+  expect(sent.version).toBe(4);
   expect(sent.log.filter((entry: { kind: string }) => entry.kind === "QuarterBreak")).toHaveLength(4);
 
   await page.getByRole("link", { name: "← Live coding" }).click();

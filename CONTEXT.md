@@ -64,8 +64,11 @@ A successful shot. A **Shot** with the Failed modifier is an unsuccessful attemp
 _Avoid_: score, basket
 
 **Gain**:
-Winning possession from the opposition while play continues, coded once for the winning team - always the team not previously in possession; the losing team records nothing. Optional sub-types: **Interception**, **Deflection**, **Pick-up**.
+Winning possession from the opposition while play continues, coded once for the winning team - always the team not previously in possession; the losing team records nothing. Optional sub-types: **Interception**, **Pick-up**.
 _Avoid_: steal, takeaway, general play turnover
+
+**Deflection**:
+A touch by the team out of possession that changes the ball's course without winning it. Not a **Gain** (NVAC counts it as one): the Team in Possession is unchanged, like an **Infringement**. If the deflecting team then secures the ball, that is a **Gain** by Pick-up.
 
 **Unforced Turnover**:
 Losing possession through the team's own error or infringement.
@@ -91,6 +94,14 @@ _Avoid_: starred
 **Quarter**:
 One of the four periods of a match. Quarter boundaries are coded as markers in the event log; the fourth marker is **Full Time**, and a match without it is still in progress.
 
+**Quarter Clock**:
+Derived elapsed time of a Quarter: from its first timestamped entry (normally the first Centre Pass) to its Quarter Break marker, or to now while the quarter is in progress. Wall-clock based, so it includes stoppages and need not match the official 15 minutes. Unavailable for untimed logs (e.g. Shorthand imports). There is no coded quarter-start marker; the first centre pass is the start.
+_Avoid_: game clock, match clock, timer
+
+**Interval**:
+The gap between a Quarter Break marker and the next quarter's first entry. It is never counted as quarter time.
+_Avoid_: break time, half time (as the generic term)
+
 **Substitution**:
 A change of which player occupies a position, effective from a moment in the match. The sequence of substitutions determines each player's Playing Time.
 _Avoid_: sub (in prose), interchange
@@ -100,7 +111,7 @@ The assignment of player names to positions for a team over the course of a matc
 _Avoid_: lineup, squad
 
 **Playing Time**:
-Derived per-player time on court, computed from roster assignments and substitution moments.
+Derived per-player time on court, computed from roster assignments and substitution moments, counting only Quarter Clock spans - Intervals are excluded, so a player on court all match has Playing Time equal to the sum of the quarters.
 
 ### Sharing
 

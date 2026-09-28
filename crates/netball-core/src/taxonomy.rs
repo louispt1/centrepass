@@ -19,17 +19,19 @@ pub enum ActionKind {
     Feed,
     Goal,
     Gain,
+    Deflection,
     UnforcedTurnover,
     Infringement,
     Rebound,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 7] = [
+    pub const ALL: [ActionKind; 8] = [
         ActionKind::CentrePassReceive,
         ActionKind::Feed,
         ActionKind::Goal,
         ActionKind::Gain,
+        ActionKind::Deflection,
         ActionKind::UnforcedTurnover,
         ActionKind::Infringement,
         ActionKind::Rebound,
@@ -54,9 +56,10 @@ impl ActionKind {
                 Position::GD,
             ],
             ActionKind::Goal => &[Position::GS, Position::GA, Position::Team],
-            ActionKind::Gain | ActionKind::UnforcedTurnover | ActionKind::Infringement => {
-                &Position::ALL
-            }
+            ActionKind::Gain
+            | ActionKind::Deflection
+            | ActionKind::UnforcedTurnover
+            | ActionKind::Infringement => &Position::ALL,
             ActionKind::Rebound => &[Position::GS, Position::GA, Position::GD, Position::GK],
         }
     }
@@ -71,11 +74,7 @@ impl ActionKind {
     /// The optional sub-types this action can carry (only Gain has any).
     pub fn sub_types(self) -> &'static [GainSubType] {
         match self {
-            ActionKind::Gain => &[
-                GainSubType::Interception,
-                GainSubType::Deflection,
-                GainSubType::PickUp,
-            ],
+            ActionKind::Gain => &[GainSubType::Interception, GainSubType::PickUp],
             _ => &[],
         }
     }
@@ -125,6 +124,9 @@ mod tests {
                 format!(r#"{{"type":"Goal","position":{position},"failed":false}}"#)
             }
             ActionKind::Gain => format!(r#"{{"type":"Gain","position":{position}}}"#),
+            ActionKind::Deflection => {
+                format!(r#"{{"type":"Deflection","position":{position}}}"#)
+            }
             ActionKind::UnforcedTurnover => {
                 format!(r#"{{"type":"UnforcedTurnover","position":{position}}}"#)
             }
@@ -166,14 +168,10 @@ mod tests {
     }
 
     #[test]
-    fn only_gain_has_sub_types_and_it_has_all_three() {
+    fn only_gain_has_sub_types() {
         for kind in ActionKind::ALL {
             let expected: &[GainSubType] = if kind == ActionKind::Gain {
-                &[
-                    GainSubType::Interception,
-                    GainSubType::Deflection,
-                    GainSubType::PickUp,
-                ]
+                &[GainSubType::Interception, GainSubType::PickUp]
             } else {
                 &[]
             };
