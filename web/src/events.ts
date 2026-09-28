@@ -14,7 +14,7 @@ import type { ReboundPosition } from "./types/ReboundPosition";
 import type { Team } from "./types/Team";
 
 /** Fixed team colours: every tap and log entry shows whose it is. */
-export const TEAM_COLOURS: Record<Team, string> = { A: "#0f4c5c", B: "#a4343a" };
+export const TEAM_COLOURS: Record<Team, string> = { A: "#263E58", B: "#ED1C24" };
 
 export const otherTeam = (team: Team): Team => (team === "A" ? "B" : "A");
 

@@ -55,9 +55,9 @@ const tapButton = {
 } as const;
 
 const selectedButton = {
-  background: "#0f4c5c",
+  background: "#263E58",
   color: "#fff",
-  borderColor: "#0f4c5c",
+  borderColor: "#263E58",
 } as const;
 
 /** A button in the colour of the team a tap on it will be coded for. */

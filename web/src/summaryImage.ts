@@ -15,10 +15,10 @@ import { matchBaseName, shareOrDownload } from "./matchFile";
 const WIDTH = 1080;
 const HEIGHT = 1350;
 
-const BG = "#0f4c5c"; // CentrePass teal
+const BG = "#263E58"; // CentrePass blue
 const INK = "#ffffff";
-const MUTED = "#9fc3cc";
-const ACCENT = "#ffd23f";
+const MUTED = "#a9b8c9";
+const ACCENT = "#ED1C24";
 
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 

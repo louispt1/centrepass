@@ -316,7 +316,7 @@ export default function MatchListScreen() {
         />
       </label>
       {importError && (
-        <p data-testid="import-error" role="alert" style={{ color: "#a11", fontSize: "0.9rem" }}>
+        <p data-testid="import-error" role="alert" style={{ color: "#ED1C24", fontSize: "0.9rem" }}>
           {importError}
         </p>
       )}
@@ -328,7 +328,7 @@ export default function MatchListScreen() {
           </p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
-              style={{ ...smallButton, borderColor: "#a11", color: "#a11" }}
+              style={{ ...smallButton, borderColor: "#ED1C24", color: "#ED1C24" }}
               onClick={() => void confirmReplace()}
             >
               Replace my copy
@@ -361,7 +361,7 @@ export default function MatchListScreen() {
         </button>
       </form>
       {shorthandError && (
-        <p data-testid="shorthand-error" role="alert" style={{ color: "#a11", fontSize: "0.9rem" }}>
+        <p data-testid="shorthand-error" role="alert" style={{ color: "#ED1C24", fontSize: "0.9rem" }}>
           {shorthandError}
         </p>
       )}
@@ -440,7 +440,7 @@ export default function MatchListScreen() {
                       <>
                         <button
                           data-testid={`confirm-delete-${match.id}`}
-                          style={{ ...smallButton, borderColor: "#a11", color: "#a11" }}
+                          style={{ ...smallButton, borderColor: "#ED1C24", color: "#ED1C24" }}
                           onClick={() => void confirmDelete(match.id)}
                         >
                           Confirm delete

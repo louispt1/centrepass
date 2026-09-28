@@ -298,7 +298,7 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
             fontSize: "0.95rem",
             fontWeight: 600,
             color: "#fff",
-            background: "#0f4c5c",
+            background: "#263E58",
             border: "none",
             borderRadius: "8px",
           }}
@@ -313,9 +313,9 @@ export default function StatsScreen({ matchId }: { matchId: string }) {
             padding: "0 1rem",
             fontSize: "0.95rem",
             fontWeight: 600,
-            color: "#0f4c5c",
+            color: "#263E58",
             background: "#fff",
-            border: "2px solid #0f4c5c",
+            border: "2px solid #263E58",
             borderRadius: "8px",
           }}
         >

@@ -122,7 +122,7 @@ export default function CollectionScreen({ collectionId }: { collectionId: strin
           <>
             <button
               data-testid="confirm-delete-collection"
-              style={{ ...smallButton, borderColor: "#a11", color: "#a11" }}
+              style={{ ...smallButton, borderColor: "#ED1C24", color: "#ED1C24" }}
               onClick={() =>
                 void deleteCollection(collection.id).then(() => (window.location.hash = "#/"))
               }
