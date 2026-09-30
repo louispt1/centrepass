@@ -127,9 +127,21 @@ _Avoid_: export, backup file, save file
 A shareable rendered picture of a match's headline statistics, intended for club chat groups and social media.
 _Avoid_: stats card, report
 
+**Season Summary Image**:
+The Summary Image for one team across a Collection: its Season Record, form, key rates and top players.
+_Avoid_: season report, season card
+
 **Collection**:
-A named grouping of matches (e.g. a season or tournament) used to scope cross-match statistics. Local to the device that built it; a match may belong to any number of Collections.
+A named grouping of matches (e.g. a season or tournament) used to scope cross-match statistics. A match may belong to any number of Collections. A Collection keeps a stable identity across devices and travels as a Collection File (ADR-0008).
 _Avoid_: folder, season (as the generic term)
+
+**Season Record**:
+A team's Played / Won / Drawn / Lost and goals for and against across a Collection. Only matches that reached Full Time count toward it. Derived, like all cross-match stats, by summing per-match stats. Rates are recomputed from summed counts, never averaged.
+_Avoid_: table, standings, form
+
+**Collection File**:
+The portable representation of a Collection: its identity, name, Player Aliases and member Match Files. Importing one merges into a Collection already on the device. Membership only grows, and each match follows the Match File replace rules (ADR-0007, ADR-0008).
+_Avoid_: bundle, season file
 
 **Player Alias**:
 Within a Collection, a rule folding one recorded player name into another for cross-match aggregation (e.g. "Ali" → "Alice"), because the same player's name may be spelled differently across matches. Scoped to that Collection; the underlying Match Files and their event logs are never changed.

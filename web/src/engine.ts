@@ -13,6 +13,7 @@ import {
   derive_roster,
   derive_stats,
   derive_team_in_possession,
+  parse_fixtures_csv,
   parse_shorthand,
   resolve_team,
 } from "./wasm/netball";
@@ -132,6 +133,18 @@ export function parseShorthand(input: string): LogEntry[] {
   return wasmCall(
     () => parse_shorthand(input) as LogEntry[],
     "This Shorthand could not be parsed.",
+  );
+}
+
+/**
+ * Parse a fixture CSV (`date,team,opposition`) into Fixtures: Match Files with
+ * no id and an empty log. Throws the core's row-numbered message on any bad
+ * row, so the caller never imports part of a schedule.
+ */
+export function parseFixturesCsv(text: string): MatchFile[] {
+  return wasmCall(
+    () => parse_fixtures_csv(text) as MatchFile[],
+    "This file could not be read as a fixture list.",
   );
 }
 

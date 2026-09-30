@@ -15,3 +15,7 @@ Split out of the `05-collections-cross-match-stats.md` grilling session (2026-09
 ## Blocked by
 
 None
+
+## Comments
+
+- 2026-09-28 (season-fixtures grilling): the share target should also accept a **Collection File** (ADR-0008), not just Match Files. Both route to the same Import handler.

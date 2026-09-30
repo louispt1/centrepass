@@ -220,7 +220,7 @@ test("holds a screen wake lock during coding and releases it after", async ({ pa
 
   // Leaving the live screen releases the lock.
   await page.getByRole("link", { name: "← Matches" }).click();
-  await expect(page.getByTestId("match-list")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Matches" })).toBeVisible();
   await expect.poll(async () => (await counters()).releases).toBe((await counters()).requests);
 });
 

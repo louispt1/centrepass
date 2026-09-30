@@ -36,7 +36,12 @@ pub struct StatsReport {
     pub quarter_spans: Vec<QuarterSpan>,
     /// One entry per team, in `[Team::A, Team::B]` order.
     pub teams: Vec<TeamStats>,
+    /// Whether the fourth Quarter Break (Full Time) has been coded.
+    pub full_time: bool,
 }
+
+/// A match has four quarters; the fourth Quarter Break is Full Time.
+pub const QUARTERS: usize = 4;
 
 /// One team's statistics: its players' individual lines plus team-level
 /// conversion rates.
@@ -201,9 +206,11 @@ pub fn derive_stats(log: &[LogEntry]) -> StatsReport {
         build_team_stats(log, &attributions, &possessions, Team::A),
         build_team_stats(log, &attributions, &possessions, Team::B),
     ];
+    let quarter_scores = derive_quarter_scores(log);
     StatsReport {
         score: derive_score(log),
-        quarter_scores: derive_quarter_scores(log),
+        full_time: quarter_scores.len() > QUARTERS,
+        quarter_scores,
         quarter_spans: derive_quarter_spans(log),
         teams,
     }
@@ -445,6 +452,17 @@ mod tests {
     }
 
     /// Team A's players from a report, by name (panics if absent).
+    #[test]
+    fn full_time_is_the_fourth_quarter_break() {
+        let mut log = vec![goal(Team::A, GoalPosition::GS)];
+        for _ in 0..3 {
+            log.push(quarter_break());
+        }
+        assert!(!derive_stats(&log).full_time);
+        log.push(quarter_break());
+        assert!(derive_stats(&log).full_time);
+    }
+
     fn player<'a>(report: &'a StatsReport, name: &str) -> &'a PlayerStats {
         report.teams[0]
             .players

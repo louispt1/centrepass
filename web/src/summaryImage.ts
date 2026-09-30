@@ -8,7 +8,9 @@
 import type { StatsReport } from "./types/StatsReport";
 import type { TeamStats } from "./types/TeamStats";
 import type { StoredMatch } from "./storage";
-import { matchBaseName, shareOrDownload } from "./matchFile";
+import type { CollectionTeam } from "./types/CollectionTeam";
+import { matchBaseName, safeName, shareOrDownload } from "./matchFile";
+import { METRICS, seasonValue, sparkline } from "./season";
 
 // A portrait canvas that reads well as a chat image: large enough that the text
 // stays legible when a messenger shrinks it to message width.
@@ -152,7 +154,10 @@ export function renderSummaryImageCanvas(
 
 /** The Summary Image as a PNG blob. */
 export function summaryImageBlob(match: StoredMatch, report: StatsReport): Promise<Blob> {
-  const canvas = renderSummaryImageCanvas(match, report);
+  return pngBlob(renderSummaryImageCanvas(match, report));
+}
+
+function pngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
@@ -170,4 +175,136 @@ export async function shareSummaryImage(match: StoredMatch, report: StatsReport)
   const blob = await summaryImageBlob(match, report);
   const file = new File([blob], `${matchBaseName(match)}.png`, { type: "image/png" });
   await shareOrDownload([file], `${match.teamAName} v ${match.teamBName}`);
+}
+
+/**
+ * Draw the Season Summary Image for one team bucket of a Collection: its
+ * Season Record, form, goal-difference trend, key rates, and top players.
+ * Every figure comes from the core's collection stats via `season.ts`.
+ */
+export function renderSeasonImageCanvas(collectionName: string, team: CollectionTeam): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get a 2D canvas context for the season image.");
+  const [left, right, centre] = [64, WIDTH - 64, WIDTH / 2];
+  const text = (value: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign) => {
+    ctx.font = `${font} ${FONT}`;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    ctx.fillText(value, x, y);
+  };
+
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  text("CentrePass", left, 90, "700 44px", ACCENT, "left");
+  text(collectionName, right, 88, "400 30px", MUTED, "right");
+  text(team.name, centre, 190, "700 60px", INK, "center");
+
+  // Season Record: Full Time matches only.
+  const { won, drawn, lost, goalsFor, goalsAgainst } = team.record;
+  const diff = goalsFor - goalsAgainst;
+  text(`${won} W · ${drawn} D · ${lost} L`, centre, 320, "800 100px", INK, "center");
+  text(`GF ${goalsFor}   GA ${goalsAgainst}   (${diff > 0 ? "+" : ""}${diff})`, centre, 385, "500 36px", MUTED, "center");
+
+  // Form strip: one chip per Full Time match, wrapping onto a second row.
+  const form = team.series.filter((point) => point.fullTime);
+  const cols = Math.min(form.length, 16);
+  const gap = 10;
+  const size = cols === 0 ? 0 : Math.min(56, (right - left - (cols - 1) * gap) / cols);
+  let y = 425;
+  form.forEach((point, i) => {
+    const [row, col] = [Math.floor(i / cols), i % cols];
+    const x = centre - (cols * size + (cols - 1) * gap) / 2 + col * (size + gap);
+    const top = y + row * (size + gap);
+    const result = point.goalsFor > point.goalsAgainst ? "W" : point.goalsFor < point.goalsAgainst ? "L" : "D";
+    ctx.fillStyle = result === "W" ? INK : result === "L" ? ACCENT : MUTED;
+    ctx.fillRect(x, top, size, size);
+    ctx.textBaseline = "middle";
+    text(result, x + size / 2, top + size / 2 + 2, `700 ${Math.round(size * 0.55)}px`, BG, "center");
+    ctx.textBaseline = "alphabetic";
+  });
+  y += form.length === 0 ? 0 : Math.ceil(form.length / cols) * (size + gap);
+
+  // Goal-difference trend, the season average dashed.
+  const goalDifference = METRICS[0];
+  y += 60;
+  text("Goal difference by match", left, y, "600 30px", INK, "left");
+  const box = { x: left, y: y + 20, width: right - left, height: 110 };
+  const { points, referenceY } = sparkline(
+    goalDifference,
+    team.series,
+    seasonValue(goalDifference, team),
+    box.width,
+    box.height,
+  );
+  ctx.strokeStyle = MUTED;
+  ctx.lineWidth = 2;
+  if (referenceY !== null) {
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.moveTo(box.x, box.y + referenceY);
+    ctx.lineTo(box.x + box.width, box.y + referenceY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  points.forEach((p, i) => {
+    if (!p) return;
+    // A gap (no value) starts a new stroke.
+    if (i === 0 || !points[i - 1]) ctx.moveTo(box.x + p.x, box.y + p.y);
+    else ctx.lineTo(box.x + p.x, box.y + p.y);
+  });
+  ctx.stroke();
+  for (const p of points) {
+    if (!p) continue;
+    ctx.beginPath();
+    ctx.arc(box.x + p.x, box.y + p.y, 9, 0, 2 * Math.PI);
+    ctx.fillStyle = p.fullTime ? INK : BG;
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+  y = box.y + box.height + 70;
+
+  // Key rates, from summed counts.
+  for (const key of ["shooting", "centre-pass", "gain", "opponent-centre-pass"]) {
+    const metric = METRICS.find((m) => m.key === key)!;
+    const value = seasonValue(metric, team);
+    text(metric.label, left, y, "400 34px", INK, "left");
+    text(value === null ? "–" : metric.format(value), right, y, "700 34px", INK, "right");
+    y += 50;
+  }
+
+  // Top three scorers and gainers, side by side.
+  y += 30;
+  const top = (count: (player: CollectionTeam["players"][number]) => number) =>
+    team.players
+      .filter((player) => count(player) > 0)
+      .sort((a, b) => count(b) - count(a))
+      .slice(0, 3);
+  const column = (title: string, x: number, count: (player: CollectionTeam["players"][number]) => number) => {
+    text(title, x, y, "600 30px", ACCENT, "left");
+    const leaders = top(count);
+    if (leaders.length === 0) text("-", x, y + 46, "400 30px", MUTED, "left");
+    leaders.forEach((player, i) => {
+      text(player.stats.player, x, y + 46 * (i + 1), "400 30px", INK, "left");
+      text(String(count(player)), x + 380, y + 46 * (i + 1), "600 30px", INK, "right");
+    });
+  };
+  column("Top scorers", left, (player) => player.stats.goals);
+  column("Top gains", centre + 40, (player) => player.stats.gains);
+
+  text("Coded with CentrePass - open-source netball match stats", centre, HEIGHT - 48, "400 26px", MUTED, "center");
+  return canvas;
+}
+
+/** Render and share (or download) a team's Season Summary Image. */
+export async function shareSeasonImage(collectionName: string, team: CollectionTeam): Promise<void> {
+  const blob = await pngBlob(renderSeasonImageCanvas(collectionName, team));
+  const file = new File([blob], `${safeName(`${collectionName} ${team.name}`)}.png`, { type: "image/png" });
+  await shareOrDownload([file], `${team.name} - ${collectionName}`);
 }

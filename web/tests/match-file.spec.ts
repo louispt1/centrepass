@@ -191,3 +191,66 @@ test("importing a file with an unrecognised version is rejected with a clear mes
   // No partial state: the rejected file created no match.
   await expect(page.getByText("No matches yet.")).toBeVisible();
 });
+
+/** A Match File with `goals` TEAM goals for Team A; zero goals is a Fixture. */
+function fileOf(id: string, goals: number, date = "2026-10-03") {
+  const log = Array.from({ length: goals }, () => ({
+    kind: "Event",
+    team: "A",
+    action: { type: "Goal", position: "TEAM", failed: false },
+    flagged: false,
+    timestampMs: null,
+  }));
+  return {
+    name: `${id}-${goals}.centrepass.json`,
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify({ version: 4, id, teamAName: "Hornets", teamBName: id, date, log }),
+    ),
+  };
+}
+
+test("importing only asks when both copies are coded (ADR-0007)", async ({ page }) => {
+  await page.goto("/centrepass/");
+  const input = page.getByTestId("import-match");
+  const summary = page.getByTestId("import-summary");
+
+  // Several fixtures in one pick.
+  await input.setInputFiles([fileOf("fx1", 0), fileOf("fx2", 0)]);
+  await expect(summary).toHaveText("Added 2");
+
+  // A coded file fills a fixture; an empty one never overwrites coded data.
+  await input.setInputFiles(fileOf("fx1", 1));
+  await expect(summary).toHaveText("Filled 1");
+  await input.setInputFiles([fileOf("fx1", 0), fileOf("fx2", 0, "2026-10-10")]);
+  await expect(summary).toHaveText("Updated 1 · Kept your coded copy of 1");
+  await expect(page.getByRole("link", { name: /Hornets vs fx2 - 2026-10-10/ })).toBeVisible();
+  await expect(page.getByTestId("confirm-replace")).toBeHidden();
+
+  // Coded over coded asks, showing both sides.
+  await input.setInputFiles(fileOf("fx1", 2));
+  await expect(page.getByTestId("replace-sides")).toContainText("Yours: 1 events, 1–0, not finished");
+  await expect(page.getByTestId("replace-sides")).toContainText("File: 2 events, 2–0, not finished");
+  await page.getByRole("button", { name: "Replace my copy" }).click();
+  await page.getByRole("link", { name: /Hornets vs fx1/ }).click();
+  await expect(page.getByTestId("score-team-a")).toHaveText("2");
+});
+
+test("fixtures list under Upcoming, soonest first, until coding starts", async ({ page }) => {
+  await page.goto("/centrepass/");
+  await page
+    .getByTestId("import-match")
+    .setInputFiles([fileOf("late", 0, "2026-11-01"), fileOf("soon", 0, "2026-10-01"), fileOf("done", 1)]);
+  const upcoming = page.getByTestId("upcoming-list").locator("li");
+  await expect(upcoming).toHaveCount(2);
+  await expect(upcoming.first()).toContainText("Hornets vs soon");
+  await expect(page.getByTestId("match-list")).toContainText("Hornets vs done");
+
+  // Code goes to the roster; the first coded entry moves it to Played.
+  await page.getByTestId("code-soon").click();
+  await page.getByTestId("roster-GS").fill("Alice");
+  await page.getByTestId("save-roster").click();
+  await page.getByRole("link", { name: "← Matches" }).click();
+  await expect(upcoming).toHaveCount(1);
+  await expect(page.getByTestId("match-list")).toContainText("Hornets vs soon");
+});

@@ -134,13 +134,8 @@ impl MatchFile {
 
         let versioned: VersionedMatchFile =
             serde_json::from_value(value).map_err(|_| MatchFileError::Malformed)?;
-        // The id becomes a storage key and part of the app's URL, so only a
-        // plain token is accepted from a file.
-        if let Some(id) = &versioned.id {
-            let plain = |c: char| c.is_ascii_alphanumeric() || c == '-' || c == '_';
-            if id.is_empty() || id.len() > 64 || !id.chars().all(plain) {
-                return Err(MatchFileError::Malformed);
-            }
+        if versioned.id.as_deref().is_some_and(|id| !is_plain_id(id)) {
+            return Err(MatchFileError::Malformed);
         }
         Ok(MatchFile {
             id: versioned.id,
@@ -150,6 +145,13 @@ impl MatchFile {
             log: versioned.log,
         })
     }
+}
+
+/// An id becomes a storage key and part of the app's URL, so only a plain
+/// token is accepted from a file.
+pub(crate) fn is_plain_id(id: &str) -> bool {
+    let plain = |c: char| c.is_ascii_alphanumeric() || c == '-' || c == '_';
+    !id.is_empty() && id.len() <= 64 && id.chars().all(plain)
 }
 
 /// Version 1 → 2: a Centre Pass Receive can no longer fail (ADR-0004). A

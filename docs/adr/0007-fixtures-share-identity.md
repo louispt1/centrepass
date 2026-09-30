@@ -1,6 +1,6 @@
 # Fixtures are empty Matches that share identity; import only asks when both copies are coded
 
-Clubs know their season schedule in advance. The stats-keeper imports it once as **Fixtures**, which are Matches with an empty log, and shares them as a Collection bundle. Coders import the bundle and code the fixture on match day, and the coded Match File that comes back replaces the empty fixture under ADR-0005. No new record type and no new file format. A Fixture is just a Match that nobody has coded yet.
+Clubs know their season schedule in advance. The stats-keeper imports it once as **Fixtures**, which are Matches with an empty log, and shares the Collection (as a Collection File, ADR-0008). Coders import it and code the fixture on match day, and the coded Match File that comes back replaces the empty fixture under ADR-0005. No new record type. A Fixture is just a Match that nobody has coded yet.
 
 This narrows one consequence of ADR-0005. Two coders coding the *same* fixture now share an id and collide on import, where before they would have been two distinct matches. We accept this: a club codes a fixture once, and the collision surfaces as a prompt, not silent loss.
 

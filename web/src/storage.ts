@@ -20,8 +20,10 @@ export interface StoredMatch {
   sentAtMs?: number;
 }
 
-/** Changed since it was last sent to the club, or never sent at all. */
+/** Changed since it was last sent to the club, or never sent at all. A
+ * Fixture (empty log) has nothing to lose, so it never counts. */
 export function notSent(match: StoredMatch): boolean {
+  if (match.log.length === 0) return false;
   return match.sentAtMs === undefined || (match.changedAtMs ?? 0) > match.sentAtMs;
 }
 

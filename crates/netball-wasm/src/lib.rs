@@ -161,3 +161,35 @@ pub fn derive_collection_stats(matches: JsValue, aliases: JsValue) -> Result<JsV
     let stats = netball_core::derive_collection_stats(&matches, &aliases);
     serde_wasm_bindgen::to_value(&stats).map_err(JsValue::from)
 }
+
+/// Parse a fixture CSV into Fixtures (`MatchFile[]` with no id and an empty
+/// log). One bad row throws the core's row-numbered message and yields no
+/// value, so the UI never imports part of a schedule.
+#[wasm_bindgen]
+pub fn parse_fixtures_csv(text: &str) -> Result<JsValue, JsValue> {
+    let fixtures = netball_core::parse_fixtures_csv(text)
+        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_wasm_bindgen::to_value(&fixtures).map_err(JsValue::from)
+}
+
+/// Serialize a Collection (`CollectionFile`) to its portable, versioned JSON.
+#[wasm_bindgen]
+pub fn serialize_collection_file(collection_file: JsValue) -> Result<String, JsValue> {
+    let collection_file: netball_core::CollectionFile =
+        serde_wasm_bindgen::from_value(collection_file)?;
+    Ok(collection_file.to_json())
+}
+
+/// Parse a Collection File JSON string (`CollectionFile`), or throw the core's
+/// human-readable message and yield nothing, member matches included.
+#[wasm_bindgen]
+pub fn parse_collection_file(json: &str) -> Result<JsValue, JsValue> {
+    let collection_file = netball_core::CollectionFile::from_json(json)
+        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    // As a plain object, not a JS `Map`, so `playerAliases` is a Record.
+    serde::Serialize::serialize(
+        &collection_file,
+        &serde_wasm_bindgen::Serializer::json_compatible(),
+    )
+    .map_err(JsValue::from)
+}

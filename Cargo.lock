@@ -160,6 +160,7 @@ name = "netball-wasm"
 version = "0.1.0"
 dependencies = [
  "netball-core",
+ "serde",
  "serde-wasm-bindgen",
  "wasm-bindgen",
 ]

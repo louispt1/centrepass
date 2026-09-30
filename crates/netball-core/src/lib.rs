@@ -6,8 +6,10 @@
 
 pub mod clock;
 pub mod collection;
+pub mod collection_file;
 pub mod definitions;
 pub mod event;
+pub mod fixtures;
 pub mod match_file;
 pub mod possession;
 pub mod roster;
@@ -17,7 +19,11 @@ pub mod stats;
 pub mod taxonomy;
 
 pub use clock::{derive_quarter_spans, QuarterSpan};
-pub use collection::{derive_collection_stats, CollectionPlayer, CollectionStats, CollectionTeam};
+pub use collection::{
+    derive_collection_stats, CollectionPlayer, CollectionStats, CollectionTeam, SeasonPoint,
+    SeasonRecord,
+};
+pub use collection_file::{CollectionFile, CollectionFileError, COLLECTION_FILE_VERSION};
 pub use definitions::{
     definitions, definitions_markdown, deviations, modifiers, Descriptor, Deviation, Resolution,
 };
@@ -25,6 +31,7 @@ pub use event::{
     Action, CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType,
     GoalPosition, LogEntry, Position, QuarterBreak, ReboundPosition, Substitution, Team,
 };
+pub use fixtures::{parse_fixtures_csv, FixturesCsvError};
 pub use match_file::{MatchFile, MatchFileError, MATCH_FILE_VERSION};
 pub use possession::{derive_team_in_possession, resolve_team};
 pub use roster::{derive_attributions, derive_playing_time, derive_roster, PlayingTime, Roster};

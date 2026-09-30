@@ -5,6 +5,7 @@ async function fillMatchDetails(page: Page) {
   await page.getByLabel("Your team").fill("Hornets U13");
   await page.getByLabel("Opposition").fill("Riverside");
   await page.getByLabel("Date").fill("2026-07-10");
+  await page.getByText("Import from Shorthand", { exact: true }).click();
 }
 
 test("pasting valid Shorthand imports a match that renders in the stat views", async ({ page }) => {

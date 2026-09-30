@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::match_file::MatchFile;
-use crate::stats::{derive_stats, PlayerStats};
+use crate::stats::{derive_stats, Conversions, PlayerStats, TeamTotals};
 
 /// Every team seen across a Collection's matches, most matches first.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -37,6 +37,45 @@ pub struct CollectionTeam {
     pub untimed_matches: u32,
     /// In order of first appearance across the matches.
     pub players: Vec<CollectionPlayer>,
+    /// Played / Won / Drawn / Lost and goals, over Full Time matches only.
+    pub record: SeasonRecord,
+    /// Summed over every coded match, Full Time or not. Rates are the
+    /// caller's to divide once from these counts.
+    pub totals: TeamTotals,
+    pub conversions: Conversions,
+    /// The opposition's conversions in this team's matches (how well it
+    /// defends their centre pass).
+    pub opponent_conversions: Conversions,
+    /// One point per coded match, in date order, for trends.
+    pub series: Vec<SeasonPoint>,
+}
+
+/// A team's Season Record (`CONTEXT.md`).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub struct SeasonRecord {
+    pub played: u32,
+    pub won: u32,
+    pub drawn: u32,
+    pub lost: u32,
+    pub goals_for: u32,
+    pub goals_against: u32,
+}
+
+/// One coded match from a team's side: the raw counts behind its trends.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub struct SeasonPoint {
+    pub match_id: Option<String>,
+    pub date: String,
+    pub full_time: bool,
+    pub goals_for: u32,
+    pub goals_against: u32,
+    pub totals: TeamTotals,
+    pub conversions: Conversions,
+    pub opponent_conversions: Conversions,
 }
 
 /// One player's stats summed across the matches they appeared in.
@@ -49,6 +88,24 @@ pub struct CollectionPlayer {
     pub stats: PlayerStats,
     /// Member matches where the player appears in that match's stats.
     pub games_played: u32,
+}
+
+fn add_conversions(total: &mut Conversions, more: &Conversions) {
+    total.centre_pass_total += more.centre_pass_total;
+    total.centre_pass_goals += more.centre_pass_goals;
+    total.gain_total += more.gain_total;
+    total.gain_goals += more.gain_goals;
+}
+
+fn add_totals(total: &mut TeamTotals, more: &TeamTotals) {
+    total.goals += more.goals;
+    total.shots += more.shots;
+    total.gains += more.gains;
+    total.deflections += more.deflections;
+    total.unforced_turnovers += more.unforced_turnovers;
+    total.infringements += more.infringements;
+    total.possessions += more.possessions;
+    total.possession_goals += more.possession_goals;
 }
 
 fn key(name: &str) -> String {
@@ -115,9 +172,14 @@ pub fn derive_collection_stats(
     let mut teams: Vec<TeamAcc> = Vec::new();
 
     for (match_index, match_file) in matches.iter().enumerate() {
+        // A Fixture (empty log) hasn't been played, so it counts for nothing.
+        if match_file.log.is_empty() {
+            continue;
+        }
         let report = derive_stats(&match_file.log);
         let names = [&match_file.team_a_name, &match_file.team_b_name];
-        for (team_stats, name) in report.teams.iter().zip(names) {
+        for (side, (team_stats, name)) in report.teams.iter().zip(names).enumerate() {
+            let opponent = &report.teams[1 - side];
             let team_key = key(name);
             let position = match teams.iter().position(|t| t.key == team_key) {
                 Some(position) => position,
@@ -129,6 +191,11 @@ pub fn derive_collection_stats(
                             matches: 0,
                             untimed_matches: 0,
                             players: Vec::new(),
+                            record: SeasonRecord::default(),
+                            totals: TeamTotals::default(),
+                            conversions: Conversions::default(),
+                            opponent_conversions: Conversions::default(),
+                            series: Vec::new(),
                         },
                         last_match: usize::MAX,
                         players: Vec::new(),
@@ -137,9 +204,40 @@ pub fn derive_collection_stats(
                 }
             };
             let acc = &mut teams[position];
+            // A name on both sides of one match (an internal game) counts
+            // its first side only.
             if acc.last_match != match_index {
                 acc.last_match = match_index;
                 acc.team.matches += 1;
+                let (goals_for, goals_against) = (
+                    report.score.for_team(team_stats.team),
+                    report.score.for_team(opponent.team),
+                );
+                let team = &mut acc.team;
+                if report.full_time {
+                    let record = &mut team.record;
+                    record.played += 1;
+                    match goals_for.cmp(&goals_against) {
+                        std::cmp::Ordering::Greater => record.won += 1,
+                        std::cmp::Ordering::Equal => record.drawn += 1,
+                        std::cmp::Ordering::Less => record.lost += 1,
+                    }
+                    record.goals_for += goals_for;
+                    record.goals_against += goals_against;
+                }
+                add_totals(&mut team.totals, &team_stats.totals);
+                add_conversions(&mut team.conversions, &team_stats.conversions);
+                add_conversions(&mut team.opponent_conversions, &opponent.conversions);
+                team.series.push(SeasonPoint {
+                    match_id: match_file.id.clone(),
+                    date: match_file.date.clone(),
+                    full_time: report.full_time,
+                    goals_for,
+                    goals_against,
+                    totals: team_stats.totals,
+                    conversions: team_stats.conversions,
+                    opponent_conversions: opponent.conversions,
+                });
             }
             if !team_stats.playing_time_available {
                 acc.team.untimed_matches += 1;
@@ -169,6 +267,10 @@ pub fn derive_collection_stats(
     }
 
     let mut teams: Vec<CollectionTeam> = teams.into_iter().map(|acc| acc.team).collect();
+    for team in &mut teams {
+        // Stable, so same-day matches keep the caller's order.
+        team.series.sort_by(|a, b| a.date.cmp(&b.date));
+    }
     // Stable: ties keep first-appearance order.
     teams.sort_by_key(|team| std::cmp::Reverse(team.matches));
     CollectionStats { teams }
@@ -177,7 +279,10 @@ pub fn derive_collection_stats(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event::{Action, CourtPosition, Event, GoalPosition, LogEntry, Substitution, Team};
+    use crate::event::{
+        Action, CentrePassReceivePosition, CourtPosition, Event, GoalPosition, LogEntry,
+        QuarterBreak, Substitution, Team,
+    };
 
     fn sub(team: Team, position: CourtPosition, player: &str, at: Option<i64>) -> LogEntry {
         LogEntry::Substitution(Substitution {
@@ -264,6 +369,121 @@ mod tests {
         // Sorted by match count, not first appearance.
         let order: Vec<&str> = stats.teams.iter().map(|t| t.name.as_str()).collect();
         assert_eq!(order, ["Hornets", "Oakfield", "Riverside"]);
+    }
+
+    fn cpr(team: Team) -> LogEntry {
+        LogEntry::Event(Event {
+            team,
+            action: Action::CentrePassReceive {
+                position: CentrePassReceivePosition::GA,
+            },
+            flagged: false,
+            timestamp_ms: None,
+        })
+    }
+
+    /// Centre passes alternating from A, each converted when its team is
+    /// listed in `scorers`; `full_time` appends the four Quarter Breaks.
+    fn played(date: &str, a: &str, b: &str, scorers: &[Team], full_time: bool) -> MatchFile {
+        let mut log = Vec::new();
+        for (i, scorer) in scorers.iter().enumerate() {
+            log.push(cpr(if i % 2 == 0 { Team::A } else { Team::B }));
+            log.push(goal(*scorer, GoalPosition::GS, None));
+        }
+        if full_time {
+            log.extend((0..4).map(|_| LogEntry::QuarterBreak(QuarterBreak { timestamp_ms: None })));
+        }
+        MatchFile {
+            date: date.to_string(),
+            ..game(a, b, log)
+        }
+    }
+
+    #[test]
+    fn the_season_record_counts_full_time_matches_from_either_slot() {
+        use Team::{A, B};
+        let matches = [
+            played("2026-09-01", "Hornets", "Riverside", &[A, A, B], true), // W 2-1
+            played("2026-09-08", "Oakfield", "hornets", &[A, B], true),     // D 1-1
+            played("2026-09-15", "Lakeside", "Hornets", &[A, A], true),     // L 0-2
+            played("2026-09-22", "Hornets", "Riverside", &[A, A, A], false), // not finished
+        ];
+        let stats = derive_collection_stats(&matches, &HashMap::new());
+        let hornets = team(&stats, "Hornets");
+        assert_eq!(hornets.matches, 4);
+        assert_eq!(
+            hornets.record,
+            SeasonRecord {
+                played: 3,
+                won: 1,
+                drawn: 1,
+                lost: 1,
+                goals_for: 3,
+                goals_against: 4,
+            }
+        );
+        // Every coded match feeds totals and trends, finished or not.
+        assert_eq!(hornets.totals.goals, 6);
+        let full_times: Vec<bool> = hornets.series.iter().map(|p| p.full_time).collect();
+        assert_eq!(full_times, [true, true, true, false]);
+    }
+
+    #[test]
+    fn conversions_sum_counts_and_track_the_opposition() {
+        use Team::{A, B};
+        // Hornets are A: their centre passes are the 1st and 3rd.
+        let matches = [
+            played("2026-09-01", "Hornets", "Riverside", &[A, B, B], true),
+            played("2026-09-08", "Hornets", "Oakfield", &[A], true),
+        ];
+        let stats = derive_collection_stats(&matches, &HashMap::new());
+        let hornets = team(&stats, "Hornets");
+        assert_eq!(
+            (
+                hornets.conversions.centre_pass_goals,
+                hornets.conversions.centre_pass_total
+            ),
+            (2, 3)
+        );
+        assert_eq!(
+            (
+                hornets.opponent_conversions.centre_pass_goals,
+                hornets.opponent_conversions.centre_pass_total
+            ),
+            (1, 1)
+        );
+    }
+
+    #[test]
+    fn the_series_is_in_date_order_without_fixtures() {
+        use Team::A;
+        let matches = [
+            played("2026-09-15", "Hornets", "Lakeside", &[A], true),
+            played("2026-09-22", "Hornets", "Oakfield", &[], false), // a fixture
+            played("2026-09-01", "Hornets", "Riverside", &[A], true),
+        ];
+        let stats = derive_collection_stats(&matches, &HashMap::new());
+        let dates: Vec<&str> = team(&stats, "Hornets")
+            .series
+            .iter()
+            .map(|p| p.date.as_str())
+            .collect();
+        assert_eq!(dates, ["2026-09-01", "2026-09-15"]);
+    }
+
+    #[test]
+    fn a_fixture_counts_for_nothing() {
+        let matches = [
+            game(
+                "Hornets",
+                "Riverside",
+                vec![goal(Team::A, GoalPosition::GS, None)],
+            ),
+            game("Hornets", "Oakfield", vec![]),
+        ];
+        let stats = derive_collection_stats(&matches, &HashMap::new());
+        assert_eq!(team(&stats, "Hornets").matches, 1);
+        assert!(stats.teams.iter().all(|t| t.name != "Oakfield"));
     }
 
     #[test]
