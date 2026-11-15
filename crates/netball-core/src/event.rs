@@ -104,7 +104,15 @@ macro_rules! position_subset {
 position_subset!(
     /// The seven on-court positions - [`Position`] without TEAM. A roster
     /// assignment or substitution always names a real position on court.
-    CourtPosition { GS, GA, WA, C, WD, GD, GK }
+    CourtPosition {
+        GS,
+        GA,
+        WA,
+        C,
+        WD,
+        GD,
+        GK
+    }
 );
 
 impl CourtPosition {
@@ -133,7 +141,14 @@ position_subset!(
     /// circle lies inside the attacking third, so WD and GD can feed from the
     /// centre third but GK cannot. TEAM is excluded because a feed is always
     /// attributable to the passer.
-    FeedPosition { GS, GA, WA, C, WD, GD }
+    FeedPosition {
+        GS,
+        GA,
+        WA,
+        C,
+        WD,
+        GD
+    }
 );
 
 position_subset!(
