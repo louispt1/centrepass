@@ -16,7 +16,7 @@ test("codes both teams, with possession deciding each tap's team", async ({ page
   const banner = page.getByTestId("possession-banner");
 
   // Nobody has the ball until the toss is coded: the first centre pass is A's.
-  await expect(banner).toContainText("Who has the centre pass?");
+  await expect(banner).toContainText("Start match");
   await page.getByTestId("choose-team-A").click();
   await expect(banner).toHaveAttribute("data-team", "A");
 
@@ -98,6 +98,9 @@ test("codes both teams, with possession deciding each tap's team", async ({ page
       getAll.onerror = () => reject(getAll.error);
     });
   });
+  // The Start tap leads the log; every entry after it is a coded event.
+  expect(events[0]).toMatchObject({ kind: "QuarterStart", team: "A" });
+  events.shift();
   expect(events.every((event) => event.kind === "Event")).toBe(true);
   expect(events.map((event) => `${event.team} ${event.action.type}`)).toEqual([
     "A CentrePassReceive",
@@ -153,10 +156,10 @@ test("never offers a position/action combination the core would reject", async (
   await expect(page.getByTestId("action-Goal")).toBeDisabled();
   await expect(page.getByTestId("subtype-Interception")).toBeDisabled();
 
-  // Nor before anyone has the ball.
-  await page.getByTestId("position-WD").click();
-  await expect(page.getByTestId("action-Feed")).toBeDisabled();
+  // Nor before the match is started: no position can even be picked.
+  await expect(page.getByTestId("position-WD")).toBeDisabled();
   await page.getByTestId("choose-team-A").click();
+  await page.getByTestId("position-WD").click();
 
   // WD can receive a centre pass, feed, and gain, but never shoot or rebound.
   await expect(page.getByTestId("action-Goal")).toBeDisabled();

@@ -94,7 +94,7 @@ pub fn derive_attributions(log: &[LogEntry]) -> Vec<Option<String>> {
                     .assign(substitution.position, substitution.player.clone());
                 None
             }
-            LogEntry::QuarterBreak(_) => None,
+            LogEntry::QuarterStart(_) | LogEntry::QuarterBreak(_) => None,
             LogEntry::Event(event) => CourtPosition::from_position(event.action.position())
                 .and_then(|position| rosters[roster_index(event.team)].player_at(position))
                 .map(str::to_string),
@@ -197,7 +197,7 @@ pub fn derive_playing_time(log: &[LogEntry], team: Team) -> Option<Vec<PlayingTi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::event::{Action, Event, GoalPosition, QuarterBreak, Substitution};
+    use crate::event::{Action, Event, GoalPosition, QuarterBreak, QuarterStart, Substitution};
 
     fn substitution(team: Team, position: CourtPosition, player: &str, at_ms: i64) -> LogEntry {
         LogEntry::Substitution(Substitution {
@@ -232,6 +232,10 @@ mod tests {
                 LogEntry::Event(event) => LogEntry::Event(Event {
                     timestamp_ms: None,
                     ..event
+                }),
+                LogEntry::QuarterStart(start) => LogEntry::QuarterStart(QuarterStart {
+                    timestamp_ms: None,
+                    ..start
                 }),
                 LogEntry::QuarterBreak(_) => {
                     LogEntry::QuarterBreak(QuarterBreak { timestamp_ms: None })

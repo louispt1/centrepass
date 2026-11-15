@@ -33,11 +33,11 @@ A span of the log during which one team is the Team in Possession, from winning 
 _Avoid_: play, phase
 
 **Team in Possession**:
-The team derived to hold the ball after the latest event, and so the default team for the next coded event. The coder may override it; the override is simply the team recorded on the next event. Undetermined before the first event - the first centre pass (decided by the toss) is whichever team the coder codes it for.
+The team derived to hold the ball after the latest event, and so the default team for the next coded event. The coder may override it; the override is simply the team recorded on the next event. Undetermined before the first Quarter Start - the first centre pass (decided by the toss) is whichever team the coder starts the match with.
 _Avoid_: current team, attacking team
 
 **Centre Pass Alternation**:
-The rule that centre passes alternate between the teams throughout the match, regardless of who scored, carrying across quarter breaks. After a goal or a quarter break, the Team in Possession is the team due the next centre pass. The alternation is anchored on the team actually coded for each centre pass, so correcting one re-aligns every later prediction.
+The rule that centre passes alternate between the teams throughout the match, regardless of who scored, carrying across quarter breaks. After a goal or a quarter break, the Team in Possession is the team due the next centre pass. The alternation is anchored on the team actually coded for each centre pass - by a Centre Pass Receive or a Quarter Start - so correcting one re-aligns every later prediction.
 
 **Coded**:
 Describes a datum the coder enters directly (e.g. a Goal).
@@ -98,8 +98,12 @@ _Avoid_: starred
 **Quarter**:
 One of the four periods of a match. Quarter boundaries are coded as markers in the event log; the fourth marker is **Full Time**, and a match without it is still in progress.
 
+**Quarter Start**:
+The coded whistle for a Quarter, naming the team taking its first centre pass. It starts the Quarter Clock and anchors Centre Pass Alternation like a coded Centre Pass Receive, so a centre pass that goes uncoded before a break can't mislead the next quarter's prediction. Coding is locked until a quarter has one (or any Event, for logs that predate it). It is not a Centre Pass Receive and counts in no statistic.
+_Avoid_: kick-off, quarter start marker
+
 **Quarter Clock**:
-Derived elapsed time of a Quarter: from its first timestamped Event (normally the first Centre Pass; a Substitution never starts one) to its Quarter Break marker, or to now while the quarter is in progress. Wall-clock based, so it includes stoppages and need not match the official 15 minutes. Unavailable for untimed logs (e.g. Shorthand imports). There is no coded quarter-start marker; the first centre pass is the start.
+Derived elapsed time of a Quarter: from its Quarter Start - or, in a log without one, its first timestamped Event (a Substitution never starts one) - to its Quarter Break marker, or to now while the quarter is in progress. Wall-clock based, so it includes stoppages and need not match the official 15 minutes. Unavailable for untimed logs (e.g. Shorthand imports).
 _Avoid_: game clock, match clock, timer
 
 **Interval**:

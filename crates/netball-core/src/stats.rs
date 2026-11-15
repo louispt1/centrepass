@@ -390,7 +390,7 @@ mod tests {
     use super::*;
     use crate::event::{
         CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType, GoalPosition,
-        QuarterBreak, ReboundPosition, Substitution,
+        QuarterBreak, QuarterStart, ReboundPosition, Substitution,
     };
 
     // --- Log-building helpers ------------------------------------------------
@@ -477,6 +477,10 @@ mod tests {
                 LogEntry::Event(e) => LogEntry::Event(Event {
                     timestamp_ms: None,
                     ..e
+                }),
+                LogEntry::QuarterStart(start) => LogEntry::QuarterStart(QuarterStart {
+                    timestamp_ms: None,
+                    ..start
                 }),
                 LogEntry::QuarterBreak(_) => {
                     LogEntry::QuarterBreak(QuarterBreak { timestamp_ms: None })

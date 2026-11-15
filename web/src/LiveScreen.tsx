@@ -153,10 +153,19 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   const inPossession = overrideTeam ?? derived.teamInPossession;
   const teamName = (team: Team) => (team === "A" ? match.teamAName : match.teamBName);
   const teamFor = (kind: ActionKind) =>
-    selectedPosition === null ? null : resolveTeam(inPossession, kind, selectedPosition);
+    selectedPosition === null || !started
+      ? null
+      : resolveTeam(inPossession, kind, selectedPosition);
   // Quarter breaks recorded so far = quarter segments − 1.
   const quarterBreaks = quarterScores.length - 1;
   const fullTime = quarterBreaks >= QUARTERS;
+  // Coding is locked until the quarter's whistle: its Quarter Start, or any
+  // event (a log from before Quarter Start, or a Shorthand import).
+  const quarterEntries = match.log.slice(
+    match.log.findLastIndex((entry) => entry.kind === "QuarterBreak") + 1,
+  );
+  const started =
+    fullTime || quarterEntries.some((entry) => entry.kind !== "Substitution");
 
   // Quarter Clock: closed quarters run start to break; the current one to now.
   const now = Date.now();
@@ -232,7 +241,13 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     if (lastEvent) replaceLast({ ...lastEvent, flagged: !lastEvent.flagged });
   }
 
+  function startQuarter(team: Team) {
+    append({ kind: "QuarterStart", team, timestampMs: Date.now() });
+    setOverrideTeam(null);
+  }
+
   async function recordQuarterBreak() {
+    setOverrideTeam(null);
     await replaceLog([...match!.log, { kind: "QuarterBreak", timestampMs: Date.now() }]);
     // Full time: on to the stats, where the Match File is sent to the club.
     if (quarterBreaks + 1 >= QUARTERS) window.location.hash = `#/match/${matchId}/stats`;
@@ -244,6 +259,8 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   }
 
   const lastEntries = match.log.slice(-4);
+  const quarterOf = (logIndex: number) =>
+    match.log.slice(0, logIndex).filter((entry) => entry.kind === "QuarterBreak").length + 1;
   const lastAttributions = attributions.slice(-4);
 
   return (
@@ -332,20 +349,32 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
           background: inPossession ? TEAM_COLOURS[inPossession] : "#555",
         }}
       >
-        {inPossession === null ? (
+        {!started || inPossession === null ? (
           <>
-            <span style={{ fontWeight: 600 }}>Who has the centre pass?</span>
+            <span style={{ fontWeight: 600 }}>
+              {quarterBreaks === 0 ? "Start match" : `Start Q${quarterBreaks + 1}`}
+            </span>
             <span style={{ display: "flex", gap: "0.4rem" }}>
-              {(["A", "B"] as const).map((team) => (
-                <button
-                  key={team}
-                  data-testid={`choose-team-${team}`}
-                  style={{ ...teamButton(team), color: TEAM_COLOURS[team] }}
-                  onClick={() => setOverrideTeam(team)}
-                >
-                  {teamName(team)}
-                </button>
-              ))}
+              {(["A", "B"] as const).map((team) => {
+                // The team due the centre pass is filled; tapping either starts it.
+                const predicted = derived.teamInPossession === team;
+                return (
+                  <button
+                    key={team}
+                    data-testid={`choose-team-${team}`}
+                    data-predicted={predicted}
+                    style={{
+                      ...teamButton(team),
+                      ...(predicted
+                        ? { background: TEAM_COLOURS[team], color: "#fff", borderColor: "#fff" }
+                        : { color: TEAM_COLOURS[team] }),
+                    }}
+                    onClick={() => startQuarter(team)}
+                  >
+                    {teamName(team)}
+                  </button>
+                );
+              })}
             </span>
           </>
         ) : (
@@ -395,7 +424,9 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
                 color: "team" in entry ? TEAM_COLOURS[entry.team] : "inherit",
               }}
             >
-              {formatEntry(entry, lastAttributions[index])}
+              {entry.kind === "QuarterStart"
+                ? `▶ Q${quarterOf(match.log.length - lastEntries.length + index)} · ${teamName(entry.team)} CP`
+                : formatEntry(entry, lastAttributions[index])}
             </span>
           ))
         )}
@@ -407,6 +438,7 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             key={position}
             data-testid={`position-${position}`}
             aria-pressed={selectedPosition === position}
+            disabled={!started}
             style={{ ...tapButton, ...(selectedPosition === position ? selectedButton : {}) }}
             onClick={() => setSelectedPosition(position)}
           >

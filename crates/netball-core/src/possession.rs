@@ -72,6 +72,14 @@ impl Fold {
             .unwrap_or_else(|| had_ball_before(team, action))
     }
 
+    /// A Quarter Start: `team` took this restart's centre pass, as surely as
+    /// if its Centre Pass Receive had been coded.
+    fn start(&mut self, team: Team) {
+        self.team_in_possession = Some(team);
+        self.next_centre_pass = Some(team.other());
+        self.awaiting_centre_pass = false;
+    }
+
     fn restart(&mut self) {
         self.team_in_possession = self.next_centre_pass;
         self.awaiting_centre_pass = true;
@@ -130,6 +138,7 @@ pub fn derive_team_in_possession(log: &[LogEntry]) -> Option<Team> {
     for entry in log {
         match entry {
             LogEntry::Event(event) => fold.apply(event.team, &event.action),
+            LogEntry::QuarterStart(start) => fold.start(start.team),
             LogEntry::QuarterBreak(_) => fold.restart(),
             LogEntry::Substitution(_) => {}
         }
@@ -163,9 +172,17 @@ pub(crate) fn segment_possessions(log: &[LogEntry]) -> Vec<Possession> {
     let mut fold = Fold::new();
     let mut possessions = Vec::new();
     let mut current: Option<Possession> = None;
+    // The team of a Quarter Start whose centre pass possession has not yet
+    // had an event: it begins with the first one, so none is ever empty.
+    let mut started_by: Option<Team> = None;
     for (index, entry) in log.iter().enumerate() {
         match entry {
+            LogEntry::QuarterStart(start) => {
+                fold.start(start.team);
+                started_by = Some(start.team);
+            }
             LogEntry::QuarterBreak(_) => {
+                started_by = None;
                 possessions.extend(current.take());
                 fold.restart();
             }
@@ -175,6 +192,7 @@ pub(crate) fn segment_possessions(log: &[LogEntry]) -> Vec<Possession> {
                 let origin = match event.action {
                     Action::CentrePassReceive { .. } => Origin::CentrePass,
                     Action::Gain { .. } => Origin::Gain,
+                    _ if started_by == Some(owner) => Origin::CentrePass,
                     _ if fold.awaiting_centre_pass
                         && fold.centre_pass_taker(event.team, &event.action) == owner =>
                     {
@@ -199,6 +217,7 @@ pub(crate) fn segment_possessions(log: &[LogEntry]) -> Vec<Possession> {
                 ) {
                     possessions.extend(current.take());
                 }
+                started_by = None;
                 fold.apply(event.team, &event.action);
             }
         }
@@ -211,7 +230,8 @@ pub(crate) fn segment_possessions(log: &[LogEntry]) -> Vec<Possession> {
 mod tests {
     use super::*;
     use crate::event::{
-        CentrePassReceivePosition, Event, FeedPosition, GoalPosition, QuarterBreak, ReboundPosition,
+        CentrePassReceivePosition, Event, FeedPosition, GoalPosition, QuarterBreak, QuarterStart,
+        ReboundPosition,
     };
     use Team::{A, B};
 
@@ -438,6 +458,45 @@ mod tests {
             rebound(B, ReboundPosition::GK),
         ];
         assert_eq!(spans(&log), [(A, vec![0, 1, 2, 3]), (B, vec![4])]);
+    }
+
+    fn quarter_start(team: Team) -> LogEntry {
+        LogEntry::QuarterStart(QuarterStart {
+            team,
+            timestamp_ms: None,
+        })
+    }
+
+    #[test]
+    fn a_quarter_start_is_a_centre_pass_taken_by_its_team() {
+        assert_eq!(tip(&[quarter_start(B)]), Some(B));
+        // Nothing coded before the whistle: B still took that centre pass.
+        assert_eq!(tip(&[quarter_start(B), quarter_break()]), Some(A));
+        // A goal leaves B due; B's centre pass goes uncoded before the break,
+        // so the coder starts Q2 with A - overriding the stale prediction.
+        let log = [
+            quarter_start(A),
+            shot(A, false),
+            quarter_break(),
+            quarter_start(A),
+        ];
+        assert_eq!(tip(&log), Some(A));
+        assert_eq!(tip(&[quarter_start(A), feed(A, false), shot(A, false)]), Some(B));
+    }
+
+    #[test]
+    fn a_coded_centre_pass_overrides_the_quarter_start() {
+        assert_eq!(tip(&[quarter_start(A), cpr(B), shot(B, false)]), Some(A));
+    }
+
+    #[test]
+    fn a_quarter_start_begins_a_centre_pass_possession_only_once_coded() {
+        use Origin::{CentrePass, Gain};
+        let log = [quarter_start(A), feed(A, false), shot(A, false)];
+        assert_eq!(spans(&log), [(A, vec![1, 2])]);
+        assert_eq!(origins(&log), [CentrePass]);
+        assert_eq!(origins(&[quarter_start(A), gain(B)]), [Gain]);
+        assert!(origins(&[quarter_start(A), quarter_break()]).is_empty());
     }
 
     #[test]

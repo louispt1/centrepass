@@ -83,9 +83,13 @@ export const SUB_TYPE_LABELS: Record<GainSubType, string> = {
  * "WD Intercept", "Beth GA Goal ✕ ⚑", "Dana → GA", or "Q break"; the caller
  * marks which team it belongs to. A coded
  * event's attributed player (from deriveAttributions) leads when known, so a
- * substitution's effect is visible on the very next tap.
+ * substitution's effect is visible on the very next tap. A Quarter Start
+ * names its team and quarter, so the live screen renders it itself.
  */
-export function formatEntry(entry: LogEntry, player: string | null = null): string {
+export function formatEntry(
+  entry: Exclude<LogEntry, { kind: "QuarterStart" }>,
+  player: string | null = null,
+): string {
   if (entry.kind === "QuarterBreak") return "Q break";
   if (entry.kind === "Substitution") return `${entry.player} → ${entry.position}`;
   const action = entry.action;

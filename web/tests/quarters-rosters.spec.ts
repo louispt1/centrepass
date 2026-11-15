@@ -56,6 +56,7 @@ test("roster → code → substitute → quarter break → per-quarter score and
   // One tap ends the quarter; the live screen tracks the current quarter.
   await page.getByTestId("quarter-break").click();
   await expect(page.getByTestId("current-quarter")).toHaveText("Q2");
+  await page.getByTestId("choose-team-A").click();
 
   // Q2: Alice (GS) scores, then the opposition answer off their centre pass.
   await page.getByTestId("position-GS").click();
@@ -90,12 +91,14 @@ test("roster → code → substitute → quarter break → per-quarter score and
   expect(kinds).toEqual([
     "Substitution", // Alice GS
     "Substitution", // Beth GA
+    "QuarterStart",
     "Event",
     "Event",
     "Event",
     "Substitution", // Dana GA
     "Event",
     "QuarterBreak",
+    "QuarterStart",
     "Event",
     "Event",
   ]);
@@ -112,10 +115,8 @@ test("roster → code → substitute → quarter break → per-quarter score and
   }
 
   // Undo works on markers like any entry: removing the opposition goal and
-  // Alice's goal, then the break, returns the match to Q1.
-  await page.getByTestId("undo").click();
-  await page.getByTestId("undo").click();
-  await page.getByTestId("undo").click();
+  // Alice's goal, the Q2 start, then the break, returns the match to Q1.
+  for (let i = 0; i < 4; i++) await page.getByTestId("undo").click();
   await expect(page.getByTestId("current-quarter")).toHaveText("Q1");
   await expect(page.getByTestId("score-team-a")).toHaveText("2");
 });
@@ -136,7 +137,7 @@ test("the fourth quarter break is full time and stops the quarter clock", async 
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("send-match-file").click();
   const sent = JSON.parse(await readFile(await (await downloadPromise).path(), "utf8"));
-  expect(sent.version).toBe(4);
+  expect(sent.version).toBe(5);
   expect(sent.log.filter((entry: { kind: string }) => entry.kind === "QuarterBreak")).toHaveLength(4);
 
   await page.getByRole("link", { name: "← Live coding" }).click();
@@ -175,4 +176,50 @@ test("the Quarter Clock runs from the first centre pass, goes amber past 15:00, 
   await page.clock.fastForward("03:00");
   await expect(clock).toHaveText("Break 3:00");
   await expect(page.getByTestId("quarter-score-1")).toContainText("15:01");
+});
+
+test("each quarter opens locked until the coder starts it with whoever takes the centre pass", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-07-10T10:00:00") });
+  await createMatch(page);
+  await page.getByTestId("save-roster").click();
+  const banner = page.getByTestId("possession-banner");
+  const clock = page.getByTestId("quarter-clock");
+
+  // Nothing can be coded before the whistle, but the roster still can.
+  await expect(banner).toContainText("Start match");
+  await expect(page.getByTestId("position-GS")).toBeDisabled();
+  await expect(page.getByTestId("open-roster")).toBeVisible();
+
+  // The Start tap is the whistle: the clock runs from it, not the first goal.
+  await page.clock.fastForward("02:00");
+  await page.getByTestId("choose-team-A").click();
+  await expect(banner).toHaveAttribute("data-team", "A");
+  await expect(page.getByTestId("event-strip")).toContainText("▶ Q1 · Hornets U13 CP");
+  await page.clock.fastForward("01:00");
+  await page.getByTestId("position-GA").click();
+  await page.getByTestId("action-Goal").click();
+  await expect(clock).toHaveText("1:00");
+
+  // B are due next, but their centre pass goes uncoded before the whistle.
+  await page.getByTestId("quarter-break").click();
+  await expect(banner).toContainText("Start Q2");
+  await expect(page.getByTestId("choose-team-B")).toHaveAttribute("data-predicted", "true");
+  await expect(page.getByTestId("position-GS")).toBeDisabled();
+
+  // The coder corrects it at the start; undo goes back to the locked banner.
+  await page.getByTestId("choose-team-A").click();
+  await expect(banner).toHaveAttribute("data-team", "A");
+  await page.getByTestId("undo").click();
+  await expect(banner).toContainText("Start Q2");
+  await page.getByTestId("choose-team-A").click();
+
+  // A pending Flip doesn't leak across the break.
+  await page.getByTestId("flip-possession").click();
+  await page.getByTestId("quarter-break").click();
+  await expect(page.getByTestId("choose-team-B")).toHaveAttribute("data-predicted", "true");
+  await page.getByTestId("choose-team-B").click();
+  await expect(page.getByTestId("flip-possession")).toHaveAttribute("aria-pressed", "false");
+  await expect(banner).toHaveAttribute("data-team", "B");
 });

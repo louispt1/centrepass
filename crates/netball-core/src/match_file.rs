@@ -2,7 +2,7 @@
 //! its event log plus metadata - and the unit of export, import, backup, and
 //! migration (ADR-0003, `CONTEXT.md`).
 //!
-//! A Match File is a versioned JSON document (`"version": 4`); older versions
+//! A Match File is a versioned JSON document (`"version": 5`); older versions
 //! are migrated on read. It carries the match's stable id, so a match keeps its
 //! identity across devices and re-importing it replaces rather than duplicates
 //! (ADR-0005). (De)serialization
@@ -21,7 +21,7 @@ use crate::event::LogEntry;
 /// The Match File format version this engine writes. Bump this only alongside
 /// a migration; [`MatchFile::from_json`] migrates older versions and rejects
 /// newer ones.
-pub const MATCH_FILE_VERSION: u32 = 4;
+pub const MATCH_FILE_VERSION: u32 = 5;
 
 /// One match in its portable form: the append-only log that is the only stored
 /// truth (ADR-0003), plus the metadata needed to name and date it. The `version`
@@ -128,6 +128,8 @@ impl MatchFile {
                 migrate_v3_log(&mut value["log"]);
             }
             Some(2 | 3) => migrate_v3_log(&mut value["log"]),
+            // Version 5 adds Quarter Start entries; a v4 log simply has none.
+            Some(4) => {}
             Some(MATCH_FILE_VERSION) => {}
             Some(version) => return Err(MatchFileError::UnsupportedVersion { found: version }),
         }
@@ -235,8 +237,8 @@ mod tests {
     fn to_json_tags_the_current_version() {
         let json = sample_match().to_json();
         assert!(
-            json.starts_with(r#"{"version":4,"#),
-            "expected a version-4 envelope, got {json}"
+            json.starts_with(r#"{"version":5,"#),
+            "expected a version-5 envelope, got {json}"
         );
     }
 
@@ -249,14 +251,14 @@ mod tests {
 
     #[test]
     fn an_unrecognised_version_is_rejected_with_its_number() {
-        let json = r#"{"version":5,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
+        let json = r#"{"version":6,"teamAName":"A","teamBName":"B","date":"2026-07-10","log":[]}"#;
         assert_eq!(
             MatchFile::from_json(json),
-            Err(MatchFileError::UnsupportedVersion { found: 5 })
+            Err(MatchFileError::UnsupportedVersion { found: 6 })
         );
         // The message names the offending version and points at the fix.
-        let message = MatchFileError::UnsupportedVersion { found: 5 }.to_string();
-        assert!(message.contains('5'));
+        let message = MatchFileError::UnsupportedVersion { found: 6 }.to_string();
+        assert!(message.contains('6'));
         assert!(message.contains("Update CentrePass"));
     }
 

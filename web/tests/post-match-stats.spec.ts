@@ -67,6 +67,7 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   // End of the first quarter.
   await page.getByTestId("quarter-break").click();
   await expect(page.getByTestId("current-quarter")).toHaveText("Q2");
+  await page.getByTestId("choose-team-B").click();
 
   // Q2 opens with their centre pass: Kira (GK) infringes defending it, then
   // picks up a gain; we turn it over (TEAM) with no goal.

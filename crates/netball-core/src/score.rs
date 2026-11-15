@@ -62,7 +62,7 @@ pub fn derive_quarter_scores(log: &[LogEntry]) -> Vec<Score> {
                     quarters.last_mut().unwrap().credit(event.team);
                 }
             }
-            LogEntry::Substitution(_) => {}
+            LogEntry::QuarterStart(_) | LogEntry::Substitution(_) => {}
         }
     }
     quarters

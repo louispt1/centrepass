@@ -251,6 +251,19 @@ pub struct Event {
     pub timestamp_ms: Option<i64>,
 }
 
+/// The whistle for a quarter: `team` takes its first centre pass, and the
+/// Quarter Clock starts here (ADR-0006). Anchors Centre Pass Alternation like
+/// a coded Centre Pass Receive, so it covers a centre pass that goes uncoded.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub struct QuarterStart {
+    pub team: Team,
+    /// Wall-clock capture time, as on [`Event`].
+    #[cfg_attr(feature = "ts-bindings", ts(type = "number | null"))]
+    pub timestamp_ms: Option<i64>,
+}
+
 /// A quarter-break marker: the moment one quarter ends and the next begins.
 /// Quarter boundaries are coded, not inferred, so the quarter an event
 /// belongs to is simply the number of breaks before it in the log.
@@ -289,6 +302,7 @@ pub struct Substitution {
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
 pub enum LogEntry {
     Event(Event),
+    QuarterStart(QuarterStart),
     QuarterBreak(QuarterBreak),
     Substitution(Substitution),
 }
@@ -298,6 +312,7 @@ impl LogEntry {
     pub fn timestamp_ms(&self) -> Option<i64> {
         match self {
             LogEntry::Event(event) => event.timestamp_ms,
+            LogEntry::QuarterStart(start) => start.timestamp_ms,
             LogEntry::QuarterBreak(quarter_break) => quarter_break.timestamp_ms,
             LogEntry::Substitution(substitution) => substitution.timestamp_ms,
         }

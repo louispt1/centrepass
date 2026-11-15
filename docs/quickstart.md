@@ -34,7 +34,10 @@ You code **both teams**, and the app keeps track of who has the ball. The
 banner under the score shows who's in possession, and each action button is
 labelled (and outlined) with the team an input will count for.
 
-At the first centre pass, pick the team that won the toss. From there
+Coding is locked until the whistle. At the first centre pass, tap the team
+that won the toss under **Start match**: that starts the clock. Each later
+quarter opens the same way with **Start Q2 / Q3 / Q4**, the team due the
+centre pass filled in - tap the other one if the app has it wrong. From there
 possession follows the play: turnovers hand the ball over, centre passes
 alternate after goals and quarters, and so on. If it ever gets it wrong, tap
 **Flip ⇄**, which swaps the team for your next tap only.

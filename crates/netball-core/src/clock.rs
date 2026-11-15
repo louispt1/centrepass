@@ -37,8 +37,8 @@ pub fn derive_quarter_spans(log: &[LogEntry]) -> Vec<QuarterSpan> {
                 current.end_ms = quarter_break.timestamp_ms;
                 spans.push(OPEN);
             }
-            LogEntry::Event(event) => {
-                current.start_ms = current.start_ms.or(event.timestamp_ms);
+            LogEntry::Event(_) | LogEntry::QuarterStart(_) => {
+                current.start_ms = current.start_ms.or(entry.timestamp_ms());
             }
             LogEntry::Substitution(_) => {}
         }

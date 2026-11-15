@@ -23,8 +23,8 @@ test("create match → record goals for both teams → undo → reload → score
   // Choose who has the first centre pass once; after each goal the centre
   // pass alternates without asking again.
   const banner = page.getByTestId("possession-banner");
-  await page.getByTestId("position-GS").click();
   await page.getByTestId("choose-team-A").click();
+  await page.getByTestId("position-GS").click();
   await page.getByTestId("action-Goal").click();
   await expect(banner).toHaveAttribute("data-team", "B");
   await page.getByTestId("action-Goal").click();
@@ -60,8 +60,10 @@ test("create match → record goals for both teams → undo → reload → score
     });
   });
   expect(storedMatches).toHaveLength(1);
-  expect(storedMatches[0].log.map((entry) => entry.team)).toEqual(["A", "B"]);
-  for (const entry of storedMatches[0].log) {
+  const [start, ...goals] = storedMatches[0].log;
+  expect(start).toMatchObject({ kind: "QuarterStart", team: "A" });
+  expect(goals.map((entry) => entry.team)).toEqual(["A", "B"]);
+  for (const entry of goals) {
     expect(entry.kind).toBe("Event");
     expect(entry.action).toMatchObject({ type: "Goal", position: "GS" });
     expect(typeof entry.timestampMs).toBe("number");
