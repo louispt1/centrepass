@@ -35,16 +35,16 @@ test("the reference opens from live coding and shows core-derived definitions", 
 test("opening and closing the reference does not lose coding state", async ({ page }) => {
   await createMatch(page);
 
-  // Establish coding state: a selected position and one failed event already
+  // Establish coding state: a selected position and one flagged event already
   // in the log.
   await page.getByTestId("choose-team-A").click();
   await page.getByTestId("position-WA").click();
   await page.getByTestId("action-Feed").click();
-  await page.getByTestId("toggle-failed").click();
+  await page.getByTestId("toggle-flagged").click();
   await page.getByTestId("position-GS").click();
   await expect(page.getByTestId("position-GS")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("event-strip")).toContainText("WA Feed ✕");
+  await expect(page.getByTestId("toggle-flagged")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("event-strip")).toContainText("WA Feed ⚑");
 
   // Open the reference and return.
   await page.getByTestId("open-reference").click();
@@ -54,11 +54,12 @@ test("opening and closing the reference does not lose coding state", async ({ pa
 
   // Every piece of coding state survived.
   await expect(page.getByTestId("position-GS")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("event-strip")).toContainText("WA Feed ✕");
+  await expect(page.getByTestId("toggle-flagged")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("event-strip")).toContainText("WA Feed ⚑");
 
   // And the still-selected GS scores, proving the selection was truly live,
   // not merely re-rendered.
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
 });

@@ -127,7 +127,7 @@ export function PlayerTable({
                 {ratio(player.goals, player.shots)}
               </td>
               <td style={rowCell} data-testid={`stat-${player.player}-feeds`}>
-                {ratio(player.completedFeeds, player.feeds)}
+                {player.feeds}
               </td>
               <td style={rowCell} data-testid={`stat-${player.player}-feedsWithShot`}>
                 {player.feedsWithShot}

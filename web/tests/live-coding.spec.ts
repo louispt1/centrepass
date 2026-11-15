@@ -27,25 +27,24 @@ test("codes both teams, with possession deciding each tap's team", async ({ page
   await page.getByTestId("action-Feed").click();
   await page.getByTestId("position-GA").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
 
   // Centre passes alternate: B's turn, and B score it.
   await expect(banner).toHaveAttribute("data-team", "B");
   await page.getByTestId("action-CentrePassReceive").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
   await expect(banner).toHaveAttribute("data-team", "A");
 
-  // A's C feed goes astray (Failed, tapped after the action). A Gain is
-  // always by the team out of possession, so B's WD intercepts with no flip.
+  // A's C feeds, and B's WD picks it off. A Gain is always by the team out
+  // of possession, so the intercept needs no flip.
   await page.getByTestId("position-C").click();
   await page.getByTestId("action-Feed").click();
-  await page.getByTestId("toggle-failed").click();
-  await expect(page.getByTestId("toggle-failed")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("position-WD").click();
   await expect(page.getByTestId("subtype-Interception")).toHaveAttribute("data-team", "B");
   await page.getByTestId("subtype-Interception").click();
-  await expect(page.getByTestId("toggle-failed")).toBeDisabled();
   await expect(banner).toHaveAttribute("data-team", "B");
 
   // B's C turns it over; A's GS misses, rebounds, and scores.
@@ -54,10 +53,11 @@ test("codes both teams, with possession deciding each tap's team", async ({ page
   await expect(banner).toHaveAttribute("data-team", "A");
   await page.getByTestId("position-GS").click();
   await page.getByTestId("action-Goal").click();
-  await page.getByTestId("toggle-failed").click();
+  await page.getByTestId("shot-miss").click();
   await expect(page.getByTestId("action-Rebound")).toHaveAttribute("data-team", "A");
   await page.getByTestId("action-Rebound").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("2");
 
   // B's centre pass is next; a GK infringement is by the team out of
@@ -117,7 +117,7 @@ test("codes both teams, with possession deciding each tap's team", async ({ page
     "A Infringement",
   ]);
   expect(events[3].action).toEqual({ type: "CentrePassReceive", position: "GA" });
-  expect(events[5].action).toMatchObject({ type: "Feed", position: "C", failed: true });
+  expect(events[5].action).toMatchObject({ type: "Feed", position: "C", failed: false });
   expect(events[6].action).toMatchObject({ position: "WD", subType: "Interception" });
   expect(events[8].action).toMatchObject({ type: "Goal", position: "GS", failed: true });
   expect(events[11]).toMatchObject({ flagged: true, action: { type: "Infringement" } });
@@ -181,12 +181,9 @@ test("never offers a position/action combination the core would reject", async (
   await page.getByTestId("position-GK").click();
   await expect(page.getByTestId("action-Feed")).toBeDisabled();
 
-  // Failed and Flag act on the last event, so they are off with no events;
-  // Failed stays off for a Gain, Flag does not.
-  await expect(page.getByTestId("toggle-failed")).toBeDisabled();
+  // Flag acts on the last event, so it is off until there is one.
   await expect(page.getByTestId("toggle-flagged")).toBeDisabled();
   await page.getByTestId("subtype-PickUp").click();
-  await expect(page.getByTestId("toggle-failed")).toBeDisabled();
   await expect(page.getByTestId("toggle-flagged")).toBeEnabled();
 });
 
@@ -243,7 +240,8 @@ test("live screen fits a phone viewport with one-hand-sized tap targets", async 
     "action-Goal",
     "action-CentrePassReceive",
     "subtype-PickUp",
-    "toggle-failed",
+    "action-AttackingInfringement",
+    "toggle-flagged",
     "choose-team-A",
     "undo",
     "quarter-break",
@@ -254,4 +252,86 @@ test("live screen fits a phone viewport with one-hand-sized tap targets", async 
     expect(box!.height, id).toBeGreaterThanOrEqual(44);
     expect(box!.width, id).toBeGreaterThanOrEqual(44);
   }
+
+  // Every coding control fits on screen without scrolling.
+  const bottom = (await page.getByTestId("open-reference").boundingBox())!;
+  expect(bottom.y + bottom.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+});
+
+test("an attacking infringement turns the ball over and is recorded as one", async ({ page }) => {
+  await createMatch(page);
+  const banner = page.getByTestId("possession-banner");
+  await page.getByTestId("choose-team-A").click();
+
+  // A's GS is called for contact: Att. infringe is A's, Def. infringe is B's.
+  await page.getByTestId("position-GS").click();
+  await expect(page.getByTestId("action-AttackingInfringement")).toHaveAttribute("data-team", "A");
+  await expect(page.getByTestId("action-Infringement")).toHaveAttribute("data-team", "B");
+  await page.getByTestId("action-AttackingInfringement").click();
+  await expect(banner).toHaveAttribute("data-team", "B");
+  await expect(page.getByTestId("event-strip-item").last()).toHaveText("GS Att. inf");
+
+  const log = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("centrepass");
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(open.error);
+    });
+    return new Promise<{ action: unknown }[]>((resolve, reject) => {
+      const getAll = db.transaction("matches").objectStore("matches").getAll();
+      getAll.onsuccess = () => resolve(getAll.result[0].log);
+      getAll.onerror = () => reject(getAll.error);
+    });
+  });
+  expect(log.at(-1)!.action).toEqual({
+    type: "UnforcedTurnover",
+    position: "GS",
+    subType: "Infringement",
+  });
+});
+
+test("a shot asks goal or miss, holding the score until answered, and stands after 5s", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-07-10T10:00:00") });
+  await createMatch(page);
+  const banner = page.getByTestId("possession-banner");
+  const popup = page.getByTestId("shot-popup");
+  const strip = page.getByTestId("event-strip-item");
+  await page.getByTestId("choose-team-A").click();
+
+  // Unanswered, the score and possession hold until the popup goes.
+  await page.getByTestId("position-GA").click();
+  await page.getByTestId("action-Goal").click();
+  await expect(popup).toBeVisible();
+  await expect(strip.last()).toHaveText("GA Shot …");
+  await expect(page.getByTestId("score-team-a")).toHaveText("0");
+  await expect(banner).toHaveAttribute("data-team", "A");
+  await page.clock.fastForward("00:05");
+  await expect(popup).toBeHidden();
+  await expect(page.getByTestId("score-team-a")).toHaveText("1");
+  await expect(banner).toHaveAttribute("data-team", "B");
+
+  // ✕ is a miss: no score, B keep the ball for the rebound.
+  await page.getByTestId("position-GS").click();
+  await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-miss").click();
+  await expect(popup).toBeHidden();
+  await expect(strip.last()).toHaveText("GS Goal ✕");
+  await expect(page.getByTestId("score-team-b")).toHaveText("0");
+  await expect(banner).toHaveAttribute("data-team", "B");
+
+  // ✓ confirms at once.
+  await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
+  await expect(page.getByTestId("score-team-b")).toHaveText("1");
+
+  // A tap on the blurred screen confirms too, without acting on what's under it.
+  await page.getByTestId("position-GA").click();
+  await page.getByTestId("action-Goal").click();
+  const gs = (await page.getByTestId("position-GS").boundingBox())!;
+  await page.mouse.click(gs.x + gs.width / 2, gs.y + gs.height / 2);
+  await expect(popup).toBeHidden();
+  await expect(page.getByTestId("score-team-a")).toHaveText("2");
+  await expect(page.getByTestId("position-GS")).toHaveAttribute("aria-pressed", "false");
 });

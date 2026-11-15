@@ -102,7 +102,9 @@ function migrateToV4Log(match: StoredMatch): StoredMatch {
     const { failed, ...action } = entry.action as typeof entry.action & { failed?: boolean };
     return {
       ...entry,
-      action: failed ? { type: "UnforcedTurnover" as const, position: action.position } : action,
+      action: failed
+        ? { type: "UnforcedTurnover" as const, position: action.position, subType: null }
+        : action,
     };
   });
   return { ...match, log };

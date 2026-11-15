@@ -29,7 +29,8 @@ pub use definitions::{
 };
 pub use event::{
     Action, CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType,
-    GoalPosition, LogEntry, Position, QuarterBreak, ReboundPosition, Substitution, Team,
+    GoalPosition, LogEntry, Position, QuarterBreak, QuarterStart, ReboundPosition, Substitution,
+    Team, TurnoverSubType,
 };
 pub use fixtures::{parse_fixtures_csv, FixturesCsvError};
 pub use match_file::{MatchFile, MatchFileError, MATCH_FILE_VERSION};

@@ -160,7 +160,8 @@ pub fn definitions() -> Vec<Descriptor> {
             "Infringement",
             "An action contrary to the rules, penalised by the umpire, committed by the team out \
              of possession; it does not change possession (an infringement by the team in \
-             possession is an Unforced Turnover). Codeable for any position, or TEAM.",
+             possession is an Unforced Turnover by Infringement, `ei`). Codeable for any \
+             position, or TEAM.",
             Coded,
             None,
         ),
@@ -173,6 +174,16 @@ pub fn definitions() -> Vec<Descriptor> {
              shooting team for GS/GA, the defending team for GD/GK.",
             Coded,
             None,
+        ),
+        descriptor(
+            Some("ei"),
+            "Infringement",
+            "Unforced turnover",
+            "An Unforced Turnover by an infringement penalised by the umpire against the team in \
+             possession (e.g. an attacker's contact or footwork), as opposed to an error. Counts \
+             as both a turnover and an infringement.",
+            Optional,
+            Some("Unforced Turnover"),
         ),
         descriptor(
             Some("pi"),
@@ -423,7 +434,7 @@ mod tests {
     fn every_coded_action_kind_has_a_definition() {
         // Each Shorthand action code the parser accepts must be documented.
         let codes: Vec<String> = definitions().into_iter().filter_map(|d| d.code).collect();
-        for code in ["c", "f", "g", "p", "d", "e", "i", "r", "pi", "pp"] {
+        for code in ["c", "f", "g", "p", "d", "e", "i", "r", "ei", "pi", "pp"] {
             assert!(
                 codes.contains(&code.to_string()),
                 "missing definition for `{code}`"

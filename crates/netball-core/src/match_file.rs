@@ -200,7 +200,8 @@ mod tests {
     use super::*;
     use crate::event::{
         Action, CentrePassReceivePosition, CourtPosition, Event, FeedPosition, GainSubType,
-        GoalPosition, Position, QuarterBreak, ReboundPosition, Substitution, Team,
+        GoalPosition, Position, QuarterBreak, QuarterStart, ReboundPosition, Substitution, Team,
+        TurnoverSubType,
     };
     use proptest::prelude::*;
 
@@ -286,7 +287,8 @@ mod tests {
             Event {
                 team: Team::B,
                 action: Action::UnforcedTurnover {
-                    position: Position::GD
+                    position: Position::GD,
+                    sub_type: None,
                 },
                 flagged: true,
                 timestamp_ms: Some(2),
@@ -438,7 +440,11 @@ mod tests {
             (arb_position(), arb_gain_sub_type())
                 .prop_map(|(position, sub_type)| Action::Gain { position, sub_type }),
             arb_position().prop_map(|position| Action::Deflection { position }),
-            arb_position().prop_map(|position| Action::UnforcedTurnover { position }),
+            (
+                arb_position(),
+                prop_oneof![Just(None), Just(Some(TurnoverSubType::Infringement))]
+            )
+                .prop_map(|(position, sub_type)| Action::UnforcedTurnover { position, sub_type }),
             arb_position().prop_map(|position| Action::Infringement { position }),
             prop_oneof![
                 Just(ReboundPosition::GS),
@@ -468,6 +474,9 @@ mod tests {
                     timestamp_ms,
                 })
             ),
+            (arb_team(), arb_timestamp()).prop_map(|(team, timestamp_ms)| {
+                LogEntry::QuarterStart(QuarterStart { team, timestamp_ms })
+            }),
             arb_timestamp()
                 .prop_map(|timestamp_ms| LogEntry::QuarterBreak(QuarterBreak { timestamp_ms })),
             (arb_team(), arb_court_position(), ".*", arb_timestamp()).prop_map(

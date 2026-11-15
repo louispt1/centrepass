@@ -19,6 +19,8 @@ const ROSTER: Record<string, string> = {
 async function code(page: Page, position: string, action: string) {
   await page.getByTestId(`position-${position}`).click();
   await page.getByTestId(`action-${action}`).click();
+  // A shot asks goal or miss; answer goal straight away.
+  if (action === "Goal") await page.getByTestId("shot-goal").click();
 }
 
 test("the full v1 flow works with the network disabled", async ({ page, context }) => {

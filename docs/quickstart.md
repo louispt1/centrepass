@@ -32,7 +32,7 @@ matches, so spell names the same way every week. Subs happen mid-match from
 
 You code **both teams**, and the app keeps track of who has the ball. The
 banner under the score shows who's in possession, and each action button is
-labelled (and outlined) with the team an input will count for.
+filled with the colour of the team an input will count for.
 
 Coding is locked until the whistle. At the first centre pass, tap the team
 that won the toss under **Start match**: that starts the clock. Each later
@@ -45,11 +45,19 @@ alternate after goals and quarters, and so on. If it ever gets it wrong, tap
 Every event is two taps:
 
 1. The **position** (GS, GA, … or TEAM if you're not sure).
-2. The **action** (Goal / Shot, Feed, Intercept, …).
+2. The **action** (Shot, Feed, Intercept, …).
+
+After a **Shot**, the screen asks **✓ Goal** or **✕ Miss**. Tap ✕ for a miss;
+for a goal, tap ✓, tap anywhere else, or just wait 5 seconds. The score
+updates once you've answered.
+
+An umpire's call against the team with the ball, like an attacker's contact or
+footwork, is **Att. infringe**: it hands the ball over and counts as both a
+turnover and an infringement. A call against the defending team is
+**Def. infringe**, and the attack keeps the ball.
 
 Then, if needed, straight after:
 
-- **Failed ✕** for a missed shot or a feed that didn't land. Tap again to undo.
 - **Flag ⚑** to mark the event to check later.
 - **Undo** removes the last thing you recorded.
 - **End Q1 / Q2 / Q3** marks the end of each quarter.
@@ -59,14 +67,14 @@ can spot a mistake and undo.
 
 ![Live coding](img/03-live-coding.png)
 
-**Reference** opens over the coding screen and closes straight back to it, outlining
+**Reference**, at the bottom, opens over the coding screen and closes straight back to it, outlining
 the definitions of each action.
 
 ![The in-app reference](img/04-reference.png)
 
 ## 4. Read the stats
 
-Tap **Stats** for the full picture: head-to-head, score by quarter, conversion
+Tap **Stats** (top right) for the full picture: head-to-head, score by quarter, conversion
 rates, and a line for every player. It's all worked out from what you coded.
 
 ![Post-match stats](img/05-stats.png)

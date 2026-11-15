@@ -12,6 +12,7 @@ import type { LogEntry } from "./types/LogEntry";
 import type { Position } from "./types/Position";
 import type { ReboundPosition } from "./types/ReboundPosition";
 import type { Team } from "./types/Team";
+import type { TurnoverSubType } from "./types/TurnoverSubType";
 
 /** Fixed team colours: every tap and log entry shows whose it is. */
 export const TEAM_COLOURS: Record<Team, string> = { A: "#263E58", B: "#ED1C24" };
@@ -27,7 +28,7 @@ export function buildAction(
   kind: ActionKind,
   position: Position,
   failed: boolean,
-  subType: GainSubType | null = null,
+  subType: GainSubType | TurnoverSubType | null = null,
 ): Action {
   switch (kind) {
     case "CentrePassReceive":
@@ -37,11 +38,11 @@ export function buildAction(
     case "Goal":
       return { type: "Goal", position: position as GoalPosition, failed };
     case "Gain":
-      return { type: "Gain", position, subType };
+      return { type: "Gain", position, subType: subType as GainSubType | null };
     case "Deflection":
       return { type: "Deflection", position };
     case "UnforcedTurnover":
-      return { type: "UnforcedTurnover", position };
+      return { type: "UnforcedTurnover", position, subType: subType as TurnoverSubType | null };
     case "Infringement":
       return { type: "Infringement", position };
     case "Rebound":
@@ -53,11 +54,11 @@ export function buildAction(
 export const ACTION_LABELS: Record<ActionKind, string> = {
   CentrePassReceive: "CP Receive",
   Feed: "Feed",
-  Goal: "Goal / Shot",
+  Goal: "Shot",
   Gain: "Gain",
   Deflection: "Deflect",
   UnforcedTurnover: "Turnover",
-  Infringement: "Infringe",
+  Infringement: "Def. infringe",
   Rebound: "Rebound",
 };
 
@@ -96,7 +97,9 @@ export function formatEntry(
   const label =
     action.type === "Gain" && action.subType
       ? SUB_TYPE_LABELS[action.subType]
-      : STRIP_LABELS[action.type];
+      : action.type === "UnforcedTurnover" && action.subType === "Infringement"
+        ? "Att. inf"
+        : STRIP_LABELS[action.type];
   const parts = [`${action.position} ${label}`];
   if (player) parts.unshift(player);
   if ("failed" in action && action.failed) parts.push("✕");

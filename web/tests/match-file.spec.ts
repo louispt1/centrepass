@@ -29,6 +29,8 @@ async function createMatchWithRoster(page: Page) {
 async function code(page: Page, position: string, action: string) {
   await page.getByTestId(`position-${position}`).click();
   await page.getByTestId(`action-${action}`).click();
+  // A shot asks goal or miss; answer goal straight away.
+  if (action === "Goal") await page.getByTestId("shot-goal").click();
 }
 
 /** The stat values this match should show, on both the original and the

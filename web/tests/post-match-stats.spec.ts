@@ -26,9 +26,11 @@ async function createMatchWithRoster(page: Page) {
 }
 
 /** Select a position, then record an action by its taxonomy id. */
-async function code(page: Page, position: string, action: string) {
+async function code(page: Page, position: string, action: string, missed = false) {
   await page.getByTestId(`position-${position}`).click();
   await page.getByTestId(`action-${action}`).click();
+  // A shot asks goal or miss.
+  if (action === "Goal") await page.getByTestId(missed ? "shot-miss" : "shot-goal").click();
 }
 
 test("a coded match shows correct numbers in every stat view", async ({ page }) => {
@@ -57,8 +59,7 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await page.getByTestId("position-GD").click();
   await page.getByTestId("subtype-Interception").click();
   await code(page, "GA", "Feed");
-  await code(page, "GS", "Goal");
-  await page.getByTestId("toggle-failed").click();
+  await code(page, "GS", "Goal", true);
   await expect(page.getByTestId("score-team-a")).toHaveText("1"); // the miss
   await code(page, "GS", "Rebound");
   await code(page, "GS", "Goal");
@@ -76,8 +77,7 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
   await code(page, "TEAM", "UnforcedTurnover");
 
   // Their GS misses and Kira takes the defensive rebound.
-  await code(page, "GS", "Goal");
-  await page.getByTestId("toggle-failed").click();
+  await code(page, "GS", "Goal", true);
   await code(page, "GK", "Rebound");
 
   // --- The stat views ----------------------------------------------------
@@ -111,7 +111,7 @@ test("a coded match shows correct numbers in every stat view", async ({ page }) 
 
   // Wanda's feed led directly to a goal (assist); Beth's led to a shot that
   // scored only off a rebound (feed-with-shot, but no assist).
-  await expect(page.getByTestId("stat-Wanda-feeds")).toHaveText("1/1 (100%)");
+  await expect(page.getByTestId("stat-Wanda-feeds")).toHaveText("1");
   await expect(page.getByTestId("stat-Wanda-feedsWithShot")).toHaveText("1");
   await expect(page.getByTestId("stat-Wanda-assists")).toHaveText("1");
   await expect(page.getByTestId("stat-Beth-feedsWithShot")).toHaveText("1");

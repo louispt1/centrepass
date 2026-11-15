@@ -11,7 +11,7 @@
 //!
 //! - **Position** - a single digit `1`–`8` for GS, GA, WA, C, WD, GD, GK, TEAM.
 //! - **Action** - `c` receive, `f` feed, `g` goal, `e` unforced turnover,
-//!   `p` gain, `pi`/`pp` gain by interception/pick-up, `d` deflection (`pd`
+//!   `ei` unforced turnover by infringement, `p` gain, `pi`/`pp` gain by interception/pick-up, `d` deflection (`pd`
 //!   also accepted), `i` infringement, `r` rebound. Sub-types match greedily,
 //!   so `1pi` is a GS gain by interception, never a gain (`p`) followed by an
 //!   infringement.
@@ -32,7 +32,7 @@ use std::fmt;
 
 use crate::event::{
     Action, CentrePassReceivePosition, Event, FeedPosition, GainSubType, GoalPosition, LogEntry,
-    Position, QuarterBreak, ReboundPosition, Team,
+    Position, QuarterBreak, ReboundPosition, Team, TurnoverSubType,
 };
 use crate::taxonomy::ActionKind;
 
@@ -98,7 +98,7 @@ impl fmt::Display for ShorthandError {
 
 impl fmt::Display for ShorthandErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        const ACTIONS: &str = "c f g e p pi pp d i r";
+        const ACTIONS: &str = "c f g e ei p pi pp d i r";
         match self {
             ShorthandErrorKind::MissingPosition => {
                 write!(f, "expected a position digit 1–8 to start the event")
@@ -282,17 +282,24 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
         _ => return Err((0, ShorthandErrorKind::MissingPosition)),
     };
 
-    // Action, matched greedily so `pi`/`pp` win over a bare `p`. `pd` is the
+    // Action, matched greedily so `ei`/`pi`/`pp` win over a bare `e`/`p`. `pd` is the
     // old Deflection code, from when it was a Gain sub-type; still accepted.
     let mut index = 1;
     if index >= token.len() {
         return Err((index, ShorthandErrorKind::MissingAction));
     }
+    let mut turnover_sub_type = None;
     let (kind, sub_type) = match token[index] {
         'c' => (ActionKind::CentrePassReceive, None),
         'f' => (ActionKind::Feed, None),
         'g' => (ActionKind::Goal, None),
-        'e' => (ActionKind::UnforcedTurnover, None),
+        'e' => {
+            if token.get(index + 1) == Some(&'i') {
+                index += 1;
+                turnover_sub_type = Some(TurnoverSubType::Infringement);
+            }
+            (ActionKind::UnforcedTurnover, None)
+        }
         'i' => (ActionKind::Infringement, None),
         'r' => (ActionKind::Rebound, None),
         'd' => (ActionKind::Deflection, None),
@@ -350,7 +357,7 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
         index += 1;
     }
 
-    let action = build_action(kind, sub_type, position, failed).ok_or((
+    let action = build_action(kind, sub_type, turnover_sub_type, position, failed).ok_or((
         0,
         ShorthandErrorKind::IllegalPosition {
             position,
@@ -366,6 +373,7 @@ fn parse_event_token(token: &[char]) -> Result<(Action, bool), (usize, Shorthand
 fn build_action(
     kind: ActionKind,
     sub_type: Option<GainSubType>,
+    turnover_sub_type: Option<TurnoverSubType>,
     position: Position,
     failed: bool,
 ) -> Option<Action> {
@@ -383,7 +391,10 @@ fn build_action(
         },
         ActionKind::Gain => Action::Gain { position, sub_type },
         ActionKind::Deflection => Action::Deflection { position },
-        ActionKind::UnforcedTurnover => Action::UnforcedTurnover { position },
+        ActionKind::UnforcedTurnover => Action::UnforcedTurnover {
+            position,
+            sub_type: turnover_sub_type,
+        },
         ActionKind::Infringement => Action::Infringement { position },
         ActionKind::Rebound => Action::Rebound {
             position: ReboundPosition::from_position(position)?,
@@ -557,7 +568,8 @@ mod tests {
         assert_eq!(
             only_event("4e").action,
             Action::UnforcedTurnover {
-                position: Position::C
+                position: Position::C,
+                sub_type: None,
             }
         );
         assert_eq!(
@@ -596,6 +608,20 @@ mod tests {
                 }
             );
         }
+    }
+
+    #[test]
+    fn a_turnover_by_infringement_is_ei() {
+        let turnover = |sub_type| Action::UnforcedTurnover {
+            position: Position::GS,
+            sub_type,
+        };
+        assert_eq!(
+            only_event("1ei").action,
+            turnover(Some(TurnoverSubType::Infringement))
+        );
+        assert_eq!(only_event("1e").action, turnover(None));
+        assert!(only_event("1ei!").flagged);
     }
 
     #[test]

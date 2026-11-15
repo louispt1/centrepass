@@ -34,6 +34,7 @@ test("roster → code → substitute → quarter break → per-quarter score and
   await page.getByTestId("position-GA").click();
   await page.getByTestId("action-CentrePassReceive").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("1");
   const strip = page.getByTestId("event-strip");
   await expect(strip).toContainText("Beth GA Goal");
@@ -50,6 +51,7 @@ test("roster → code → substitute → quarter break → per-quarter score and
   await expect(strip).toContainText("Dana → GA");
   await page.getByTestId("position-GA").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("2");
   await expect(strip).toContainText("Dana GA Goal");
 
@@ -61,8 +63,10 @@ test("roster → code → substitute → quarter break → per-quarter score and
   // Q2: Alice (GS) scores, then the opposition answer off their centre pass.
   await page.getByTestId("position-GS").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("action-Goal")).toHaveAttribute("data-team", "B");
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(page.getByTestId("score-team-a")).toHaveText("3");
   await expect(page.getByTestId("score-team-b")).toHaveText("1");
 
@@ -200,6 +204,7 @@ test("each quarter opens locked until the coder starts it with whoever takes the
   await page.clock.fastForward("01:00");
   await page.getByTestId("position-GA").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(clock).toHaveText("1:00");
 
   // B are due next, but their centre pass goes uncoded before the whistle.

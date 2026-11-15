@@ -75,11 +75,11 @@ _Avoid_: steal, takeaway, general play turnover
 A touch by the team out of possession that changes the ball's course without winning it. Not a **Gain** (NVAC counts it as one): the Team in Possession is unchanged, like an **Infringement**. If the deflecting team then secures the ball, that is a **Gain** by Pick-up.
 
 **Unforced Turnover**:
-Losing possession through the team's own error or infringement.
+Losing possession through the team's own error or infringement. Optional sub-type: **Infringement**, for one penalised by the umpire against the team in possession (an attacker's contact, footwork, held ball); it counts as both a turnover and an infringement.
 _Avoid_: error (as a term of art)
 
 **Infringement**:
-An action contrary to the rules, penalised by the umpire, committed by the team not in possession; it does not change the Team in Possession. An infringement by the team in possession is an Unforced Turnover.
+An action contrary to the rules, penalised by the umpire, committed by the team not in possession; it does not change the Team in Possession. An infringement by the team in possession is an Unforced Turnover with the Infringement sub-type.
 _Avoid_: penalty
 
 **Rebound**:

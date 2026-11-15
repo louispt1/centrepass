@@ -19,7 +19,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::clock::{derive_quarter_spans, QuarterSpan};
-use crate::event::{Action, GainSubType, LogEntry, Position, Team};
+use crate::event::{Action, GainSubType, LogEntry, Position, Team, TurnoverSubType};
 use crate::possession::{segment_possessions, Origin, Possession};
 use crate::roster::{derive_attributions, derive_playing_time};
 use crate::score::{derive_quarter_scores, derive_score, Score};
@@ -272,7 +272,10 @@ fn build_team_stats(
             }
             Action::Gain { .. } => totals.gains += 1,
             Action::Deflection { .. } => totals.deflections += 1,
-            Action::UnforcedTurnover { .. } => totals.unforced_turnovers += 1,
+            Action::UnforcedTurnover { sub_type, .. } => {
+                totals.unforced_turnovers += 1;
+                totals.infringements += u32::from(sub_type == Some(TurnoverSubType::Infringement));
+            }
             Action::Infringement { .. } => totals.infringements += 1,
             _ => {}
         }
@@ -296,7 +299,10 @@ fn build_team_stats(
                 Position::GS | Position::GA => stats.attacking_rebounds += 1,
                 _ => stats.defensive_rebounds += 1,
             },
-            Action::UnforcedTurnover { .. } => stats.unforced_turnovers += 1,
+            Action::UnforcedTurnover { sub_type, .. } => {
+                stats.unforced_turnovers += 1;
+                stats.infringements += u32::from(sub_type == Some(TurnoverSubType::Infringement));
+            }
             Action::Infringement { .. } => stats.infringements += 1,
             Action::Gain { sub_type, .. } => {
                 stats.gains += 1;
@@ -438,7 +444,13 @@ mod tests {
     }
 
     fn turnover(team: Team, position: Position) -> LogEntry {
-        event(team, Action::UnforcedTurnover { position })
+        event(
+            team,
+            Action::UnforcedTurnover {
+                position,
+                sub_type: None,
+            },
+        )
     }
 
     fn infringement(team: Team, position: Position) -> LogEntry {
@@ -550,6 +562,23 @@ mod tests {
         let report = derive_stats(&log);
         assert_eq!(player(&report, "Cara").unforced_turnovers, 1);
         assert_eq!(player(&report, "Cara").infringements, 2);
+    }
+
+    #[test]
+    fn a_turnover_by_infringement_counts_as_both() {
+        let log = [
+            sub(Team::A, CourtPosition::GS, "Alice", 0),
+            event(
+                Team::A,
+                Action::UnforcedTurnover {
+                    position: Position::GS,
+                    sub_type: Some(TurnoverSubType::Infringement),
+                },
+            ),
+        ];
+        let report = derive_stats(&log);
+        assert_eq!(player(&report, "Alice").unforced_turnovers, 1);
+        assert_eq!(player(&report, "Alice").infringements, 1);
     }
 
     #[test]

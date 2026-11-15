@@ -158,6 +158,15 @@ pub enum GainSubType {
     PickUp,
 }
 
+/// Optional detail on why possession was lost: NVAC's Unforced Turnover is
+/// the team's "own error or infringement", and this marks the infringement -
+/// one penalised by the umpire against the team in possession.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS), ts(export))]
+pub enum TurnoverSubType {
+    Infringement,
+}
+
 /// A coded action, per the NVAC-aligned taxonomy in `CONTEXT.md`.
 ///
 /// Variants carry their own position (restricted to the legal subset) and,
@@ -193,6 +202,8 @@ pub enum Action {
     },
     UnforcedTurnover {
         position: Position,
+        #[serde(default, rename = "subType")]
+        sub_type: Option<TurnoverSubType>,
     },
     Infringement {
         position: Position,
@@ -226,7 +237,7 @@ impl Action {
             Action::Goal { position, .. } => position.into(),
             Action::Gain { position, .. } => position,
             Action::Deflection { position } => position,
-            Action::UnforcedTurnover { position } => position,
+            Action::UnforcedTurnover { position, .. } => position,
             Action::Infringement { position } => position,
             Action::Rebound { position } => position.into(),
         }

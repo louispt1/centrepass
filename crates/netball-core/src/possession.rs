@@ -283,6 +283,7 @@ mod tests {
             team,
             Action::UnforcedTurnover {
                 position: Position::C,
+                sub_type: None,
             },
         )
     }
@@ -481,7 +482,10 @@ mod tests {
             quarter_start(A),
         ];
         assert_eq!(tip(&log), Some(A));
-        assert_eq!(tip(&[quarter_start(A), feed(A, false), shot(A, false)]), Some(B));
+        assert_eq!(
+            tip(&[quarter_start(A), feed(A, false), shot(A, false)]),
+            Some(B)
+        );
     }
 
     #[test]

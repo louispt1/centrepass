@@ -26,10 +26,13 @@ test("create match → record goals for both teams → undo → reload → score
   await page.getByTestId("choose-team-A").click();
   await page.getByTestId("position-GS").click();
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(banner).toHaveAttribute("data-team", "B");
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expect(banner).toHaveAttribute("data-team", "A");
   await page.getByTestId("action-Goal").click();
+  await page.getByTestId("shot-goal").click();
   await expectScore(page, 2, 1);
   await expect(page.getByTestId("choose-team-A")).toHaveCount(0);
 
