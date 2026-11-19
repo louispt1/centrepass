@@ -68,10 +68,16 @@ test("codes both teams, with possession deciding each tap's team", async ({ page
   await page.getByTestId("toggle-flagged").click();
   await expect(banner).toHaveAttribute("data-team", "B");
 
-  // The strip shows the last few events, each in its team's colour.
+  // The strip shows the last few events, each in its team's colour: four on a
+  // phone, as many as fit on an iPad in landscape.
   const strip = page.getByTestId("event-strip");
   const items = strip.getByTestId("event-strip-item");
-  await expect(items).toHaveCount(4);
+  const shown = items.filter({ visible: true });
+  if (test.info().project.name === "ipad-webkit-landscape") {
+    expect(await shown.count()).toBeGreaterThan(4);
+  } else {
+    await expect(shown).toHaveCount(4);
+  }
   await expect(strip).toContainText("GS Goal ✕");
   await expect(strip).toContainText("GS Reb");
   await expect(strip).toContainText("GK Inf ⚑");
@@ -193,7 +199,8 @@ test("holds a screen wake lock during coding and releases it after", async ({ pa
   await page.addInitScript(() => {
     const counters = { requests: 0, releases: 0 };
     (window as unknown as { __wakeLock: typeof counters }).__wakeLock = counters;
-    navigator.wakeLock.request = async () => {
+    // defineProperty, not assignment: WebKit ignores writes to the native method.
+    Object.defineProperty(navigator, "wakeLock", { configurable: true, value: { request: async () => {
       counters.requests += 1;
       return {
         released: false,
@@ -206,7 +213,7 @@ test("holds a screen wake lock during coding and releases it after", async ({ pa
         removeEventListener() {},
         dispatchEvent: () => false,
       } as unknown as WakeLockSentinel;
-    };
+    } } });
   });
 
   await createMatch(page);
@@ -256,6 +263,30 @@ test("live screen fits a phone viewport with one-hand-sized tap targets", async 
   // Every coding control fits on screen without scrolling.
   const bottom = (await page.getByTestId("open-reference").boundingBox())!;
   expect(bottom.y + bottom.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+});
+
+test("an iPad in landscape puts the coding pad beside the match state, all on one screen", async ({
+  page,
+}) => {
+  test.skip(test.info().project.name !== "ipad-webkit-landscape", "iPad landscape layout only");
+  await createMatch(page);
+  await page.getByTestId("choose-team-A").click();
+
+  // The coding pad sits to the right of the score, not below it.
+  const score = (await page.getByTestId("score-team-b").boundingBox())!;
+  const pad = (await page.getByTestId("position-GS").boundingBox())!;
+  expect(pad.x).toBeGreaterThan(score.x + score.width);
+
+  // Nothing scrolls, and every control is on screen.
+  const scrolls = await page.evaluate(
+    () => document.documentElement.scrollHeight > window.innerHeight,
+  );
+  expect(scrolls).toBe(false);
+  const height = page.viewportSize()!.height;
+  for (const id of ["position-GK", "action-Deflection", "action-Infringement", "open-reference", "match-stats"]) {
+    const box = (await page.getByTestId(id).boundingBox())!;
+    expect(box.y + box.height, id).toBeLessThanOrEqual(height);
+  }
 });
 
 test("an attacking infringement turns the ball over and is recorded as one", async ({ page }) => {

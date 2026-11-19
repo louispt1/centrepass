@@ -1,6 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
+// WebKit can share files, so the app opens a share sheet that never settles
+// headless; hide it so these tests exercise the download fallback.
+test.beforeEach(({ page }) => page.addInitScript(() => delete (Navigator.prototype as Partial<Navigator>).canShare));
+
 // Issue 09: one tap on a finished match renders the Summary Image and shares
 // it, with a plain download as the fallback. Headless Chromium cannot share
 // files, so the button falls back to a download - which is exactly what this

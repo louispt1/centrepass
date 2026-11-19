@@ -34,6 +34,8 @@ You code **both teams**, and the app keeps track of who has the ball. The
 banner under the score shows who's in possession, and each action button is
 filled with the colour of the team an input will count for.
 
+On an iPad, turn it sideways for a larger coding pad.
+
 Coding is locked until the whistle. At the first centre pass, tap the team
 that won the toss under **Start match**: that starts the clock. Each later
 quarter opens the same way with **Start Q2 / Q3 / Q4**, the team due the

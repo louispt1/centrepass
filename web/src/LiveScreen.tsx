@@ -26,6 +26,7 @@ import {
 import ReferencePanel from "./ReferencePanel";
 import { getMatch, putMatch, type StoredMatch } from "./storage";
 import { useScreenWakeLock } from "./wakeLock";
+import "./LiveScreen.css";
 
 // Layout order of the position grid: attack down to defence, TEAM last.
 const POSITION_GRID: Position[] = ["GS", "GA", "WA", "C", "WD", "GD", "GK", "TEAM"];
@@ -77,6 +78,10 @@ const ACTION_GRID: ActionTap[] = [
   tap("Deflection"),
   tap("Infringement"),
 ];
+
+// Entries the event strip renders: a phone shows the last four (CSS hides the
+// rest); an iPad in landscape lists as many as fit.
+const STRIP_ENTRIES = 12;
 
 // How long a shot's goal-or-miss question stays open before it stands as a goal.
 const SHOT_CONFIRM_MS = 5000;
@@ -291,10 +296,10 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
     setOverrideTeam(null);
   }
 
-  const lastEntries = match.log.slice(-4);
+  const lastEntries = match.log.slice(-STRIP_ENTRIES);
   const quarterOf = (logIndex: number) =>
     match.log.slice(0, logIndex).filter((entry) => entry.kind === "QuarterBreak").length + 1;
-  const lastAttributions = attributions.slice(-4);
+  const lastAttributions = attributions.slice(-STRIP_ENTRIES);
 
   // While a shot's question is open, everything but it is blurred, and a tap
   // anywhere else answers "goal" without acting on what was under it.
@@ -310,16 +315,9 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
   } as const;
 
   return (
-    <main
-      style={{
-        fontFamily: "system-ui, sans-serif",
-        padding: "0.75rem",
-        maxWidth: "28rem",
-        margin: "0 auto",
-      }}
-    >
+    <main className="live" style={{ fontFamily: "system-ui, sans-serif" }}>
       <style>{"@keyframes shot-countdown { from { width: 100%; } to { width: 0; } }"}</style>
-      <div style={blurred}>
+      <div className="live-top" style={blurred}>
         {/* Equal outer columns keep the clock centred over the scoreboard. */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
           <a href="#/">← Matches</a>
@@ -437,63 +435,46 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
             </>
           )}
         </div>
+      </div>
 
-        <div
-          data-testid="event-strip"
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            overflowX: "auto",
-            whiteSpace: "nowrap",
-            padding: "0.4rem 0.2rem",
-            borderTop: "1px solid #ddd",
-            borderBottom: "1px solid #ddd",
-            marginBottom: "0.75rem",
-            fontSize: "0.85rem",
-            minHeight: "1.2rem",
-          }}
-        >
-          {lastEntries.length === 0 ? (
-            <span style={{ color: "#666" }}>No events yet</span>
-          ) : (
-            lastEntries.map((entry, index) => {
-              const player = lastAttributions[index];
-              const isLast = index === lastEntries.length - 1;
-              return (
-                <span
-                  key={match.log.length - lastEntries.length + index}
-                  data-testid="event-strip-item"
-                  data-team={"team" in entry ? entry.team : ""}
-                  style={{
-                    fontWeight: isLast ? 700 : 400,
-                    color: "team" in entry ? TEAM_COLOURS[entry.team] : "inherit",
-                  }}
-                >
-                  {entry.kind === "QuarterStart"
-                    ? `▶ Q${quarterOf(match.log.length - lastEntries.length + index)} · ${teamName(entry.team)} CP`
-                    : isLast && shotOpen && entry.kind === "Event"
-                      ? `${player ? `${player} ` : ""}${entry.action.position} Shot …`
-                      : formatEntry(entry, player)}
-                </span>
-              );
-            })
-          )}
-        </div>
-
-        <div style={gridStyle(4)}>
-          {POSITION_GRID.map((position) => (
-            <button
-              key={position}
-              data-testid={`position-${position}`}
-              aria-pressed={selectedPosition === position}
-              disabled={!started}
-              style={{ ...tapButton, ...(selectedPosition === position ? selectedButton : {}) }}
-              onClick={() => setSelectedPosition(position)}
-            >
-              {position}
-            </button>
-          ))}
-        </div>
+      <div
+        data-testid="event-strip"
+        className="live-log"
+        style={{
+          ...blurred,
+          padding: "0.4rem 0.2rem",
+          borderTop: "1px solid #ddd",
+          borderBottom: "1px solid #ddd",
+          marginBottom: "0.75rem",
+          fontSize: "0.85rem",
+          minHeight: "1.2rem",
+        }}
+      >
+        {lastEntries.length === 0 ? (
+          <span style={{ color: "#666" }}>No events yet</span>
+        ) : (
+          lastEntries.map((entry, index) => {
+            const player = lastAttributions[index];
+            const isLast = index === lastEntries.length - 1;
+            return (
+              <span
+                key={match.log.length - lastEntries.length + index}
+                data-testid="event-strip-item"
+                data-team={"team" in entry ? entry.team : ""}
+                style={{
+                  fontWeight: isLast ? 700 : 400,
+                  color: "team" in entry ? TEAM_COLOURS[entry.team] : "inherit",
+                }}
+              >
+                {entry.kind === "QuarterStart"
+                  ? `▶ Q${quarterOf(match.log.length - lastEntries.length + index)} · ${teamName(entry.team)} CP`
+                  : isLast && shotOpen && entry.kind === "Event"
+                    ? `${player ? `${player} ` : ""}${entry.action.position} Shot …`
+                    : formatEntry(entry, player)}
+              </span>
+            );
+          })
+        )}
       </div>
 
       {shotOpen && (
@@ -504,68 +485,89 @@ export default function LiveScreen({ matchId }: { matchId: string }) {
         />
       )}
 
-      <div style={{ position: "relative", zIndex: shotOpen ? 2 : "auto" }}>
-        <div style={gridStyle(2)}>
-          {ACTION_GRID.map((action) => {
-            const info = actionByKind(action.kind);
-            return (
-              <ActionButton
-                key={action.testId}
-                testId={action.testId}
-                label={action.label}
-                team={canRecord(info) ? teamFor(action.kind) : null}
-                onClick={() => record(action)}
-              />
-            );
-          })}
+      <div className="live-pad">
+        <div className="live-pad-grid" style={{ ...gridStyle(4), marginBottom: 0, ...blurred }}>
+          {POSITION_GRID.map((position) => (
+            <button
+              key={position}
+              data-testid={`position-${position}`}
+              aria-pressed={selectedPosition === position}
+              disabled={!started}
+              style={{
+                ...tapButton,
+                fontSize: "inherit",
+                ...(selectedPosition === position ? selectedButton : {}),
+              }}
+              onClick={() => setSelectedPosition(position)}
+            >
+              {position}
+            </button>
+          ))}
         </div>
-        {shotOpen && (
-          <div
-            data-testid="shot-popup"
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-              padding: "0.75rem",
-              borderRadius: "12px",
-              background: "#fff",
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.25)",
-            }}
-          >
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", flex: 1 }}>
-              <button
-                data-testid="shot-goal"
-                style={{ ...tapButton, fontSize: "1.5rem", background: "#15803D", color: "#fff", border: "none" }}
-                onClick={() => setShotOpen(false)}
-              >
-                ✓ Goal
-              </button>
-              <button
-                data-testid="shot-miss"
-                style={{ ...tapButton, fontSize: "1.5rem", background: "#B91C1C", color: "#fff", border: "none" }}
-                onClick={missShot}
-              >
-                ✕ Miss
-              </button>
-            </div>
-            {/* Drains over SHOT_CONFIRM_MS: when it empties, the goal stands. */}
-            <div style={{ height: "6px", borderRadius: "3px", background: "#eee" }}>
-              <div
-                style={{
-                  height: "100%",
-                  borderRadius: "3px",
-                  background: "#444",
-                  animation: `shot-countdown ${SHOT_CONFIRM_MS}ms linear forwards`,
-                }}
-              />
-            </div>
+
+        <div style={{ display: "grid", position: "relative", zIndex: shotOpen ? 2 : "auto" }}>
+          <div className="live-pad-grid" style={{ ...gridStyle(2), marginBottom: 0 }}>
+            {ACTION_GRID.map((action) => {
+              const info = actionByKind(action.kind);
+              return (
+                <ActionButton
+                  key={action.testId}
+                  testId={action.testId}
+                  label={action.label}
+                  team={canRecord(info) ? teamFor(action.kind) : null}
+                  onClick={() => record(action)}
+                />
+              );
+            })}
           </div>
-        )}
+          {shotOpen && (
+            <div
+              data-testid="shot-popup"
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+                padding: "0.75rem",
+                borderRadius: "12px",
+                background: "#fff",
+                boxShadow: "0 4px 24px rgba(0, 0, 0, 0.25)",
+              }}
+            >
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", flex: 1 }}>
+                <button
+                  data-testid="shot-goal"
+                  style={{ ...tapButton, fontSize: "1.5rem", background: "#15803D", color: "#fff", border: "none" }}
+                  onClick={() => setShotOpen(false)}
+                >
+                  ✓ Goal
+                </button>
+                <button
+                  data-testid="shot-miss"
+                  style={{ ...tapButton, fontSize: "1.5rem", background: "#B91C1C", color: "#fff", border: "none" }}
+                  onClick={missShot}
+                >
+                  ✕ Miss
+                </button>
+              </div>
+              {/* Drains over SHOT_CONFIRM_MS: when it empties, the goal stands. */}
+              <div style={{ height: "6px", borderRadius: "3px", background: "#eee" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    borderRadius: "3px",
+                    background: "#444",
+                    animation: `shot-countdown ${SHOT_CONFIRM_MS}ms linear forwards`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div style={blurred}>
+      <div className="live-controls" style={blurred}>
         <div style={{ ...gridStyle(3), marginTop: "0.75rem" }}>
           <button
             data-testid="undo"
@@ -677,8 +679,8 @@ function ActionButton({
       data-team={team ?? ""}
       style={
         team
-          ? { ...tapButton, background: TEAM_COLOURS[team], color: "#fff", borderColor: TEAM_COLOURS[team] }
-          : { ...tapButton, color: "#999", borderColor: "#ccc" }
+          ? { ...tapButton, fontSize: "inherit", background: TEAM_COLOURS[team], color: "#fff", borderColor: TEAM_COLOURS[team] }
+          : { ...tapButton, fontSize: "inherit", color: "#999", borderColor: "#ccc" }
       }
       disabled={team === null}
       onClick={onClick}

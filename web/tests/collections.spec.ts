@@ -1,5 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 
+// WebKit can share files, so the app opens a share sheet that never settles
+// headless; hide it so these tests exercise the download fallback.
+test.beforeEach(({ page }) => page.addInitScript(() => delete (Navigator.prototype as Partial<Navigator>).canShare));
+
 /** A Match File where `shooter` plays GS for `ourSide` and scores `goals`. */
 function matchFile(id: string, date: string, ourSide: "A" | "B", shooter: string, goals: number) {
   const [teamAName, teamBName] = ourSide === "A" ? ["Hornets", "Riverside"] : ["Lakeside", "hornets"];

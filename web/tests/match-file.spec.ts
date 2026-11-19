@@ -1,5 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 
+// WebKit can share files, so the app opens a share sheet that never settles
+// headless; hide it so these tests exercise the download fallback.
+test.beforeEach(({ page }) => page.addInitScript(() => delete (Navigator.prototype as Partial<Navigator>).canShare));
+
 // A full roster so coded events land on named players and playing time (from
 // live timestamps) survives the export → import round-trip.
 const ROSTER: Record<string, string> = {

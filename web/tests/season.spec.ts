@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 
+// WebKit can share files, so the app opens a share sheet that never settles
+// headless; hide it so these tests exercise the download fallback.
+test.beforeEach(({ page }) => page.addInitScript(() => delete (Navigator.prototype as Partial<Navigator>).canShare));
+
 /** A Match File whose goals are scored in `goals` order ("AAB"), each after a
  * centre pass alternating from A, optionally ending at Full Time. */
 function played(id: string, date: string, a: string, b: string, goals: string, fullTime: boolean) {

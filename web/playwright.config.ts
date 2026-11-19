@@ -10,9 +10,13 @@ export default defineConfig({
     baseURL: "http://localhost:4173",
     trace: "on-first-retry",
   },
-  // Phone-sized viewport: courtside one-handed phone use is the design
-  // target, so every test runs against it.
-  projects: [{ name: "mobile-chromium", use: { ...devices["Pixel 7"] } }],
+  // Courtside one-handed phone use is the design target; the iPad projects
+  // run on WebKit (Safari's engine), and landscape catches rotation.
+  projects: [
+    { name: "mobile-chromium", use: { ...devices["Pixel 7"] } },
+    { name: "ipad-webkit", use: { ...devices["iPad (gen 7)"] } },
+    { name: "ipad-webkit-landscape", use: { ...devices["iPad (gen 7) landscape"] } },
+  ],
   webServer: {
     command: "npm run preview",
     url: "http://localhost:4173/centrepass/",

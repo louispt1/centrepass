@@ -8,6 +8,7 @@ async function expectScore(page: import("@playwright/test").Page, teamA: number,
 test("create match → record goals for both teams → undo → reload → score correct", async ({
   page,
   context,
+  browserName,
 }) => {
   await page.goto("/centrepass/");
 
@@ -76,12 +77,15 @@ test("create match → record goals for both teams → undo → reload → score
   await page.reload();
   await expectScore(page, 1, 1);
 
-  // …including offline.
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await context.setOffline(true);
-  await page.reload();
-  await expectScore(page, 1, 1);
-  await context.setOffline(false);
+  // …including offline (skipped on WebKit: Playwright's WebKit errors on any
+  // offline navigation, even one the service worker serves).
+  if (browserName !== "webkit") {
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await context.setOffline(true);
+    await page.reload();
+    await expectScore(page, 1, 1);
+    await context.setOffline(false);
+  }
 
   // The match appears in the list and can be reopened.
   await page.getByRole("link", { name: "← Matches" }).click();

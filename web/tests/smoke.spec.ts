@@ -3,7 +3,10 @@ import { test, expect } from "@playwright/test";
 // The app renders only once the WASM engine has loaded (main.tsx), so the
 // heading showing proves netball-core is running.
 
-test("loads fully offline after one visit", async ({ page, context }) => {
+test("loads fully offline after one visit", async ({ page, context, browserName }) => {
+  // Playwright's WebKit errors on any navigation while offline, even one the
+  // service worker serves; real Safari is fine. Offline is covered on Chromium.
+  test.skip(browserName === "webkit", "Playwright WebKit cannot navigate offline");
   await page.goto("/centrepass/");
   await expect(page.getByRole("heading", { name: "CentrePass" })).toBeVisible();
   // The service worker precaches everything at install, before it activates,

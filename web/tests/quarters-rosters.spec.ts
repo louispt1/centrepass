@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { test, expect, type Page } from "@playwright/test";
 
+// WebKit can share files, so the app opens a share sheet that never settles
+// headless; hide it so these tests exercise the download fallback.
+test.beforeEach(({ page }) => page.addInitScript(() => delete (Navigator.prototype as Partial<Navigator>).canShare));
+
 async function createMatch(page: Page) {
   await page.goto("/centrepass/");
   await page.getByLabel("Your team").fill("Hornets U13");
